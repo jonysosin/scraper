@@ -48,7 +48,6 @@ const scraper: Scraper = async (request, page) => {
   page.on('response', async response => {
     // 3: hook SKU details
     if (response.url().includes('//ProductStylesJSONView')) {
-      console.log(await response.text())
       let variant: any = Object.entries(await response.json())[0][1]
       variant.manifestImages = []
       variants.push(variant)
@@ -98,8 +97,6 @@ const scraper: Scraper = async (request, page) => {
   page.on('response', async response => {
     // 4: hook for image data
     if (response.url().includes('manifest_2.json')) {
-      console.log('eeeeeee')
-      console.log(variants)
       if (response.status() === 200) {
         let { items } = await response.json()
         let urlPartNumber = response.url().split(/RayBan.|_manifest/g)[1]
