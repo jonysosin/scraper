@@ -1,3 +1,4 @@
+import { getSelectorTextContent } from '../../providerHelpers/getSelectorTextContent'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 import { getProductOptions } from '../shopify/helpers'
@@ -46,7 +47,7 @@ export default shopifyScraper(
 
       return extraData
     },
-    variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
+    variantFn: async (_request, page, product, providerProduct, providerVariant) => {
       /**
        * Get the list of options for the variants of this provider
        * (4) ["Color", "Size", "Inseam", "Belt Loops"]
@@ -58,6 +59,12 @@ export default shopifyScraper(
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
+
+      /**
+       * Get the title from the HTML, as it's different than the one in the JSON
+       */
+      product.title =
+        (await getSelectorTextContent(page, '.product-app__action-pane__title')) || product.title
     },
   },
   {},
