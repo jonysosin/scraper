@@ -58,6 +58,14 @@ export default class Product {
     }
   }
 
+  /**
+   * Adds a new additional sections to the product
+   * @param sections TAdditionalSection[]
+   */
+  addAdditionalSections(sections: IDescriptionSection[]) {
+    sections.forEach(section => this.addAdditionalSection(section))
+  }
+
   clone(): Product {
     return Object.assign(Object.create(Object.getPrototypeOf(this)), this)
   }
