@@ -70,7 +70,7 @@ export default shopifyScraper(
 
       return extraData
     },
-    variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
+    variantFn: async (_request, page, product, providerProduct, providerVariant) => {
       /**
        * Get the list of options for the variants of this provider
        * (3) ["Title", "Size", "Amount"]
@@ -87,6 +87,20 @@ export default shopifyScraper(
       if (color) {
         product.color = color
       }
+
+      /**
+       * Replace the original description with the one displayed in the website
+       */
+      const description = await page.evaluate(() => {
+        return document.querySelector('.product__description')?.textContent?.trim()
+      })
+
+      product.description = description
+
+      product.additionalSections.shift()
+
+      // Default always to the same name
+      product.brand = 'eos'
     },
   },
   {},
