@@ -1,3 +1,4 @@
+import { getProductOptions } from '../shopify/helpers'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
 
