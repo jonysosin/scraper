@@ -1,42 +1,81 @@
-import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
+import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
+import parseUrl from 'parse-url'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
 
 export default shopifyScraper(
   {
+    urls: url => {
+      const parsedUrl = parseUrl(url)
+      return {
+        jsonUrl: `https://entireworld.myshopify.com${parsedUrl.pathname}`,
+        htmlUrl: `https://theentireworld.com${parsedUrl.pathname.replace(/^\/products/, '')}`,
+      }
+    },
     productFn: async (_request, page) => {
       const extraData: TShopifyExtraData = {}
-      /**
-       * Get the breadcrumbs
-       */
-      extraData.breadcrumbs = await page.evaluate(() => {
-        const breadcrumbsSelector = document.querySelector('nav.breadcrumbs')
-        return breadcrumbsSelector?.textContent
-          ? breadcrumbsSelector.textContent.replace(/\n/gim, '').split('›')
-          : []
-      })
 
       /**
        * Get additional descriptions and information
        */
-      extraData.keyValuePairs = await page.evaluate(() => {
-        // Get a list of titles
-        const keys = Array.from(document.querySelectorAll('.product-description-wrapper > ul > li'))
+      extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        let mainAdded = 0
+        const sections = Array.from(
+          document.querySelectorAll('.cb__pr__details .cb__pr__variant-info__section'),
+        ).map((e, i) => {
+          if (!e.querySelector('h5')) {
+            return {
+              name: 'Description',
+              content: e?.outerHTML,
+              description_placement: !mainAdded++
+                ? DESCRIPTION_PLACEMENT.MAIN
+                : DESCRIPTION_PLACEMENT.ADJACENT,
+            }
+          } else {
+            const name = e.querySelector('h5')?.textContent?.trim() || `key_${i}`
+            e.querySelector('h5')?.remove()
+            return {
+              name,
+              content: e?.outerHTML,
+              description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+            }
+          }
+        })
 
-        // Get a list of content for the titles above
-        const values = Array.from(document.querySelectorAll('.product-description-wrapper > div'))
+        return sections
+      }, DESCRIPTION_PLACEMENT)
 
-        // Join the two arrays in a key value object
-        return values.reduce((acc: Record<string, string>, value, i) => {
-          acc[keys[i].textContent?.trim() || `key_${i}`] = value.outerHTML?.trim() || ''
-          return acc
-        }, {})
+      const additionalDescription = await page.evaluate(() => {
+        return document
+          .querySelector('.cb__pr__specific-item-name')
+          ?.parentElement?.outerHTML?.trim()
       })
+
+      if (additionalDescription) {
+        extraData.additionalSections.push({
+          name: 'Description',
+          content: additionalDescription,
+          description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+        })
+      }
 
       /**
        * Get Size Chart HTML
        */
-      extraData.sizeChartHtml = await getSelectorOuterHtml(page, 'div[data-remodal-id=size-chart]')
+      const sizeGuide = extraData.additionalSections.find(e => e.name === 'Sizing Guide')?.content
+      const howToMeasure = extraData.additionalSections.find(
+        e => e.name === 'How To Measure',
+      )?.content
+      if (extraData.additionalSections.find(e => e.name === 'Sizing Guide')) {
+        extraData.sizeChartHtml = `<div>
+          ${sizeGuide || ''}
+          ${howToMeasure || ''}
+        </div>`
+      }
+
+      // extraData.additionalSections = extraData.additionalSections.filter(
+      //   e => !['Sizing Guide', 'How To Measure'].includes(e.name),
+      // )
 
       return extraData
     },
@@ -55,12 +94,11 @@ export default shopifyScraper(
       if (optionsObj.Color) {
         product.color = optionsObj.Color
       }
+      if (optionsObj.Size) {
+        product.size = optionsObj.Size
+      }
 
-      /**
-       * Sometimes, the title needs a replacement to remove the color at the end (if exists)
-       * Example: "High-Waist Catch The Light Short - Black"
-       */
-      product.title = product.title.replace(/ - [^-]+$/, '')
+      // images [new Set(Array.from(document.querySelectorAll('.product__image-carousel__oflow-wrap')[0].querySelectorAll('picture source')).map(e => e.getAttribute('srcset')?.replace(/\?.*/, '')))]
     },
   },
   {},
