@@ -1,5 +1,8 @@
-spartina449: # add . to the provider name to skip all its urls
+.spartina449: # add . to the provider name to skip all its urls
   - https://www.spartina449.com/lowcountry-pearl-necklace-silver-atlantic-opal.html
-_4ocean:
+._4ocean:
   # - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
   - https://www.4ocean.com/products/4ocean-logo-womens-v-neck-long-sleeve-t-shirt
+
+herocosmetics:
+- https://www.herocosmetics.us/products/lightning-wand?utm_content=Facebook_UA&utm_source=facebook&variant=39284083490858

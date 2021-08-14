@@ -96,22 +96,40 @@ export default shopifyScraper(
         product.size = optionsObj.Size
       }
 
-      await page.evaluate(() => {
-        const elementVideoPlay = document.querySelector(
-          'div.lproduct-images__video-icon',
-        ) as HTMLElement
-        elementVideoPlay.click()
-        return true || null
-      })
+   
+      await page.click(`.product-images__video-icon`)
+      await page.waitForSelector('.product-images__video-box')
+      
       const video = await page.evaluate(() => {
         return document
-          .querySelector('.product-images__video-container iframe')
+          .querySelector('.product-details__howto-video iframe')
+          ?.getAttribute('src')
+      })
+      const menuVideo =  await page.evaluate(() => {
+        return document
+          .querySelector('.product-images__video-box iframe')
           ?.getAttribute('src')
       })
 
       if (video) {
-        product.videos.push(video)
+          product.videos.push(video)    
       }
+      if (menuVideo){
+        product.videos.push(menuVideo)
+      }
+       /**
+       * Get extra images
+       */
+    const images = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('.product-images__container .product-images__image picture'))
+        .map(e => e.querySelector('source')?.getAttribute('srcset') || '')
+        .filter(e => e.split('=')[2].length > 0)
+    })
+    if (images.length) {
+
+      product.images = images
+    
+    }
     },
   },
   {},
