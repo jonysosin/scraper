@@ -10,6 +10,15 @@ const promiseGen = () => {
   return [promise, resolve]
 }
 
+function IsJsonString(str) {
+  try {
+    JSON.parse(str)
+  } catch (e) {
+    return false
+  }
+  return true
+}
+
 const scraper: Scraper = async (request, page) => {
   await page.setRequestInterception(true)
 
@@ -18,7 +27,7 @@ const scraper: Scraper = async (request, page) => {
   let [waitForSelectors, selectorsCompleted] = promiseGen()
   let [waitForVariants, variantsCompleted] = promiseGen()
 
-  let itemGroupId, variantsCounter
+  let itemGroupId
 
   page.on('request', request => request.continue())
 
@@ -34,25 +43,18 @@ const scraper: Scraper = async (request, page) => {
         allSKUs = allSKUs.concat(JSON.parse(details.allSkus))
       }
 
-      variantsCounter = allSKUs.length
-
       await waitForSelectors
 
       for (let sku of allSKUs) {
         let url = `https://www.ray-ban.com/usa/eyeglasses//ProductStylesJSONView?langId=-1&storeId=10151&catEntries=${sku}`
-        await page.goto(url)
+        const response = await page.goto(url)
+
+        let variant: any = Object.entries(await response.json())[0][1]
+        variant.manifestImages = []
+        variants.push(variant)
       }
-    }
-  })
 
-  page.on('response', async response => {
-    // 3: hook SKU details
-    if (response.url().includes('//ProductStylesJSONView')) {
-      let variant: any = Object.entries(await response.json())[0][1]
-      variant.manifestImages = []
-      variants.push(variant)
-
-      if (!--variantsCounter) variantsCompleted()
+      variantsCompleted()
     }
   })
 
@@ -61,11 +63,10 @@ const scraper: Scraper = async (request, page) => {
   // 1: description from selector
   let description, breadcrumbs, detailsTable, lensColor
   try {
-
     await page.waitForSelector('.rb-pdp-editorial', { timeout: 15000 })
 
     breadcrumbs = await page.evaluate(() =>
-      Array.from(document.querySelectorAll('.rb-pdp-left-breadcrumb li')).map(e => e.textContent)
+      Array.from(document.querySelectorAll('.rb-pdp-left-breadcrumb li')).map(e => e.textContent),
     )
 
     description = await page.$eval(
@@ -84,45 +85,22 @@ const scraper: Scraper = async (request, page) => {
           ?.split('  ')[0]
           .trim() || '',
     )
-
   } catch (e) {}
 
   selectorsCompleted()
   await waitForVariants
 
-  let [waitForImages, imagesCompleted] = promiseGen()
-  let manifestCounter = variants.length
+  for (let variant of variants) {
+    let url = `https://images.ray-ban.com/is/image/RayBan/${variant.partNumber}_manifest_2.json`
+    const response = await page.goto(url)
 
-
-  page.on('response', async response => {
-    // 4: hook for image data
-    if (response.url().includes('manifest_2.json')) {
-      if (response.status() === 200) {
-        let { items } = await response.json()
-        let urlPartNumber = response.url().split(/RayBan.|_manifest/g)[1]
-
-        let variant: any = variants.find((v: any) => v.partNumber == urlPartNumber)
-
-        if (variant !== undefined) {
-          variant.manifestImages = items.map(
-            img =>
-              `https://images.ray-ban.com/is/image/RayBan/${urlPartNumber}_${img.file_key}.png`,
-          )
-        }
-      }
-      if (!--manifestCounter) imagesCompleted()
-    }
-  })
-
-  for (let { partNumber } of variants) {
-    let url = `https://images.ray-ban.com/is/image/RayBan/${partNumber}_manifest_2.json`
-    await page.goto(url)
+    let { items } = await response.json()
+    variant.manifestImages = items.map(
+      img => `https://images.ray-ban.com/is/image/RayBan/${variant.partNumber}_${img.file_key}.png`,
+    )
   }
 
-  await waitForImages
-
   const products = variants.map((v: any) => {
-
     let url = new URL(request.pageUrl).hostname + v.linkDetailsView
     let p = new Product(v.catentryId, v.modelName, url)
 
