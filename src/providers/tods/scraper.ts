@@ -6,22 +6,42 @@ import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { ProductResponse } from './types'
 import { getLdJsonScripts } from '../../utils/extractors'
 
-const BASE_URL = `https://www.tods.com`
-const BASE_PRODUCT_URL = `${BASE_URL}/us-en`
-const PRODUCTS_API_URL = `${BASE_URL}/rest/v2/tods-ww/products/`
-
 function parseBullets(desc: string) {
   return [...desc.matchAll(/<li>(.+?)<\/li>/g)].map(m => m[1])
 }
 
 const scraper: Scraper = async (request, page) => {
-  await page.goto(request.pageUrl)
+  const navPromise = page.goto(request.pageUrl)
+
+  const api_locale = await new Promise<any>((res, rej) => {
+    page.on('response', response => {
+      const url = response.url()
+      if (url.includes('/products/')) {
+        const locale = response.url().match(/\/rest\/(.+)\/products/)![1]
+        res(locale)
+      }
+    })
+    setTimeout(() => rej(new Error('Timeout waiting for response')), 60000)
+  })
+
+  await navPromise
+
+  const BASE_URL = `https://www.tods.com`
+  // us-en or ww-en
+  const website_locale = request.pageUrl.replace(`${BASE_URL}/`, '').split('/')[0]
+
+  const BASE_PRODUCT_URL = `${BASE_URL}/${website_locale}`
+  const PRODUCTS_API_URL = `${BASE_URL}/rest/${api_locale}/products/`
+
+  const screenshot = await screenPage(page)
 
   const id = _.last(request.pageUrl.split('/'))!
 
   const productResponses = await page.evaluate(
     async (id, PRODUCTS_API_URL) => {
-      const mainResponse: ProductResponse = await (await fetch(`${PRODUCTS_API_URL}${id}`)).json()
+      const apiUrl = `${PRODUCTS_API_URL}${id}`
+      const res = await fetch(apiUrl)
+      const mainResponse: ProductResponse = await res.json()
       const responses: ProductResponse[] = await Promise.all(
         mainResponse.colorSizeOptions.map(async opt => {
           return (await fetch(`${PRODUCTS_API_URL}${opt.skuOrigin}`)).json()
@@ -36,24 +56,30 @@ const scraper: Scraper = async (request, page) => {
   const products: Product[] = []
 
   for (const productResponse of productResponses) {
-    const productUrl = `${BASE_PRODUCT_URL}${productResponse.url}`
-    await page.goto(productUrl)
+    const url = `${BASE_PRODUCT_URL}/p/${productResponse.code}`
+
     // if we get redirected, skip product
-    if (page.url() !== productUrl) {
+    await page.goto(url)
+    if (page.url() !== url) {
       continue
     }
 
     const ldjson = (await getLdJsonScripts(page))[0]
 
+    const additionalSectionDescription = await page.$eval(
+      '.detailInfo__description',
+      e => e.outerHTML,
+    )
+    const additionalSectionDetails = await page.$eval('.detailInfo__listWrapper', e => e.outerHTML)
+
     for (const variantResponse of productResponse.variantOptions) {
-      const url = `${BASE_PRODUCT_URL}${variantResponse.url}`
       const title = productResponse.name
-      const variantId = `${variantResponse.code}:${variantResponse.color ?? ''}:${
-        variantResponse.size ?? ''
-      }`
+      const variantId = variantResponse.code
       const product = new Product(variantId, title, url)
 
-      product.color = variantResponse.color
+      if (variantResponse.color) {
+        product.color = variantResponse.color
+      }
       product.size = variantResponse.size
       product.availability = !!variantResponse.stock.stockLevel
       product.description = productResponse.summary
@@ -61,8 +87,10 @@ const scraper: Scraper = async (request, page) => {
       product.images = productResponse.carouselImages.map(c => `https:${c.url}`)
       product.sku = variantResponse.code
       product.brand = ldjson?.brand?.name
-      product.currency = ldjson.offers.priceCurrency
-      product.realPrice = ldjson.offers.price
+      if (ldjson.offers) {
+        product.currency = ldjson.offers.priceCurrency
+        product.realPrice = ldjson.offers.price
+      }
       if (ldjson?.mainEntityOfPage?.breadcrumb?.itemListElement) {
         product.breadcrumbs = ldjson.mainEntityOfPage.breadcrumb.itemListElement.map(
           e => e.item.name,
@@ -83,20 +111,19 @@ const scraper: Scraper = async (request, page) => {
       }
 
       product.addAdditionalSection({
-        content: await page.$eval('.detailInfo__description', e => e.outerHTML),
+        content: additionalSectionDescription,
         description_placement: DESCRIPTION_PLACEMENT.MAIN,
         name: 'DESCRIPTION',
       })
       product.addAdditionalSection({
-        content: await page.$eval('.detailInfo__listWrapper', e => e.outerHTML),
+        content: additionalSectionDetails,
         description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
         name: 'MORE DETAILS',
       })
+
       products.push(product)
     }
   }
-
-  const screenshot = await screenPage(page)
 
   return {
     screenshot,
