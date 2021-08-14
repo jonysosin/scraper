@@ -46,12 +46,25 @@ const scraper: Scraper = async (request, page) => {
       await waitForSelectors
 
       for (let sku of allSKUs) {
-        let url = `https://www.ray-ban.com/usa/eyeglasses//ProductStylesJSONView?langId=-1&storeId=10151&catEntries=${sku}`
-        const response = await page.goto(url)
 
-        let variant: any = Object.entries(await response.json())[0][1]
-        variant.manifestImages = []
-        variants.push(variant)
+        let url = `https://www.ray-ban.com/usa/eyeglasses//ProductStylesJSONView?langId=-1&storeId=10151&catEntries=${sku}`
+        let maxRetry = 5
+
+        for(let i=1; i <= maxRetry; i++) {
+          const response = await page.goto(url)
+          if ( IsJsonString(await response.text()) ) {
+
+            let variant: any = Object.entries(await response.json())[0][1]
+            variant.manifestImages = []
+            variants.push(variant)
+            break
+
+          } else {
+            console.log(`bad JSON, ${i}/${maxRetry}`)
+            await new Promise(r=>setTimeout(r, 1000))
+          }
+        }
+
       }
 
       variantsCompleted()
@@ -88,6 +101,7 @@ const scraper: Scraper = async (request, page) => {
   } catch (e) {}
 
   selectorsCompleted()
+  // carousel hook
   await waitForVariants
 
   for (let variant of variants) {
