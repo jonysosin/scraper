@@ -24,6 +24,11 @@ const scraper: Scraper = async (request, page) => {
         ?.map(s => s.trim()) || [],
   )
 
+  const description = await page.$eval(
+    '.product-full__description .product-full__accordion__panel',
+    e => (e as HTMLDivElement)?.innerText,
+  )
+
   const details = await page.$eval(
     '.product-full__description .product-full__accordion__panel',
     e => e.innerHTML,
@@ -60,7 +65,7 @@ const scraper: Scraper = async (request, page) => {
     const product = new Product(sku.SKU_ID, data.PROD_RGN_NAME, link)
 
     product.subTitle = data.SHORT_DESC
-    product.description = data.DESCRIPTION || data.META_DESCRIPTION || data.SHORT_DESC
+    product.description = description || data.DESCRIPTION || data.META_DESCRIPTION || data.SHORT_DESC
     product.availability = !!sku.isShoppable
     product.brand = 'La Mer'
     product.color = sku.SHADENAME
@@ -79,15 +84,9 @@ const scraper: Scraper = async (request, page) => {
     product.bullets = bullets
 
     product.addAdditionalSection({
-      name: 'description',
-      content: `<h2 class="product-full__desc">${data.SHORT_DESC}</h2>`,
-      description_placement: DESCRIPTION_PLACEMENT.MAIN,
-    })
-
-    product.addAdditionalSection({
       name: 'Details',
       content: details,
-      description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+      description_placement: DESCRIPTION_PLACEMENT.MAIN,
     })
 
     product.addAdditionalSection({
