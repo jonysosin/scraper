@@ -9,7 +9,7 @@ export default shopifyScraper(
       const parsedUrl = parseUrl(url)
       return {
         jsonUrl: `https://entireworld.myshopify.com${parsedUrl.pathname}`,
-        htmlUrl: `https://theentireworld.com${parsedUrl.pathname.replace(/^\/products/, '')}`,
+        htmlUrl: `https://theentireworld.com${parsedUrl.pathname}`,
       }
     },
     productFn: async (_request, page) => {
