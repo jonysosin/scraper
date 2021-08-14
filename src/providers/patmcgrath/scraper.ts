@@ -51,11 +51,12 @@ export default shopifyScraper(
        * Remove the first element of the array, as the additional section captured by the generic shopify scraper is not correct in this case
        */
       product.additionalSections.shift()
+      product.additionalSections = product.additionalSections.filter(e => e.name !== 'Reviews')
 
       /**
        * The product title is in the product level, not the variant
        */
-      product.title = providerProduct.title
+      product.title = providerProduct.title.split(': ')[0]
     },
   },
   {},
