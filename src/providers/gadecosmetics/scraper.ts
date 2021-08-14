@@ -37,7 +37,10 @@ export default shopifyScraper(
           return {
             name: keys[i] || `key_${i}`,
             content: value || '',
-            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+            description_placement:
+              keys[i] === 'PRODUCT DETAILS'
+                ? DESCRIPTION_PLACEMENT.MAIN
+                : DESCRIPTION_PLACEMENT.ADJACENT,
           }
         })
 
@@ -54,13 +57,12 @@ export default shopifyScraper(
     variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
       /**
        * Get the list of options for the variants of this provider
-       * (5) ["Color", "Title", "Denominations", "color", "color tab"]
+       * (5) ["Color", "Title", "Denominations", "color", "color tab"]
        */
       const optionsObj = getProductOptions(providerProduct, providerVariant)
-      if (optionsObj.Color || optionsObj['color']) {
-        product.color = optionsObj.Color || optionsObj['color']
+      if (optionsObj.Color || optionsObj['color'] || optionsObj['color tab']) {
+        product.color = optionsObj.Color || optionsObj['color'] || optionsObj['color tab']
       }
-
       /**
        * Remove the first element of the array, as the additional section captured by the generic shopify scraper is not correct in this case
        */
