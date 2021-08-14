@@ -1,5 +1,31 @@
-spartina449: # add . to the provider name to skip all its urls
+.spartina449: # add . to the provider name to skip all its urls
   - https://www.spartina449.com/lowcountry-pearl-necklace-silver-atlantic-opal.html
-_4ocean:
+._4ocean:
   # - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
   - https://www.4ocean.com/products/4ocean-logo-womens-v-neck-long-sleeve-t-shirt
+hollisterco:
+  - https://www.abercrombie.com/shop/wd/p/straight-jeans-35504840?seq=02&categoryId=12236&faceout=prod1
+  - https://www.hollisterco.com/shop/wd/social-tourist/p/social-tourist-dog-leash-45662320?categoryId=65014738&seq=01
+  - https://www.hollisterco.com/shop/wd/gilly-hicks/p/gilly-hicks-dreamworthy-soft-square-neck-loungelette-44676819?categoryId=64790790&seq=01&faceout=life1
+  - https://www.hollisterco.com/shop/wd/p/must-have-crewneck-t-shirt-45785819?categoryId=12634&seq=07&faceout=prod1
+  - https://www.hollisterco.com/shop/wd/gilly-hicks/p/gilly-hicks-go-seamless-plunge-sportlette-45354820?categoryId=64790382&seq=03
+  - https://www.hollisterco.com/shop/wd/p/ultra-high-rise-dad-jeans-46301003?categoryId=12620&seq=01
+  - https://www.hollisterco.com/shop/wd/p/must-have-wrap-baby-tee-45989821?categoryId=12552&seq=02&faceout=prod1
+  - https://www.hollisterco.com/shop/wd/p/skinny-fleece-jogger-pants-46540325?categoryId=12556&seq=01&faceout=life1
+  - https://www.hollisterco.com/shop/wd/p/super-skinny-jeans-46299079?categoryId=12589&seq=10&faceout=model1
+  - https://www.hollisterco.com/shop/wd/p/flash-reactive-stacked-skinny-no-fade-jeans-45992478?categoryId=12589&seq=09&faceout=prod1
+  - https://www.hollisterco.com/shop/wd/p/ankle-socks-5-pack-38321322?categoryId=16409&seq=01&faceout=prod1
+  - https://www.hollisterco.com/shop/wd/social-tourist/p/social-tourist-baggy-jeans-44495321?categoryId=12623&seq=01&faceout=life1
+  - https://www.hollisterco.com/shop/wd/p/must-have-polo-2-pack-43608819?categoryId=671151&seq=07&faceout=prod1
+  - https://www.hollisterco.com/shop/wd/gilly-hicks/p/gilly-hicks-go-breathe-full-zip-46205821?categoryId=64790718&seq=01&faceout=model1
+  - https://www.hollisterco.com/shop/wd/gilly-hicks/p/gilly-hicks-waffle-joggers-46564819?categoryId=64790717&seq=03&faceout=model1
+  - https://www.hollisterco.com/shop/wd/gilly-hicks/p/gilly-hicks-happy-fleece-short-46564820?categoryId=64790717&seq=01&faceout=model1
+  - https://www.hollisterco.com/shop/wd/gilly-hicks/p/gilly-hicks-happy-fleece-short-46564820?categoryId=64790717&seq=03&faceout=prod1
+  - https://www.hollisterco.com/shop/wd-es/p/print-graphic-tee-43946320-1002?categoryId=63058424&seq=02&faceout=prod1
+  # - https://www.hollisterco.com/shop/wd-es/p/pride-print-bandana-44245819-1002?categoryId=63058424&seq=01&faceout=prod1
+  # - https://www.hollisterco.com/shop/wd-es/p/paquete-de-5-camisetas-con-cuello-redondo-infaltable-45822820?categoryId=12634&seq=01&faceout=prod1
+  # - https://www.hollisterco.com/shop/wd-es/p/tie-dye-graphic-tank-43946820-1002?categoryId=63058424&seq=01&faceout=prod1
+  # - https://www.hollisterco.com/shop/wd-es/p/colonia-jake-44781821?categoryId=16403&seq=02&faceout=prod2
+  # - https://www.hollisterco.com/shop/wd-es/p/jeans-ajustados-hollister-7503122-1002?categoryId=12589&seq=06&faceout=model1
+  # - https://www.hollisterco.com/shop/wd-es/p/tie-dye-icon-slide-sandal-45387319-1002?categoryId=16409&seq=01&faceout=prod1
+  # - https://www.hollisterco.com/shop/wd-es/gilly-hicks/p/gilly-hicks-go-seamless-plunge-sportlette-45354820-1002?categoryId=63189722&seq=03&faceout=prod1
