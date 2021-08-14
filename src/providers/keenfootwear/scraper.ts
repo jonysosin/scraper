@@ -1,6 +1,6 @@
 import type { Page } from 'puppeteer'
 import Product from '../../entities/product'
-import { DESCRIPTION_PLACEMENT } from 'src/interfaces/outputProduct'
+import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import IScraper from '../../interfaces/scraper'
 import screenPage from '../../utils/capture'
 import { extractMetaTags, mergeMetaTags } from '../../utils/extractors'
