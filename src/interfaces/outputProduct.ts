@@ -45,6 +45,8 @@ export default interface IOutputProduct {
   options?: { [key: string]: string }
   gender?: string
   breadcrumbs?: string
+  fb_pixel_content_id?: string
+  fb_pixel_content_type?: string
   color_family?: string
   parent_website_url?: string
   age_group?: string
