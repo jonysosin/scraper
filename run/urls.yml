@@ -1,5 +1,18 @@
-spartina449: # add . to the provider name to skip all its urls
+.spartina449: # add . to the provider name to skip all its urls
   - https://www.spartina449.com/lowcountry-pearl-necklace-silver-atlantic-opal.html
-_4ocean:
+._4ocean:
   # - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
   - https://www.4ocean.com/products/4ocean-logo-womens-v-neck-long-sleeve-t-shirt
+rayban:
+  # - https://www.ray-ban.com/usa/sunglasses/RB2186%20UNISEX%20state%20street-brown%20tortoise/8056597177627
+  # - https://www.ray-ban.com/usa/sunglasses/RB3138%20MALE%20shooter%20havana%20collection-gold/8053672495041
+  # - https://www.ray-ban.com/usa/sunglasses/RB2187%20UNISEX%20nomad%20legend-shiny%20black/8056597242653
+  # - https://www.ray-ban.com/usa/sunglasses/0RB2187-NOMAD%20LEGEND-Shiny%20Black/8056597242653
+  # - https://www.ray-ban.com/usa/eyeglasses/RX5487%20UNISEX%20nomad%20optics-tortoise/8056597429306
+  # - https://www.ray-ban.com/usa/sunglasses/RB1969%20UNISEX%20rectangle%201969-gold/8056597177108
+  # - https://www.ray-ban.com/usa/sunglasses/RB4314N%20FEMALE%20nina-black/8053672970708
+  # - https://www.ray-ban.com/usa/sunglasses/RB3447%20UNISEX%20round%20metal-gold/805289439899
+  # - https://www.ray-ban.com/usa/sunglasses/RB3025%20UNISEX%20aviator%20total%20black-black/8056597328111
+  # - https://www.ray-ban.com/usa/sunglasses/RB3447%20UNISEX%20round%20metal-gold/805289439899
+  # - https://www.ray-ban.com/usa/sunglasses/RB2187%20UNISEX%20nomad-shiny%20havana/8056597242677
+  - https://www.ray-ban.com/usa/sunglasses/RB3647M%20UNISEX%20scuderia%20ferrari%20uk%20limited%20edition-black/8056597559461
