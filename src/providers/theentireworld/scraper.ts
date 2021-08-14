@@ -15,6 +15,9 @@ export default shopifyScraper(
     productFn: async (_request, page) => {
       const extraData: TShopifyExtraData = {}
 
+      // Wait for the description to load
+      await page.waitForSelector('.cb__pr__details__interest')
+
       /**
        * Get additional descriptions and information
        */
