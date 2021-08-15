@@ -1,6 +1,8 @@
+import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
+import parseHtmlTextContent from '../../providerHelpers/parseHtmlTextContent'
 
 export default shopifyScraper(
   {
@@ -29,10 +31,11 @@ export default shopifyScraper(
 
         // Join the two arrays
         const sections = values.map((value, i) => {
+          const name = keys[i] || `key_${i}`
           return {
-            name: keys[i] || `key_${i}`,
+            name,
             content: value || '',
-            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+            description_placement: (name === 'Sizing' || name === 'Materials') ? DESCRIPTION_PLACEMENT.DISTANT : DESCRIPTION_PLACEMENT.ADJACENT,
           }
         })
 
@@ -40,12 +43,14 @@ export default shopifyScraper(
         return sections.filter(e => !['Shipping & Returns'].includes(e.name))
       }, DESCRIPTION_PLACEMENT)
 
+
+
       return extraData
     },
-    variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
+    variantFn: async (_request, page, product, providerProduct, providerVariant) => {
       /**
        * Get the list of options for the variants of this provider
-       * (6) ["Size", "Title", "Color", "Framed?", "Framing?", "Frame"]
+       * (6) ["Size", "Title", "Color", "Framed?", "Framing?", "Frame"]
        */
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Color) {
@@ -53,6 +58,21 @@ export default shopifyScraper(
       }
       if (optionsObj.Size) {
         product.size = optionsObj.Size
+      }
+
+      const descriptionSection = await page.evaluate(() =>{
+        return Array.from(Array.from(document.querySelectorAll('.go-iconic-bullets')).map(e => e.textContent)).filter(e => e !== " ").toString()
+      })
+      if (descriptionSection) {
+        // Remove the first element of the array, as the additional section captured by the generic shopify scraper is not correct in this case
+        product.additionalSections.shift()
+
+        product.description = parseHtmlTextContent(descriptionSection)
+        product.additionalSections.push({
+          name: 'Description',
+          content: descriptionSection,
+          description_placement: DESCRIPTION_PLACEMENT.MAIN,
+        })
       }
 
       /**
