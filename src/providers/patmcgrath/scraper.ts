@@ -54,6 +54,8 @@ export default shopifyScraper(
       /**
        * Get additional descriptions and information
        */
+      product.additionalSections.shift()
+      product.additionalSections = product.additionalSections.filter(e => e.name !== 'Reviews')
 
       /**
        * Replace all the product images with the ones related by color (only if there're matches)
