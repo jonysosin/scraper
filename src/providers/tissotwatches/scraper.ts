@@ -8,6 +8,10 @@ import { getBaseProductMetadata, getItemPropValue } from './helpers';
 const scraper: Scraper = async (request, page) => {
   /**
    * Intercept Magento Widgets
+   *
+   * Why? Because Magento 2 render all the JSON configs for jQuery widgets for all the modules,
+   * and when jQuery initialize them, the data is removed from the page, so intercepting the .js files
+   * we can get all the data raw sent from the backend to the jQuery widgets (get product data from JSON instead checking the dom)
    */
   await page.setRequestInterception(true);
   page.on('request', (interceptedRequest) => {
