@@ -29,7 +29,8 @@ export default shopifyScraper(
           }
         })
 
-        return sections
+        // Filter some sections
+        return sections.filter(e => !['Shipping'].includes(e.name))
       }, DESCRIPTION_PLACEMENT)
 
       extraData.additionalSections = details.concat(extraData.additionalSections || [])
