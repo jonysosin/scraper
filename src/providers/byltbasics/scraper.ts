@@ -109,6 +109,18 @@ export default shopifyScraper(
       }
 
       /**
+       * If there're more product images in the ProductShowcase, add them
+       */
+      const productShowcaseImages = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('#ProductShowcase img'))
+          .map(e => e.getAttribute('src') || '')
+          .filter(e => e !== '')
+      })
+      if (Array.isArray(productShowcaseImages) && productShowcaseImages.length) {
+        product.images = [...product.images, ...productShowcaseImages]
+      }
+
+      /**
        * Normalize the brand
        */
       if (product.brand && ['FLEXFIT'].includes(product.brand)) {
