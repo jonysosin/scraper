@@ -52,25 +52,29 @@ async function createBaseProduct(productData: any, page: Page) {
   const product = new Product(productData.id, productData.name, productData.url)
 
   // Subtitle
-  const subtitle = await page.evaluate(() => document.querySelector('.product-label')?.textContent)
-  if (subtitle) {
-    product.subTitle = subtitle
+  const subtitleElement = !!await page.$('.product-label')
+  if (subtitleElement) {
+    const subtitle = await page.$eval(('.product-label'), element => element.textContent)
+
+    if (subtitle) {
+      product.subTitle = subtitle
+    }
   }
 
   // Images
-  const [images, videos] = await page.evaluate(() => {
-    const images = Array.from(document.querySelectorAll('.product-mosaic .product-mosaic__item img')).map((img: any) => img && img.src)
-    const videos = Array.from(document.querySelectorAll('.product-video iframe')).map(((i: any) => i && i.src))
-
-    return [images, videos]
-  })
-
+  const images = await page.$$eval('.product-mosaic .product-mosaic__item img', elements => elements.map((img: any) => img && img.src))
   if (images && images.length) {
     product.images = images
   }
 
-  if (videos && videos.length) {
-    product.videos = videos
+
+  const $videoElements = '.product-video iframe'
+  const hasVideoElement = !!await page.$($videoElements)
+  if (hasVideoElement) {
+    const videos = await page.$$eval($videoElements, elements => elements.map(((i: any) => i && i.src)))
+    if (videos && videos.length) {
+      product.videos = videos
+    }
   }
 
   // Description
@@ -103,15 +107,11 @@ async function createBaseProduct(productData: any, page: Page) {
   product.realPrice = productData.price_info.minimal_price
   product.higherPrice = productData.price_info.max_price
 
-  // Availability
-  const availability = await page.evaluate(() => {
-    const meta: any = document.querySelector('[itemprop="availability"]')
-
-    return meta?.content == 'http://schema.org/InStock'
-  })
-
-  product.availability = availability
   product.itemGroupId = product.id
+
+  // Availability
+  const availability = await page.$eval('[itemprop="availability"]', element => element?.getAttribute('content'))
+  product.availability = availability =='http://schema.org/InStock'
 
   const gender = await getGender(page)
   if (gender) {
@@ -125,12 +125,13 @@ async function createBaseProduct(productData: any, page: Page) {
   }
 
   // Size Chart
-  const sizeChartUrl = await page.evaluate(() => {
-    return (document.querySelector('.product-size-description a') as HTMLHyperlinkElementUtils | null)?.href
-  })
+  const sizeChartElement = await page.$('.product-size-description')
+  if (sizeChartElement) {
+    const sizeChartUrl = await sizeChartElement.$eval('a', (element: any) => element.href)
 
-  if (sizeChartUrl) {
-    product.sizeChartUrls = [sizeChartUrl]
+    if (sizeChartUrl) {
+      product.sizeChartUrls = [sizeChartUrl]
+    }
   }
 
   // KeyValue Pairs
@@ -170,11 +171,7 @@ async function getAdditionalSections(page: Page): Promise<IDescriptionSection[]>
   const additionalSections: IDescriptionSection[] = []
 
   // Product Specs
-  const productSpecsContent = await page.evaluate(() => {
-    const productSpecs = document.querySelector('div.page-product > div.product-specs')
-
-    return productSpecs?.innerHTML.trim()
-  })
+  const productSpecsContent = await page.$eval('div.page-product > div.product-specs', (element: any) => element?.innerHTML.trim())
   if (productSpecsContent) {
     additionalSections.push({
       name: 'Product Specs',
@@ -184,11 +181,7 @@ async function getAdditionalSections(page: Page): Promise<IDescriptionSection[]>
   }
 
   // User manual
-  const userManualContent = await page.evaluate(() => {
-    const userManual = document.querySelector('#product-user-manual')
-
-    return userManual?.innerHTML.trim()
-  })
+  const userManualContent = await page.$eval('#product-user-manual', (element: any) => element?.innerHTML.trim())
   if (userManualContent) {
     additionalSections.push({
       name: 'Product Specs',
@@ -210,22 +203,16 @@ async function getGender(page: Page) {
 }
 
 async function getKeyValuePairs (page: Page) {
-  const keyValuePairs = await page.evaluate(() => {
-    const elements = document.querySelectorAll('.product-specs li')
+  const keyValuePairs = await page.$$eval('.product-specs li', elements => {
+    return elements.reduce((prev: any, curr) => {
+      const index = curr?.querySelector('h4')?.innerText
+      const value = curr?.querySelector('p')?.innerText
+      if (index && value) {
+        prev[index] = value
+      }
 
-    if (elements.length) {
-      return Array.from(elements).reduce((prev: any, curr) => {
-        const index = curr?.querySelector('h4')?.innerText
-        const value = curr?.querySelector('p')?.innerText
-        if (index && value) {
-          prev[index] = value
-        }
-
-        return prev
-      }, {})
-    }
-
-    return null
+      return prev
+    }, {})
   })
 
   return keyValuePairs
