@@ -1,18 +1,5 @@
-.spartina449: # add . to the provider name to skip all its urls
+spartina449: # add . to the provider name to skip all its urls
   - https://www.spartina449.com/lowcountry-pearl-necklace-silver-atlantic-opal.html
-._4ocean:
+_4ocean:
   # - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
   - https://www.4ocean.com/products/4ocean-logo-womens-v-neck-long-sleeve-t-shirt
-.theentireworld:
-  - https://theentireworld.com/women/product/dress-womens-type-g-version-1-orangey-red
-inhhair:
-  - https://inhhair.com/collections/best-selling/products/jordynn-synthetic-curly-ponytail-extension
-  - https://inhhair.com/collections/best-selling/jordynn-synthetic-curly-ponytail-extension
-  - https://inhhair.com/collections/best-selling/miya-synthetic-straight-long-ponytail-extension
-  - https://inhhair.com/collections/best-selling/deep-waver-hair-beach-waves
-  - https://inhhair.com/collections/best-selling/insert-blowout-here-blow-dryer-brush
-  - https://inhhair.com/collections/best-selling/brit-long-curly-ponytail-synthetic-hair-extensions
-  - https://inhhair.com/collections/best-selling/shayla-synthetic-curly-ponytail-extension
-  - https://inhhair.com/collections/best-selling/22-inch-u-clip-synthetic-hair-extensions
-  - https://inhhair.com/collections/best-selling/remy-hair-lux-extensions
-  - https://inhhair.com/collections/best-selling/lola-synthetic-ponytail-extension
