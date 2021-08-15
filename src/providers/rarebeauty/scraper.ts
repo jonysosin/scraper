@@ -1,10 +1,11 @@
+import { TMediaImage } from '../shopify/types'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
 
 export default shopifyScraper(
   {
-    productFn: async (_request, page, providerProduct) => {
+    productFn: async (request, page, providerProduct) => {
       const extraData: TShopifyExtraData = {}
 
       /**
@@ -33,24 +34,64 @@ export default shopifyScraper(
        * Get additional descriptions and information
        */
       extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
-        // Get a list of titles
-        const keys = Array.from(document.querySelectorAll('.pv-extra-details__section > h2'))?.map(
-          e => e.textContent,
-        )
+        /**
+         * Get sections wrapper
+         */
+        const accordions = document.querySelector('#extraDetailsAcc')
 
-        // Get a list of content for the titles above
-        const values = Array.from(document.querySelectorAll('.pv-extra-details__section > p'))?.map(
-          e => e.outerHTML,
-        )
+        if (accordions) {
+          /**
+           * Get default keys and values
+           */
 
-        // Join the two arrays
-        return values.map((value, i) => {
-          return {
-            name: keys[i] || `key_${i}`,
-            content: value || '',
-            description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+          const keys = Array.from(accordions?.querySelectorAll('span'))?.map(e =>
+            e.innerText.trim(),
+          )
+          const values = Array.from(accordions?.querySelectorAll('div'))?.map(e =>
+            e.outerHTML.trim(),
+          )
+
+          /**
+           * Join the arrays
+           */
+          let sections = values.map((value, i) => {
+            return {
+              name: keys[i] || `key_${i}`,
+              content: value || '',
+              description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+            }
+          })
+
+          /**
+           * Some products have additional content shown in a modal,
+           * we get those, if any, and replace its content for the one we previously had in the sections above
+           */
+
+          const ingredientsModal = document.querySelector(
+            'aside#ingredientsModal div.modal__content',
+          )
+
+          if (ingredientsModal) {
+            sections.forEach(e => {
+              if (e.name === `What's in it?`) {
+                e.content = ingredientsModal?.outerHTML.trim()
+              }
+            })
           }
-        })
+
+          const usageModal = document.querySelector('aside#usageModal div.modal__content')
+
+          if (usageModal) {
+            sections.forEach(e => {
+              if (e.name === `How to use`) {
+                e.content = usageModal?.outerHTML.trim()
+              }
+            })
+          }
+
+          return sections
+        }
+        return []
       }, DESCRIPTION_PLACEMENT)
 
       return extraData
@@ -60,9 +101,21 @@ export default shopifyScraper(
        * Get the list of options for the variants of this provider
        * (3) ["Title", "Shade", "Give back"]
        */
+
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Shade) {
         product.color = optionsObj.Shade
+      }
+
+      if (product.color) {
+        const images = (providerProduct.media as TMediaImage[])
+          .filter(e => e.alt === optionsObj.Shade)
+          .map(e => e?.src)
+          .filter(e => e !== '')
+
+        if (images.length) {
+          product.images = images
+        }
       }
     },
   },
