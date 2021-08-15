@@ -1,7 +1,5 @@
-import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
-import parseHtmlTextContent from '../../providerHelpers/parseHtmlTextContent'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { TMediaImage } from '../shopify/types'
 
@@ -19,49 +17,44 @@ export default shopifyScraper(
       })
 
       /**
-       * Get additional descriptions and information
+       * This site differs from the others and has a particular description included in the HTML (not the JSON)
        */
-      // The description coming from the json doesnt match the one shown in the page
-      const mainDescription = await page.evaluate(DESCRIPTION_PLACEMENT => {
-        const content = document.querySelector('.ProductMeta__Description')?.outerHTML?.trim() || ''
-        return content
-          ? {
-              name: 'Description',
-              content,
-              description_placement: DESCRIPTION_PLACEMENT.MAIN,
-            }
-          : null
-      }, DESCRIPTION_PLACEMENT)
-
-      if (mainDescription) {
-        extraData.additionalSections?.push(mainDescription)
-      }
-
-       /**
-       * Add the "Products Details" section
-       */
-      const productDetails = await getSelectorOuterHtml(page, '.Product__Details')
-      if (productDetails) {
+      const description = await page.evaluate(() => {
+        return document.querySelector('.ProductMeta__Description')?.outerHTML?.trim()
+      })
+      if (description) {
         extraData.additionalSections?.push({
-          name: 'Products Details',
-          content: productDetails,
+          name: 'Description',
+          content: description,
+          description_placement: DESCRIPTION_PLACEMENT.MAIN,
+        })
+      }
+      const details = await page.evaluate(() => {
+        return document.querySelector('.Product__Details')?.outerHTML?.trim()
+      })
+      if (details) {
+        extraData.additionalSections?.push({
+          name: 'Product Details',
+          content: details,
           description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
         })
       }
 
       return extraData
     },
-    variantFn: async (_request, page, product, providerProduct, providerVariant, extraData) => {
+    variantFn: async (_request, page, product, providerProduct, providerVariant) => {
       /**
        * Normalize the brand
        */
-       if (product.brand && ['Mented'].includes(product.brand)) {
+      if (product.brand && ['Mented'].includes(product.brand)) {
         product.brand = 'Mented Cosmetics'
       }
+
       /**
        * Get the list of options for the variants of this provider
        * (5) ["Title", "Color", "Denominations", "Shade", "Combination"]
        */
+
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Color || optionsObj.Shade) {
         product.color = optionsObj.Color || optionsObj.Shade
@@ -70,7 +63,7 @@ export default shopifyScraper(
       /**
        * Replace all the product images with the ones related by color (only if there're matches)
        */
-       if (product.color) {
+      if (product.color) {
         const images = (providerProduct.media as TMediaImage[])
           .filter(e => e.alt !== null)
           .filter(e => e.alt === product.color)
@@ -82,26 +75,10 @@ export default shopifyScraper(
         }
       }
 
-      // Remove the first element of the array, as the additional section captured by the generic shopify scraper is not correct in this case
-      product.additionalSections.shift()
-       /**
-       * Replace the original description with the one displayed in the website
-       */
-      await page.evaluate(() => {
-        document.querySelector('.s-product__dropdown-header')?.remove()
-      })
-      const descriptionSection = await page.evaluate(() => {
-        return document.querySelector('.ProductMeta__Description')?.textContent?.trim()
-      })
-
-      if (descriptionSection) {
-        product.description = descriptionSection
-      }
-
       /**
        * Get the video by clicking preview images (if it exists)
        */
-       const videos = await page.evaluate(async () => {
+      const videos = await page.evaluate(async () => {
         return Array.from(document.querySelectorAll('.howtouse-container img')).map(
           // @ts-ignore
           e => `https://www.youtube.com/watch?v=${e.dataset?.embed}`,
