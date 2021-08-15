@@ -43,7 +43,15 @@ const scraper: Scraper = async (request, page) => {
         product.description = res.description
         product.subTitle = res.short_description
         product.brand = ldjson.brand.name
-        product.images = _.uniq(variant.media.large.map(x => `https://www.smashbox.com${x.src}`))
+        const fixedImages = await page.$$eval('.js-carousel-products img.elc-img', imgs =>
+          imgs
+            .slice(2)
+            .map(img => img.getAttribute('src'))
+            .map(img => `https://www.smashbox.com${img}`),
+        )
+        product.images = _.uniq(
+          variant.media.large.map(x => `https://www.smashbox.com${x.src}`).concat(fixedImages),
+        )
         product.videos = await page.$$eval('elc-video-js', videos => {
           return videos.flatMap(video => {
             const att = JSON.parse(video.getAttribute('data-setup')!)
