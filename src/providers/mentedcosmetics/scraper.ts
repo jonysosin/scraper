@@ -45,7 +45,7 @@ export default shopifyScraper(
         extraData.additionalSections?.push({
           name: 'Products Details',
           content: productDetails,
-          description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+          description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
         })
       }
 
