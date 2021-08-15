@@ -1,5 +1,19 @@
-spartina449: # add . to the provider name to skip all its urls
+.spartina449: # add . to the provider name to skip all its urls
   - https://www.spartina449.com/lowcountry-pearl-necklace-silver-atlantic-opal.html
-_4ocean:
+._4ocean:
   # - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
   - https://www.4ocean.com/products/4ocean-logo-womens-v-neck-long-sleeve-t-shirt
+
+kiplingusa:
+  - https://www.kipling-usa.com/essie-shoulder-bag/KI3384.html?dwvar_KI3384_color=003
+  - https://www.kipling-usa.com/sven-extra-small-monkey-keychain/KI3088.html?dwvar_KI3088_color=019
+  - https://www.kipling-usa.com/city-pack-medium-backpack/BP4328.html?dwvar_BP4328_color=933#uuid=5a3f943a3f3c7b3bfead0110d6
+  - https://www.kipling-usa.com/new-kichirou-printed-lunch-bag/KI5749.html?dwvar_KI5749_color=987#uuid=cfd73fbf85ea94617a24eac41c
+  - https://www.kipling-usa.com/disney%27s-the-little-mermaid-seoul-large-15%22-laptop-backpack/KI3528.html?dwvar_KI3528_color=376#uuid=af642f8b41da85da44170917a5
+  - https://www.kipling-usa.com/new-money-small-credit-card-wallet/100326982.html
+  - https://www.kipling-usa.com/kichirou-lunch-bag/AC7254.html?dwvar_AC7254_color=628#uuid=bc5GwiaagZUQ2aaadaJFJ3XvbP
+  - https://www.kipling-usa.com/sabian-crossbody-mini-bag/AC8280.html?dwvar_AC8280_color=570
+  - https://www.kipling-usa.com/gaze-large-rolling-backpack/KI4784.html?dwvar_KI4784_color=619
+  - https://www.kipling-usa.com/gabbie-crossbody-bag/HB6549.html?dwvar_HB6549_color=425
+  - https://www.kipling-usa.com/jengo-extra-large-convertible-backpack/KI3820.html?dwvar_KI3820_color=933#uuid=899a3a2c3a777ffa7b693f1ed4
+  - https://www.kipling-usa.com/puerto-rico-monkey-keychain/AC7562.html?dwvar_AC7562_color=975
