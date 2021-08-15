@@ -8,15 +8,30 @@ export default shopifyScraper(
     variantFn: async (_request, page, product, providerProduct, providerVariant) => {
       /**
        * Get additional descriptions and information (by variant)
+       * There are cases in which the product accordion selector differs from other products,
+       * so we pass the possible selectors to getWorkingSelector
        */
+
       const variantTitle = providerVariant.title
       product.additionalSections = await page.evaluate(
         (DESCRIPTION_PLACEMENT, variantTitle) => {
-          return Array.from(
-            document.querySelectorAll(`#accordion > [data-variant="${variantTitle}"]`),
-          )
+          function getWorkingSelector(selectors: string[]) {
+            for (let i = 0; i < selectors.length; i++) {
+              if (document.querySelectorAll(selectors[i]).length) {
+                return selectors[i]
+              }
+            }
+            return ''
+          }
+
+          const selector = getWorkingSelector([
+            `#accordion > [data-variant="${variantTitle}"]`,
+            `#accordion > div`,
+          ])
+
+          return Array.from(document.querySelectorAll(selector))
             .map(e => {
-              const name = e?.textContent?.trim() || ``
+              const name = e?.querySelector('h3')?.textContent?.trim() || ``
               return {
                 name: e.querySelector('h3')?.textContent?.trim() || '',
                 content:
@@ -45,11 +60,6 @@ export default shopifyScraper(
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
-
-      /**
-       * The product title is in the product level, not the variant
-       */
-      product.title = providerProduct.title.split(': ')[0]
 
       /**
        * Replace all the product images with the ones related by color (only if there're matches)
