@@ -120,13 +120,13 @@ export default shopifyScraper(
        /**
        * Get extra images
        */
-    const images = await page.evaluate(() => {
+    let images = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('.product-images__container .product-images__image picture'))
         .map(e => e.querySelector('source')?.getAttribute('srcset') || '')
         .filter(e => e.split('=')[2].length > 0)
     })
     if (images.length) {
-
+      images = images.map(x => x.split('=')[2])   
       product.images = images
     
     }
