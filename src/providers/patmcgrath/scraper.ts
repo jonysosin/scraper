@@ -52,12 +52,6 @@ export default shopifyScraper(
       product.title = providerProduct.title.split(': ')[0]
 
       /**
-       * Get additional descriptions and information
-       */
-      product.additionalSections.shift()
-      product.additionalSections = product.additionalSections.filter(e => e.name !== 'Reviews')
-
-      /**
        * Replace all the product images with the ones related by color (only if there're matches)
        */
       if (product.color) {
