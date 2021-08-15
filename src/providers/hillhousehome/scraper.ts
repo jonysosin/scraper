@@ -26,14 +26,10 @@ export default shopifyScraper(
 
         // Join the two arrays
         const sections = values.map((value, i) => {
-          const name = keys[i] || `key_${i}`
           return {
             name: keys[i] || `key_${i}`,
             content: value || '',
-            description_placement:
-              name === 'Why we love it'
-                ? DESCRIPTION_PLACEMENT.MAIN
-                : DESCRIPTION_PLACEMENT.ADJACENT,
+            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
           }
         })
 
@@ -107,6 +103,12 @@ export default shopifyScraper(
         if (images.length) {
           product.images = images
         }
+      }
+
+
+      // Replace the <hr> with nothing,
+      if (product.description) {
+        product.description = product.description?.replace(/----------------------------------------/, '') // Temporal fix.
       }
 
       /**
