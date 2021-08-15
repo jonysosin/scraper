@@ -11,17 +11,21 @@ export default shopifyScraper(
        * Get additional descriptions and information
        */
       extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        const selectors = Array.from(document.querySelectorAll('.krown-tabs div.titles div, h5:not([class*="krown-tab-title"])'))
+
+        for (let i = 0; i < selectors.length; i++) {
+          if (selectors[(i+1)]) {
+               if (selectors[i].tagName == selectors[(i+1)].tagName && selectors[(i+1)] != null) {
+                  delete selectors[i]
+              }
+          }
+        }
+
         // Get a list of titles
-        const keys = Array.from(
-          document.querySelectorAll('#productAccordion .accordion-section .section-title'),
-        ).map(e => e?.textContent?.trim())
+        const keys = selectors.filter(e => e?.tagName === 'H5').map(e => e?.textContent?.trim())
 
         // Get a list of content for the titles above
-        const values = Array.from(
-          document.querySelectorAll(
-            '#productAccordion .accordion-section .accordion-section-content',
-          ),
-        ).map(e => e?.outerHTML?.trim())
+        const values = selectors.filter(e => e?.tagName === 'DIV').map(e => e?.outerHTML?.trim())
 
         // Join the two arrays
         const sections = values.map((value, i) => {
@@ -33,7 +37,7 @@ export default shopifyScraper(
         })
 
         // Exclude some sections
-        return sections.filter(e => !['FAQs'].includes(e.name))
+        return sections.filter(e => !['Shipping & Returns'].includes(e.name))
       }, DESCRIPTION_PLACEMENT)
 
       return extraData
@@ -41,7 +45,7 @@ export default shopifyScraper(
     variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
       /**
        * Get the list of options for the variants of this provider
-       * (6) ["Title", "Size", "Color", "Framed?", "Framing?", "Frame"]
+       * (6) ["Size", "Title", "Color", "Framed?", "Framing?", "Frame"]
        */
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Color) {
@@ -50,6 +54,12 @@ export default shopifyScraper(
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
+
+      /**
+       * Sometimes, the title needs a replacement to remove the color at the end (if exists)
+       * Example: "High-Waist Catch The Light Short - Black"
+       */
+       product.title = product.title.replace(/ - [^-]+$/, '')
     },
   },
   {},
