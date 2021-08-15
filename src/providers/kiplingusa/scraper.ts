@@ -67,10 +67,10 @@ const scraper: Scraper = async (request, page) => {
       '.product-add-to-cart input[name="pid_master"]',
       x => x.getAttribute('value')!,
     )
-    const theTitle = await page.$eval('.pdp-name-wrapper', e => e.textContent!)
-    const brand = await page.$eval('.pdp-brand-wrapper', e => e.textContent!)
+    const subTitle = await page.$eval('.pdp-name-wrapper', e => e.textContent!)
+    const mainTitle = await page.$eval('.pdp-brand-wrapper', e => e.textContent!)
 
-    const product = new Product(id, theTitle, url)
+    const product = new Product(id, mainTitle, url)
 
     await page.waitForSelector('.zoomImg')
     product.images = await page.$$eval('.zoomImg', imgs =>
@@ -83,7 +83,7 @@ const scraper: Scraper = async (request, page) => {
     product.realPrice = parseInt(
       await page.$eval('span[itemprop="price"]', x => x.getAttribute('content')!),
     )
-    product.brand = brand
+    product.subTitle = subTitle
 
     const higherPrice = await page.evaluate(() => {
       const node = document.querySelector('.product-price > .price-standard')
@@ -122,8 +122,8 @@ const scraper: Scraper = async (request, page) => {
           '.product-description-wrapper > .product-info-accordion > div:nth-child(2)',
           e => e.outerHTML,
         ),
-        description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
-        name: 'FEATURES',
+        description_placement: DESCRIPTION_PLACEMENT.MAIN,
+        name: 'DESCRIPTION',
       })
     }
 
