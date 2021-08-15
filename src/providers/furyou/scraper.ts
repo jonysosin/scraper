@@ -26,7 +26,7 @@ export default shopifyScraper(
           return {
             name: keys[i] || `key_${i}`,
             content: value || '',
-            description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
           }
         })
 
