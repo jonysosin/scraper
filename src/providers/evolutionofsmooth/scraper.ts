@@ -20,31 +20,6 @@ export default shopifyScraper(
       )
 
       /**
-       * This site differs from the others and has a particular description included in the HTML (not the JSON)
-       */
-      const description = await page.evaluate(() => {
-        return document.querySelector('.product__description')?.outerHTML?.trim()
-      })
-      if (description) {
-        extraData.additionalSections?.push({
-          name: 'Description',
-          content: description,
-          description_placement: DESCRIPTION_PLACEMENT.MAIN,
-        })
-      }
-
-      const benefits = await page.evaluate(() => {
-        return document.querySelector('.product__benefits')?.outerHTML?.trim()
-      })
-      if (benefits) {
-        extraData.additionalSections?.push({
-          name: 'Benefits',
-          content: benefits,
-          description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
-        })
-      }
-
-      /**
        * Get additional descriptions and information
        */
       extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
@@ -68,6 +43,31 @@ export default shopifyScraper(
         return sections
       }, DESCRIPTION_PLACEMENT)
 
+      /**
+       * This site differs from the others and has a particular description included in the HTML (not the JSON)
+       */
+       const description = await page.evaluate(() => {
+        return document.querySelector('.product__description')?.outerHTML?.trim()
+      })
+      if (description) {
+        extraData.additionalSections?.push({
+          name: 'Description',
+          content: description,
+          description_placement: DESCRIPTION_PLACEMENT.MAIN,
+        })
+      }
+
+      const benefits = await page.evaluate(() => {
+        return document.querySelector('.product__benefits')?.outerHTML?.trim()
+      })
+      if (benefits) {
+        extraData.additionalSections?.push({
+          name: 'Benefits',
+          content: benefits,
+          description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+        })
+      }
+
       return extraData
     },
     variantFn: async (_request, page, product, providerProduct, providerVariant) => {
@@ -89,14 +89,8 @@ export default shopifyScraper(
       }
 
       /**
-       * Replace the original description with the one displayed in the website
+       * Cut a first element to array additionalSections
        */
-      const description = await page.evaluate(() => {
-        return document.querySelector('.product__description')?.textContent?.trim()
-      })
-
-      product.description = description
-
       product.additionalSections.shift()
 
       // Default always to the same name
