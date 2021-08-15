@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { Page } from 'puppeteer'
 import Product from '../../entities/product'
 import { DESCRIPTION_PLACEMENT, IDescriptionSection } from '../../interfaces/outputProduct'
@@ -112,7 +111,7 @@ async function getProduct(page: Page, productUrl: string) {
   }, DESCRIPTION_PLACEMENT)
 
   const specs = await page.evaluate(() => {
-    const specs = []
+    const specs: Record<string, string>[] = []
     Array.from(document.querySelectorAll('div.feature-segment li')).forEach(e => {
       const key = e.querySelector('span.feature-name')?.textContent?.replace(':', '').trim() || ''
       const value = e.querySelector('div .feature-value')?.childNodes[2]?.textContent?.trim() || ''
@@ -192,7 +191,7 @@ async function getProduct(page: Page, productUrl: string) {
     () => document.querySelector('div.size-chart')?.outerHTML.replaceAll('\n', '') || '',
   )
   product.addAdditionalSections(additionalSections)
-  console.log(product)
+
   return product
 }
 
