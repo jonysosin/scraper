@@ -63,6 +63,18 @@ export default shopifyScraper(
         })
       }
 
+      /**
+       * Add videos
+       */
+       const videos = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.video-wrapper iframe'))
+          .map(e => e?.getAttribute('src') || '')
+          .filter(e => e !== '')
+      })
+      if (Array.isArray(videos) && videos.length) {
+        extraData.videos = videos
+      }
+
       return extraData
     },
     variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
