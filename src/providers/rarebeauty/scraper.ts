@@ -1,4 +1,4 @@
-import { TMediaImage } from '../shopify/types'
+import { TMediaImage, TMediaVideo } from '../shopify/types'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
@@ -94,6 +94,14 @@ export default shopifyScraper(
         return []
       }, DESCRIPTION_PLACEMENT)
 
+      const videos = await page.$$eval('.pv__content video.video__video-thumb source', (elements) => {
+        return (elements as HTMLSourceElement[]).map((source) => {
+          return source.src
+        })
+      })
+
+      extraData.videos = videos
+
       return extraData
     },
     variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
@@ -109,7 +117,7 @@ export default shopifyScraper(
 
       if (product.color) {
         const images = (providerProduct.media as TMediaImage[])
-          .filter(e => e.alt === optionsObj.Shade)
+          .filter(e => e.alt === null || e.alt === optionsObj.Shade)
           .map(e => e?.src)
           .filter(e => e !== '')
 
