@@ -1,8 +1,7 @@
-import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
+import { DESCRIPTION_PLACEMENT } from '../../../src/interfaces/outputProduct'
 import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
-
 export default shopifyScraper(
   {
     productFn: async (_request, page, providerProduct) => {
@@ -16,7 +15,6 @@ export default shopifyScraper(
           ?.textContent?.split('>')
           .map(e => e.trim() || '')
       })
-
       /**
        * Get key value pairs from tags
        */
@@ -28,19 +26,16 @@ export default shopifyScraper(
             return pair
           }),
       )
-
       /**
        * Get additional descriptions and information
        */
       extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
         // Get a list of titles
         const keys = Array.from(document.querySelectorAll('#prod-desc-details .desc-details-title'))
-
         // Get a list of content for the titles above
         const values = Array.from(
           document.querySelectorAll('#prod-desc-details .prod-desc-content'),
         )
-
         // Join the two arrays
         let sections = values.map((value, i) => {
           return {
@@ -49,28 +44,34 @@ export default shopifyScraper(
             description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
           }
         })
-
         // Filter some sections
         sections = sections.filter(e => !['-+warranty', '-+SHIPPING & RETURNS'].includes(e.name))
-
         return sections
       }, DESCRIPTION_PLACEMENT)
-
       /**
        * Get Size Chart HTML
        */
       extraData.sizeChartHtml = await getSelectorOuterHtml(page, 'div[data-remodal-id=size-chart]')
-
       return extraData
     },
-    variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
+    variantFn: async (_request, page, product, providerProduct, providerVariant) => {
       /**
        * Get the list of options for the variants of this provider
-       * (3) ["Title", "Size", "Amount"]
+       * (3) ["Title", "Size", "Amount"]
        */
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Size) {
         product.size = optionsObj.Size
+      }
+
+      const video = await page.evaluate(() => {
+        return document
+          .querySelector('.product-image .image .videoWrapper iframe')
+          ?.getAttribute('src')
+      })
+
+      if (video) {
+        product.videos.push(video)
       }
 
       /**
@@ -78,11 +79,12 @@ export default shopifyScraper(
        * Example: "Jane - Gold/Gold/Midnight"
        */
       product.title = product.title.replace(/ - [^-]+$/, '')
-
       /**
        * COLOR: The color comes in the name of the variant
        */
       product.color = providerVariant.name.replace(/ - ([^-]+$)/, '$1')
+
+      // await page.waitForSelector("#player")
     },
   },
   {},

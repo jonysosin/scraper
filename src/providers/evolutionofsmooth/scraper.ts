@@ -46,7 +46,7 @@ export default shopifyScraper(
       /**
        * This site differs from the others and has a particular description included in the HTML (not the JSON)
        */
-       const description = await page.evaluate(() => {
+      const description = await page.evaluate(() => {
         return document.querySelector('.product__description')?.outerHTML?.trim()
       })
       if (description) {
@@ -70,7 +70,7 @@ export default shopifyScraper(
 
       return extraData
     },
-    variantFn: async (_request, page, product, providerProduct, providerVariant) => {
+    variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
       /**
        * Get the list of options for the variants of this provider
        * (3) ["Title", "Size", "Amount"]
