@@ -24,11 +24,6 @@ const scraper: Scraper = async (request, page) => {
 
   await navigationPromise
 
-  // @ts-ignore
-  const window_page_data = await page.evaluate(() => window.page_data)
-
-  const products_catalog = window_page_data['catalog-spp'].products.filter(x => !!x)
-
   const ldjson = (await getLdJsonScripts(page))[0]
 
   const responseData = response.data.products.items
@@ -48,8 +43,22 @@ const scraper: Scraper = async (request, page) => {
         product.description = res.description
         product.subTitle = res.short_description
         product.brand = ldjson.brand.name
-        product.images = _.uniq(variant.media.large.map(x => `https://www.smashbox.com${x.src}`))
-        product.sku =  variant.sku_id
+        const fixedImages = await page.$$eval('.js-carousel-products img.elc-img', imgs =>
+          imgs
+            .slice(2)
+            .map(img => img.getAttribute('src'))
+            .map(img => `https://www.smashbox.com${img}`),
+        )
+        product.images = _.uniq(
+          variant.media.large.map(x => `https://www.smashbox.com${x.src}`).concat(fixedImages),
+        )
+        product.videos = await page.$$eval('elc-video-js', videos => {
+          return videos.flatMap(video => {
+            const att = JSON.parse(video.getAttribute('data-setup')!)
+            return att.sources.map(a => a.src)
+          })
+        })
+        product.sku = variant.sku_id
         product.realPrice = variant.prices[0].include_tax.price
         product.higherPrice = variant.prices[0].include_tax.original_price
         product.currency = variant.prices[0].currency
@@ -88,6 +97,19 @@ const scraper: Scraper = async (request, page) => {
             content: await ingredients,
             description_placement: DESCRIPTION_PLACEMENT.DISTANT,
             name: 'INGREDIENTS',
+          })
+        }
+
+        const howtouse = await page.evaluate(() => {
+          const match = document.querySelector('#slot_3_spp_content')
+          return match ? match.outerHTML : null
+        })
+
+        if (howtouse) {
+          product.addAdditionalSection({
+            content: await howtouse,
+            description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+            name: 'HOW TO USE',
           })
         }
 
