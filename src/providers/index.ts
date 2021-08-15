@@ -13,6 +13,7 @@ export * as angelacaglia from './angelacaglia'
 export * as appearelOnepeloton from './appearelOnepeloton'
 export * as arnette from './arnette'
 export * as artizanjoyeria from './artizanjoyeria'
+export * as bareminerals from './bareminerals'
 export * as ballislife from './ballislife'
 export * as barstoolsports from './barstoolsports'
 export * as beautybakerie from './beautybakerie'
@@ -127,6 +128,7 @@ export * as cosbar from './cosbar'
 export * as spartina449 from './spartina449'
 export * as tods from './tods'
 export * as smashbox from './smashbox'
+export * as kiplingusa from './kiplingusa'
 
 export function getProvider(name: string) {
   const provider: IProvider = exports[name]
