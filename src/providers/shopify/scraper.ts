@@ -10,6 +10,7 @@ import { TShopifyProduct, TShopifyProductVariant } from './types'
 import { DESCRIPTION_PLACEMENT, IDescriptionSection } from '../../interfaces/outputProduct'
 
 type TCallbacks<T = { [key: string]: any }> = {
+  urls?: (url: string) => { jsonUrl: string; htmlUrl: string }
   // Callbacks for the scrapper
   productFn?: (request: IScrapeRequest, page: Page, providerProduct: TShopifyProduct) => Promise<T>
   variantFn?: (
@@ -36,14 +37,21 @@ export type TShopifyExtraData = {
 }
 
 const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
-  ({ productFn, variantFn }, { currency = 'USD' }) =>
+  ({ urls, productFn, variantFn }, { currency = 'USD' }) =>
   async (request, page) => {
     console.log('scraping', request)
+
+    const url = request.pageUrl
+
+    // If there's a specific URL for the JSON, and a different one for the HTML, call the urls fn that takes care of that
+    const jsonUrl = urls?.(url)?.jsonUrl ? urls(url).jsonUrl : url
+    const htmlUrl = urls?.(url)?.htmlUrl ? urls(url).htmlUrl : url
+
     // Get the product data from the Shopify website
-    const providerProduct = await getProductJson(page, request.pageUrl)
+    const providerProduct = await getProductJson(page, jsonUrl)
 
     // Navigate to the regular
-    await page.goto(request.pageUrl)
+    await page.goto(htmlUrl)
 
     // Extract all the metaTags
     const metaTags = await extractMetaTags(page)
@@ -65,7 +73,7 @@ const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
       const product = new Product(
         providerVariant.id.toString(),
         title,
-        `${request.pageUrl.replace(/\?.*/gim, '')}?variant=${providerVariant.id}`,
+        `${htmlUrl.replace(/\?.*/gim, '')}?variant=${providerVariant.id}`,
       )
 
       product.itemGroupId = providerProduct.id.toString()
@@ -78,7 +86,11 @@ const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
       // Add all the options a product might have (if they exists)
       product.options = getProductOptions(providerProduct, providerVariant)
 
-      if (providerVariant.compare_at_price) {
+      // If compare at price exists and it's highest than the price, then add it
+      if (
+        providerVariant.compare_at_price &&
+        providerVariant.compare_at_price > providerVariant.price
+      ) {
         product.higherPrice = providerVariant.compare_at_price / 100
       }
       product.availability = providerVariant.available
@@ -143,6 +155,11 @@ const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
         product.videos = [...product.videos, ...productExtractedData.videos]
       }
 
+      // Size chart URLs
+      if (productExtractedData.sizeChartUrls) {
+        product.videos = productExtractedData.sizeChartUrls
+      }
+
       /**
        * TODO: Add a processing to the description HTML to extract bullets and keyValues automatically
        */
@@ -185,11 +202,19 @@ const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
        *  - TODO: We need to parse the obtained URLs and normalize them in YouTube format
        */
       const youtubeRegex =
-        /https?:\/\/(?:[0-9A-Z-]+\.)?(?:youtu\.be\/|youtube(?:-nocookie)?\.com\S*?[^\w\s-])([\w-]{11})(?=[^\w-]|$)(?![?=&+%\w.-]*(?:['"][^<>]*>|<\/a>))[?=&+%\w.-]*/gi
-      const extractedVideos = product.additionalSections
-        .map(s => s.content.replace(/\"|<|>/gim, '').match(youtubeRegex) || [])
+        /https?:\/\/(?:[0-9A-Z-]+\.)?(?:youtu\.be\/|youtube(?:-nocookie)?\.com\S*?[^\w\s-])([\w-]{11})(?=[^\w-]|$)(?![?=&+%\w.-]*(?:['"][^<>]*>|<\/a>))[?=&+%\w.-]*/gim
+      const vimeoRegex =
+        /(http|https)?:\/\/(www\.|player\.)?vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|video\/|)(\d+)(?:|\/\?)/gim
+
+      const youtubeVideos = product.additionalSections
+        .map(s => s?.content?.replace(/\"|<|>/gim, '').match(youtubeRegex) || [])
         .flat()
-      product.videos = [...new Set([...product.videos, ...extractedVideos])] // Remove duplicates
+        .filter(e => e !== '')
+      const vimeoVideos = product.additionalSections
+        .map(s => s?.content?.replace(/\"|<|>/gim, '').match(vimeoRegex) || [])
+        .flat()
+        .filter(e => e !== '')
+      product.videos = [...new Set([...product.videos, ...youtubeVideos, ...vimeoVideos])] // Remove duplicates
 
       /**
        * Remove image duplicates

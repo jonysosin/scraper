@@ -41,6 +41,8 @@ export default class Product {
   sizeChartTitles?: string[]
   sizeChartData?: string[]
   matchableIds?: string[]
+  fbPixelContentId?: string
+  fbPixelContentType?: string
 
   constructor(id: string, title: string, url: string) {
     this.id = id
@@ -56,6 +58,14 @@ export default class Product {
     if (this.additionalSections && Array.isArray(this.additionalSections)) {
       this.additionalSections.push(section)
     }
+  }
+
+  /**
+   * Adds a new additional sections to the product
+   * @param sections TAdditionalSection[]
+   */
+  addAdditionalSections(sections: IDescriptionSection[]) {
+    sections.forEach(section => this.addAdditionalSection(section))
   }
 
   clone(): Product {
@@ -100,6 +110,8 @@ export default class Product {
       size_chart_titles: this.sizeChartTitles?.join('\n'),
       size_chart_data: this.sizeChartData,
       variant_matchable_id: this.matchableIds?.join('\n'),
+      fb_pixel_content_id: this.fbPixelContentId,
+      fb_pixel_content_type: this.fbPixelContentType,
     }
   }
 }
