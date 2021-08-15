@@ -55,7 +55,7 @@ export default shopifyScraper(
       }
       const color = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('.breadcrumb li:last-child')).map(
-          e => e.textContent?.split('-')[1].trim() || '',
+          e => e.textContent?.split('-')[e.textContent?.split('-').length - 1].trim() || '',
         )
       })
         
