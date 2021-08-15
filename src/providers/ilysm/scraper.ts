@@ -55,7 +55,7 @@ export default shopifyScraper(
     variantFn: async (_request, page, product, providerProduct, providerVariant) => {
       /**
        * Get the list of options for the variants of this provider
-       * (6) ["Size", "Title", "Color", "Framed?", "Framing?", "Frame"]
+       * (6) ["Size", "Title", "Color", "Framed?", "Framing?", "Frame"]
        */
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Color) {
@@ -67,9 +67,11 @@ export default shopifyScraper(
 
       const descriptionSection = await page.evaluate(() => {
         return Array.from(
-          Array.from(document.querySelectorAll('.go-iconic-bullets')).map(e => e.textContent),
+          Array.from(document.querySelectorAll('.go-iconic-bullets')).map(e =>
+            e.textContent?.trim(),
+          ),
         )
-          .filter(e => e !== ' ')
+          .filter(e => e !== '')
           .toString()
       })
       if (descriptionSection) {
