@@ -87,7 +87,7 @@ export default shopifyScraper(
        if (product.color) {
         const color = product.color.toLowerCase()
         const images = (providerProduct.media as TMediaImage[])
-          .filter(e => e.alt === `${color}`)
+          .filter(e => e.alt === `${color}` || e.alt?.replace(/\s-.*/, '') === `${color}`)
           .map(e => e?.src)
           .filter(e => e !== '')
 
