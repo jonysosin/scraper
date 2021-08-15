@@ -46,7 +46,9 @@
     "lodash": "^4.17.21",
     "parse-url": "^5.0.7",
     "puppeteer": "^10.2.0",
-    "tslib": "^2.3.1"
+    "tslib": "^2.3.1",
+    "unique-selector": "^0.5.0",
+    "uuid": "^8.3.2"
   },
   "_moduleAliases": {
     "src": "src"
