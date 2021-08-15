@@ -18,6 +18,25 @@ export default shopifyScraper(
           .filter(e => e !== '')
       })
 
+      /**
+       * Get additional descriptions and information
+       */
+      // The description coming from the json doesnt match the one shown in the page
+      const mainDescription = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        const content = document.querySelector('.ProductMeta__Description')?.outerHTML?.trim() || ''
+        return content
+          ? {
+              name: 'Description',
+              content,
+              description_placement: DESCRIPTION_PLACEMENT.MAIN,
+            }
+          : null
+      }, DESCRIPTION_PLACEMENT)
+
+      if (mainDescription) {
+        extraData.additionalSections?.push(mainDescription)
+      }
+
        /**
        * Add the "Products Details" section
        */
