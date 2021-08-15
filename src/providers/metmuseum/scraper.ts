@@ -10,7 +10,7 @@ const scraper: Scraper = async (request, page) => {
    */
   await page.setRequestInterception(true);
   page.on('request', (interceptedRequest) => {
-    if (interceptedRequest.url().endsWith('.js')) {
+    if (interceptedRequest.url().endsWith('.js') && !interceptedRequest.url().includes('Anowave_Ec')) {
       interceptedRequest.abort();
     } else {
       interceptedRequest.continue();
