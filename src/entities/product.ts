@@ -61,7 +61,7 @@ export default class Product {
   }
 
   /**
-   * Adds a new additional sections to the product
+   * Adds new additional sections to the product
    * @param sections TAdditionalSection[]
    */
   addAdditionalSections(sections: IDescriptionSection[]) {
