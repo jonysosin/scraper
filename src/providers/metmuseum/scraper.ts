@@ -6,7 +6,10 @@ import screenPage from '../../utils/capture'
 
 const scraper: Scraper = async (request, page) => {
   /**
-   * Intercept Magento Widgets
+   * Disabled JS files except for Anowave_Ec.js,
+   * Why? Because Magento 2 render all the JSON configs for jQuery widgets for all the modules,
+   * and when jQuery initialize them, the data is removed from the page, so intercepting the .js files
+   * we can get all the data raw sent from the backend to the jQuery widgets.
    */
   await page.setRequestInterception(true);
   page.on('request', (interceptedRequest) => {
@@ -99,7 +102,7 @@ async function createBaseProduct (page: Page): Promise<Product> {
   product.images = (await productMetadata.images || []).map(i => i.url)
 
   const additionalSections = await getAdditionalSections(page)
-  if (additionalSections) {
+  if (additionalSections && additionalSections.length) {
     product.additionalSections = additionalSections
   }
 
@@ -107,33 +110,26 @@ async function createBaseProduct (page: Page): Promise<Product> {
   product.availability = await page.$eval('[itemprop="availability"]', (el) => el && el.textContent === 'In Stock')
 
   // Breadcrumbs
-  const breadcrumbs = await page.evaluate(() => Array.from(document.querySelectorAll('.breadcrumbs li')).map(i => String(i.textContent)))
+  const breadcrumbs = await page.$$eval('.breadcrumbs li', items => items.map(i => String(i.textContent)))
   if (breadcrumbs.length) {
     product.breadcrumbs = breadcrumbs
   }
 
   // Bullets
-  const bullets = await page.evaluate(() => Array.from(document.querySelectorAll('.product.info.detailed ul li')).map((e: any) => e && e.innerText))
+  const bullets = await page.$$eval('.product.info.detailed ul li', items => items.map((e: any) => e?.innerText))
   if (Array.isArray(bullets) && bullets.length) {
     product.bullets = bullets
   }
 
   // Key value pairs
-  const keyValuePairs = await page.evaluate(() => {
-    let keyValuePairs: any = {}
-    const table: HTMLTableElement | null = document.querySelector('.product.info.detailed table')
+  const keyValuePairs = await page.$$eval('.product.info.detailed table tr', (items: any) => items.reduce((prev: any, curr: any) => {
+    const key = curr.children[0].innerText
+      prev[key] = curr.children[1].innerText
 
-    if (table) {
-      keyValuePairs = Array.from(table.rows).reduce((prev, curr) => {
-        prev[curr.cells[0].innerText] = curr.cells[1].innerText
+      return prev
+  }, {}))
 
-        return prev
-    }, {})
-    }
-
-    return keyValuePairs
-  })
-  if (keyValuePairs) {
+  if (keyValuePairs && Object.keys(keyValuePairs).length) {
     product.keyValuePairs = keyValuePairs
   }
 
@@ -147,37 +143,29 @@ async function createBaseProduct (page: Page): Promise<Product> {
 }
 
 async function getAdditionalSections (page: Page): Promise<IDescriptionSection[]> {
-  const sections = await page.evaluate(() => {
-    const sections: any[] = []
-    const $selector = '.product.info.detailed .data.item.title'
-    const elements = document.querySelectorAll($selector)
+  const additionalSections: IDescriptionSection[] = []
+  const sectionsElements = await page.$$eval('.product.info.detailed .data.item.title', elements =>
+    elements
+      .filter(item => item.querySelector('a')?.title !== 'Shipping & Returns')
+      .map(item => ({
+        name: item.querySelector('a')?.innerText,
+        content: item.querySelector('.content')?.innerHTML.trim()
+      }))
+  );
 
-    if (elements.length) {
-      const items = Array.from(elements).filter(item => item.querySelector('a')?.title !== 'Shipping & Returns')
-
-      if (items) {
-        for (const item of items) {
-          const name = item.querySelector('a')?.innerText
-          const content = item.querySelector('.content')?.innerHTML.trim()
-
-          if (name && content) {
-            sections.push({ name, content })
-          }
-        }
+  for (const { name, content } of sectionsElements) {
+    if (name && content) {
+      const descriptionSection: IDescriptionSection = {
+        content,
+        name,
+        description_placement: DESCRIPTION_PLACEMENT.ADJACENT
       }
+
+      additionalSections.push(descriptionSection)
     }
+  }
 
-    return sections
-  })
-
-  return (sections || []).map(section => {
-    const descriptionSection: IDescriptionSection = {
-      ...section,
-      description_placement: DESCRIPTION_PLACEMENT.ADJACENT
-    }
-
-    return descriptionSection
-  })
+  return additionalSections
 }
 
 /**
