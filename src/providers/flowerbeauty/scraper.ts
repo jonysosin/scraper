@@ -98,16 +98,19 @@ export default shopifyScraper(
        */
       if (product.color) {
         const color = product.color
-        const images = (providerProduct.media as TMediaImage[]).filter(e => {
-          const relatedVariants =
-            e.alt
-              ?.split(',')
-              .map(e => e.trim().split('|'))
-              .flat() || []
-          return relatedVariants.includes(color)
-        })
+        const images = (providerProduct.media as TMediaImage[])
+          .filter(e => {
+            const relatedVariants =
+              e.alt
+                ?.split(',')
+                .map(e => e.trim().split('|'))
+                .flat() || []
+            return relatedVariants.includes(color)
+          })
+          .map(e => e?.src || '')
+          .filter(e => e !== '')
         if (images.length) {
-          product.images = images.map(e => e?.src || '').filter(e => e !== '')
+          product.images = images
         }
       }
     },
