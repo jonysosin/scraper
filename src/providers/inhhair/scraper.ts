@@ -4,26 +4,20 @@ import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
 
 export default shopifyScraper(
   {
-    productFn: async (request, page) => {
+    productFn: async (_request, page) => {
       const extraData: TShopifyExtraData = { additionalSections: [] }
 
       /**
        * Get additional descriptions and information
        */
-      extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
-        const section = Array.from(
-          document.querySelectorAll('.product-page--description .rte-content'),
-        )
+       extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        // const section = Array.from(document.querySelectorAll('.product-page--description .rte-content'))
 
         // Get a list of titles
-        const keys = Array.from(
-          document.querySelectorAll('.product-page--description .rte-content .accordion__btn'),
-        ).map(e => e?.textContent?.trim())
+        const keys = Array.from(document.querySelectorAll('.product-page--description .rte-content .accordion__btn')).map(e => e?.textContent?.trim())
 
         // Get a list of content for the titles above
-        const values = Array.from(
-          document.querySelectorAll('.product-page--description .rte-content .accordian__about'),
-        ).map(e => e?.innerHTML?.trim())
+        const values = Array.from(document.querySelectorAll('.product-page--description .rte-content .accordian__about')).map(e => e?.innerHTML?.trim())
 
         // Join the two arrays
         const sections = values.map((value, i) => {
@@ -37,28 +31,26 @@ export default shopifyScraper(
         return sections
       }, DESCRIPTION_PLACEMENT)
 
-      const goodToKnow = await page.evaluate(() => {
-        const items = Array.from(document.querySelectorAll('.icon__container')).map(
-          e => e.outerHTML,
-        )
+      const moreFeatures = await page.evaluate(() => {
+        const items = Array.from(document.querySelectorAll('.icon__container')).map(e => e.outerHTML)
 
         return items.join('\n \n')
       })
-      if (goodToKnow) {
+      if (moreFeatures) {
         extraData.additionalSections?.push({
-          name: 'GOOD TO KNOW',
-          content: goodToKnow,
+          name: 'More Features',
+          content: moreFeatures,
           description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
         })
       }
 
-      const aboutOur = await page.evaluate(() => {
+      const additionalData = await page.evaluate(() => {
         return document.querySelector('.why__container')?.outerHTML
       })
-      if (aboutOur) {
+      if (additionalData) {
         extraData.additionalSections?.push({
-          name: 'ABOUT OUR',
-          content: aboutOur,
+          name: 'Additional Data',
+          content: additionalData,
           description_placement: DESCRIPTION_PLACEMENT.DISTANT,
         })
       }
@@ -68,7 +60,7 @@ export default shopifyScraper(
       })
       if (howTo) {
         extraData.additionalSections?.push({
-          name: 'HOW TO',
+          name: 'How To',
           content: howTo,
           description_placement: DESCRIPTION_PLACEMENT.DISTANT,
         })
@@ -92,19 +84,6 @@ export default shopifyScraper(
       if (optionsObj.Color) {
         product.color = optionsObj.Color
       }
-
-      /**
-       * Replace the original description with the one displayed in the website
-       */
-      const description = await page.evaluate(() => {
-        return document
-          .querySelector('.product-page--description .rte-content .rte-content > p > span')
-          ?.textContent?.trim()
-      })
-
-      product.description = description
-
-      product.additionalSections.shift()
     },
   },
   {},
