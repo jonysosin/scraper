@@ -127,6 +127,7 @@ export * as cosbar from './cosbar'
 export * as spartina449 from './spartina449'
 export * as tods from './tods'
 export * as smashbox from './smashbox'
+export * as kiplingusa from './kiplingusa'
 export * as metmuseum from './metmuseum'
 
 export function getProvider(name: string) {

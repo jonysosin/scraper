@@ -1,8 +1,38 @@
 .spartina449: # add . to the provider name to skip all its urls
   - https://www.spartina449.com/lowcountry-pearl-necklace-silver-atlantic-opal.html
 ._4ocean:
-  - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
+  # - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
   - https://www.4ocean.com/products/4ocean-logo-womens-v-neck-long-sleeve-t-shirt
+
+.kiplingusa:
+  - https://www.kipling-usa.com/essie-shoulder-bag/KI3384.html?dwvar_KI3384_color=003
+  - https://www.kipling-usa.com/sven-extra-small-monkey-keychain/KI3088.html?dwvar_KI3088_color=019
+  - https://www.kipling-usa.com/city-pack-medium-backpack/BP4328.html?dwvar_BP4328_color=933#uuid=5a3f943a3f3c7b3bfead0110d6
+  - https://www.kipling-usa.com/new-kichirou-printed-lunch-bag/KI5749.html?dwvar_KI5749_color=987#uuid=cfd73fbf85ea94617a24eac41c
+  - https://www.kipling-usa.com/disney%27s-the-little-mermaid-seoul-large-15%22-laptop-backpack/KI3528.html?dwvar_KI3528_color=376#uuid=af642f8b41da85da44170917a5
+  - https://www.kipling-usa.com/new-money-small-credit-card-wallet/100326982.html
+  - https://www.kipling-usa.com/kichirou-lunch-bag/AC7254.html?dwvar_AC7254_color=628#uuid=bc5GwiaagZUQ2aaadaJFJ3XvbP
+  - https://www.kipling-usa.com/sabian-crossbody-mini-bag/AC8280.html?dwvar_AC8280_color=570
+  - https://www.kipling-usa.com/gaze-large-rolling-backpack/KI4784.html?dwvar_KI4784_color=619
+  - https://www.kipling-usa.com/gabbie-crossbody-bag/HB6549.html?dwvar_HB6549_color=425
+  - https://www.kipling-usa.com/jengo-extra-large-convertible-backpack/KI3820.html?dwvar_KI3820_color=933#uuid=899a3a2c3a777ffa7b693f1ed4
+  - https://www.kipling-usa.com/puerto-rico-monkey-keychain/AC7562.html?dwvar_AC7562_color=975
+
+.smashbox:
+  - https://www.smashbox.com/product/6035/68604/Face/Foundation-Powder/Studio-Skin-Full-Coverage-24-Hour-Foundation#/shade/2.1_-_Light/_Warm_&_Peachy
+  - https://www.smashbox.com/product/17650/50985/more/brushes/blurring-foundation-brush
+  - https://www.smashbox.com/product/24740/68659/face/setting/photo-finish-fresh-setting-powder?shade=Shade_01
+  - https://www.smashbox.com/product/6032/39359/face/color-correcting-stick?shade=DON%27T_BE_DULL
+  - https://www.smashbox.com/product/6030/18515/eyes/mascara/full-exposure-mascara?shade=JET%20BLACK
+  - https://www.smashbox.com/product/6126/93045/lips/lipstick-liner/be-legendary-anti-hero-lipstick?shade=RATCATCHER_2
+  - https://www.smashbox.com/product/17618/18799/face/contour-highlight/step-by-step-contour-kit?shade=Light%2FMedium
+  - https://www.smashbox.com/product/6035/86655/face/foundation-powder/studio-skin-24-hour-wear-hydra-foundation-mini?shade=0.1_Very_Fair_With_Neutral_Undertone
+  - https://www.smashbox.com/product/17618/75668/face/contour-highlight/halo-glow-highlighter-duo?shade=Golden+Pearl&size=0.17_oz%2F5g
+  - https://www.smashbox.com/product/6025/84423/eyes/always-on-cream-eye-shadow?shade=Vanilla
+  - https://www.smashbox.com/product/6029/93046/eyes/eye-shadow/always-on-cream-shadow-squad?shade=Harley_Quinn
+  - https://www.smashbox.com/product/6126/86553/lips/lipstick-liner/be-legendary-prime-plush-lipstick?shade=Hype_Up
+  - https://www.smashbox.com/product/17638/81505/minis/mini-photo-finish-the-original-smooth-blur-primer?size=0.27_fl_oz_%2F_8mL
+
 metmuseum:
   - https://store.metmuseum.org/francois-pompon-polar-bear-sculpture-francoispompon-polarbear #price dependes on variant
   - https://store.metmuseum.org/hokusai-great-wave-unisex-tee-hokusaitee #size + color -- Medium+White=OOS
