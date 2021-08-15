@@ -1,3 +1,4 @@
+import { TMediaImage } from '../../providers/shopify/types'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
@@ -57,6 +58,20 @@ export default shopifyScraper(
        * The product title is in the product level, not the variant
        */
       product.title = providerProduct.title.split(': ')[0]
+
+      /**
+       * Replace all the product images with the ones related by color (only if there're matches)
+       */
+      if (product.color) {
+        const images = (providerProduct.media as TMediaImage[])
+          .filter(e => e.alt?.split('||')[0] === product.color)
+          .map(e => e?.src)
+          .filter(e => e !== '')
+
+        if (images.length) {
+          product.images = images
+        }
+      }
     },
   },
   {},
