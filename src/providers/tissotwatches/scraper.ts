@@ -52,9 +52,9 @@ async function createBaseProduct(productData: any, page: Page) {
   const product = new Product(productData.id, productData.name, productData.url)
 
   // Subtitle
-  const subtitleElement = !!await page.$('.product-label')
+  const subtitleElement = await page.$('.product-label')
   if (subtitleElement) {
-    const subtitle = await page.$eval(('.product-label'), element => element.textContent)
+    const subtitle = await subtitleElement.evaluate(element => element.textContent)
 
     if (subtitle) {
       product.subTitle = subtitle
@@ -67,10 +67,10 @@ async function createBaseProduct(productData: any, page: Page) {
     product.images = images
   }
 
-
+  // Videos
   const $videoElements = '.product-video iframe'
-  const hasVideoElement = !!await page.$($videoElements)
-  if (hasVideoElement) {
+  const videoElements = await page.$($videoElements)
+  if (videoElements) {
     const videos = await page.$$eval($videoElements, elements => elements.map(((i: any) => i && i.src)))
     if (videos && videos.length) {
       product.videos = videos
