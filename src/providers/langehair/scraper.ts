@@ -1,3 +1,4 @@
+import parseUrl from 'parse-url'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
@@ -47,7 +48,7 @@ export default shopifyScraper(
 
       return extraData
     },
-    variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
+    variantFn: async (request, page, product, providerProduct, providerVariant) => {
       /**
        * Get the list of options for the variants of this provider
        * (6) ["Item", "Title", "Color", "Size", "Scalp Saveur", "Le Vite"]
@@ -58,6 +59,22 @@ export default shopifyScraper(
       }
       if (optionsObj.Size) {
         product.size = optionsObj.Size
+      }
+
+      /**
+       * Each variant page has different images, so we need to visit it and get the images
+       */
+      const parsedUrl = parseUrl(request.pageUrl)
+      await page.goto(
+        `${parsedUrl.protocol}://${parsedUrl.resource}${parsedUrl.pathname}?variant=${providerVariant.id}`,
+      )
+      const images = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.slide-main img'))
+          .map(e => e.getAttribute('src')?.trim() || '')
+          .filter(e => e !== '')
+      })
+      if (images.length) {
+        product.images = images
       }
     },
   },
