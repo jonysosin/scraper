@@ -13,22 +13,25 @@ export default shopifyScraper(
         // Get a list of titles
         const keys = Array.from(
           document.querySelectorAll(
-            'div.productAccordion div.productAccordion__card:not(:first-child) .productAccordion__cardHeader button',
+            'div.productAccordion div.productAccordion__card .productAccordion__cardHeader button',
           ),
         ).map(e => e?.textContent?.trim())
 
         // Get a list of content for the titles above
         const values = Array.from(
           document.querySelectorAll(
-            'div.productAccordion div.productAccordion__card:not(:first-child) [data-parent]',
+            'div.productAccordion div.productAccordion__card [data-parent]',
           ),
-        ).map(e => e?.outerHTML?.trim())
+        ).map(e => {
+          e.querySelector('hr')?.remove()
+          return e?.outerHTML?.trim()
+        })
 
         // Join the two arrays
         const sections = values.map((value, i) => {
           const name = keys[i] || `key_${i}`
           return {
-            name: keys[i] || `key_${i}`,
+            name,
             content: value || '',
             description_placement:
               name === 'Why we love it'
@@ -108,6 +111,11 @@ export default shopifyScraper(
           product.images = images
         }
       }
+
+      /**
+       * Remove the first element of the array, as we capture the description from the HTML
+       */
+      product.additionalSections.shift()
 
       /**
        * Sometimes, the title needs a replacement to remove the color at the end (if exists)

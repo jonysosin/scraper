@@ -25,10 +25,8 @@ export default shopifyScraper(
           }
         })
 
-        // The first section is always the same as the description that we're always obtaining, so we remove it
-        sections.shift()
+        return sections.filter(e => e.name === 'Description')
 
-        return sections
       }, DESCRIPTION_PLACEMENT)
 
       /**

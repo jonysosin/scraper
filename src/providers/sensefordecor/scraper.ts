@@ -34,10 +34,14 @@ export default shopifyScraper(
 
         // Join the two arrays
         const sections = values.map((value, i) => {
+          const name = keys[i] || `key_${i}`
           return {
-            name: keys[i] || `key_${i}`,
+            name,
             content: value || '',
-            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+            description_placement:
+              name.toLowerCase() === 'description'
+                ? DESCRIPTION_PLACEMENT.MAIN
+                : DESCRIPTION_PLACEMENT.ADJACENT,
           }
         })
 
@@ -71,9 +75,14 @@ export default shopifyScraper(
        */
       product.additionalSections.shift()
 
+      product.description = providerProduct.description
+        .replace(/<[^>]*>?/gm, ' ')
+        .replace(/\s+/gm, ' ')
+        .trim()
+
       /**
        * Get the list of options for the variants of this provider
-       * (3) ["Size", "Title", "Color"]
+       * (3) ["Size", "Title", "Color"]
        */
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Color) {
