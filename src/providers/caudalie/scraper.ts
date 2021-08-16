@@ -8,6 +8,7 @@ import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 
 const scraper: Scraper = async (request, page) => {
   await page.goto(request.pageUrl, { waitUntil: 'domcontentloaded' })
+  // TODO: without this, the images are not loaded and we cannot get the full size ones - should find a better way
   await page.waitForTimeout(5000)
   const metaTags = mergeMetaTags(await extractMetaTags(page))
 
