@@ -3,6 +3,7 @@ import parseUrl from 'parse-url'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
 import _ from 'lodash'
+import { getSelectorTextContent } from '../../providerHelpers/getSelectorTextContent'
 
 export default shopifyScraper(
   {
@@ -186,8 +187,20 @@ export default shopifyScraper(
           images.push(url)
         }
       }
-
       product.images = _.compact(images)
+
+      /**
+       * Remove the first element of the array, as we're capturing in the accordions
+       */
+      product.additionalSections.shift()
+
+      /**
+       * Get the right title
+       */
+      const title = await getSelectorTextContent(page, '.cb__pr__specific-item-name')
+      if (title) {
+        product.title = title
+      }
     },
   },
   {},
