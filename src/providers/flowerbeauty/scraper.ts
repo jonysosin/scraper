@@ -104,11 +104,17 @@ export default shopifyScraper(
               e.alt
                 ?.split(',')
                 .map(e => e.trim().split('|'))
-                .flat() || []
+                .flat()
+                .map(e => e.replace(/\*/g, '')?.trim()) || []
             return relatedVariants.includes(color)
           })
           .map(e => e?.src || '')
           .filter(e => e !== '')
+
+        // Add the featured image at the beginning
+        if (providerVariant?.featured_image.src) {
+          images.unshift(providerVariant?.featured_image?.src)
+        }
         if (images.length) {
           product.images = images
         }
