@@ -76,7 +76,7 @@ export default shopifyScraper(
     },
     variantFn: async (
       _request,
-      page,
+      _page,
       product,
       providerProduct,
       providerVariant,
