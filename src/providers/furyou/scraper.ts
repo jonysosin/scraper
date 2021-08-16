@@ -14,7 +14,8 @@ export default shopifyScraper(
         //Get description outside accordion
         const descriptionContent = document
           .querySelector('.product__description-text')
-          ?.outerHTML.trim()
+          ?.outerHTML?.trim()
+
         // Get a list of titles
         const keys = Array.from(document.querySelectorAll('.product__ingredients button > p')).map(
           e => e?.textContent?.trim(),
@@ -50,6 +51,7 @@ export default shopifyScraper(
        * Shifts the predefined description and replaces it with one that includes HTML content
        */
       product.additionalSections.shift()
+
       /**
        * Get the list of options for the variants of this provider
        * (4) ["Size", "Title", "Type", "Free gift"]
