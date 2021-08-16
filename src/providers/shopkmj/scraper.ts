@@ -11,9 +11,7 @@ export default shopifyScraper(
        * Get Size Chart HTML (wait for the selector to load)
        */
       await page.waitForSelector('div.ks-modal-content')
-
       extraData.sizeChartHtml = await getSelectorOuterHtml(page, 'div.ks-modal-content')
-
 
       return extraData
     },
@@ -26,7 +24,6 @@ export default shopifyScraper(
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
-
     },
   },
   {},
