@@ -114,13 +114,17 @@ export default shopifyScraper(
        * Get the list of options for the variants of this provider
        */
       const optionsObj = getProductOptions(providerProduct, providerVariant)
-      if (optionsObj.Color) {
-        product.color = optionsObj.Color
-      }
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
 
+      /**
+       * Get the color
+       */
+      const color = await getSelectorTextContent(page, '.cb__pr__color')
+      if (color) {
+        product.color = color
+      }
       /**
        * Fetch item's id to then fetch item's images
        */
