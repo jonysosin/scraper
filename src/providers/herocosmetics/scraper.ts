@@ -1,6 +1,7 @@
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
+import _ from 'lodash'
 
 export default shopifyScraper(
   {
@@ -89,47 +90,56 @@ export default shopifyScraper(
     variantFn: async (_request, page, product, providerProduct, providerVariant) => {
       /**
        * Get the list of options for the variants of this provider
-       * * (3) ["Title", "Size", "Amount"]
+       * (3) ["Title", "Size", "Amount"]
        */
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
 
-   
-      await page.click(`.product-images__video-icon`)
-      await page.waitForSelector('.product-images__video-box')
-      
-      const video = await page.evaluate(() => {
-        return document
-          .querySelector('.product-details__howto-video iframe')
-          ?.getAttribute('src')
+      /**
+       * Get all the videos
+       */
+      // Check if there's a video between the product gallery pictures
+      const openVideoSelectorExists = await page.evaluate(() => {
+        const openVideoSelector = document.querySelector('.product-images__video-icon')
+        // @ts-ignore
+        openVideoSelector?.click()
+        return !!openVideoSelector
       })
-      const menuVideo =  await page.evaluate(() => {
-        return document
-          .querySelector('.product-images__video-box iframe')
-          ?.getAttribute('src')
-      })
+      if (openVideoSelectorExists) {
+        await page.waitForSelector('#ImageVideoContainer iframe')
+        const mainVideo = await page.evaluate(() => {
+          return document.querySelector('#ImageVideoContainer iframe')?.getAttribute('src') || ''
+        })
+        if (mainVideo) {
+          product.videos = [mainVideo, ...product.videos]
+        }
+      }
 
-      if (video) {
-          product.videos.push(video)    
-      }
-      if (menuVideo){
-        product.videos.push(menuVideo)
-      }
-       /**
+      /**
        * Get extra images
        */
-    let images = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('.product-images__container .product-images__image picture'))
-        .map(e => e.querySelector('source')?.getAttribute('srcset') || '')
-        .filter(e => e.split('=')[2].length > 0)
-    })
-    if (images.length) {
-      images = images.map(x => x.split('=')[2])   
-      product.images = images
-    
-    }
+      let images = await page.evaluate(() => {
+        const mainImages = Array.from(
+          document.querySelectorAll('.product-images__container .product-images__image picture'),
+        )
+          .map(e => e.querySelector('source')?.getAttribute('srcset') || '')
+          .filter(e => e.split('=')[2].length > 0)
+        const bottomImages = Array.from(
+          document.querySelectorAll('.product-details__marketing-imagewrap > img'),
+        )
+          .map(e => e.getAttribute('src') || '')
+          .filter(e => e.split('=')[2].length > 0)
+        const animatedImage = document
+          .querySelector('.product-images__images-wrapper iframe')
+          ?.getAttribute('src')
+        return [...mainImages, ...bottomImages, animatedImage]
+      })
+
+      if (images.length) {
+        product.images = _.compact(images)
+      }
     },
   },
   {},
