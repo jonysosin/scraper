@@ -40,6 +40,8 @@ export type TShopifyExtraData = {
 const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
   ({ urls, productFn, variantFn }, { currency = 'USD' }) =>
   async (request, page) => {
+    console.log('scraping', request)
+
     const url = request.pageUrl
 
     // If there's a specific URL for the JSON, and a different one for the HTML, call the urls fn that takes care of that
