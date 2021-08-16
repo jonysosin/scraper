@@ -90,6 +90,8 @@ export default shopifyScraper(
         product.size = optionsObj.Size
       }
 
+      product.brand = 'Moonlit Skincare'
+
       /**
        * Remove the first element of the array, as the additional section captured by the generic shopify scraper is not correct in this case
        */
