@@ -7,7 +7,16 @@ export default shopifyScraper(
     productFn: async (_request, page) => {
       const extraData: TShopifyExtraData = {}
 
-      extraData.sizeChartHtml = await getSelectorOuterHtml(page, '.product-form--modal')
+      /**
+       * Get the sizechart (if any)
+       */
+      extraData.sizeChartHtml = await page.evaluate(getSelectorOuterHtml => {
+        const hasSizeChart = document.querySelector('.product-form--variants a.modal--link')
+
+        if (hasSizeChart) {
+          return document.querySelector('.product-form--modal')?.outerHTML?.trim()
+        } else return ''
+      })
 
       return extraData
     },
