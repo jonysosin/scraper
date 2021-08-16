@@ -58,11 +58,14 @@ const scraper: Scraper = async (request, page) => {
     }
   }
 
-  const mockVariants = variantsURLs.splice(1, 5)
-
   const products: Product[] = []
 
-  for (const { detailsURL, imagesURL } of mockVariants) {
+  let counter = variantsURLs.length
+
+  for (const { detailsURL, imagesURL } of variantsURLs) {
+
+    console.log(--counter)
+
     await page.goto(detailsURL, { waitUntil: 'domcontentloaded' })
 
     // re-run script with details
@@ -92,12 +95,16 @@ const scraper: Scraper = async (request, page) => {
     const keyValuePairs = await page.evaluate(() =>
       Object.fromEntries(
         Array.from(document.querySelectorAll('.js-product-accordion ul')[1].querySelectorAll('li'))
-          .map((i:any) => i.textContent.split(';').map(i => i.trim().split(':')))
+          .map((i: any) => i.textContent.split(';').map(i => i.trim().split(':')))
           .flat(),
       ),
     )
 
-    await new Promise(r => setTimeout(r, 30000000))
+    await page.goto(imagesURL, { waitUntil: 'domcontentloaded' })
+
+    const images = await page.$$eval('img[data-original]', images =>
+      images.map((img:any) => img.dataset?.original || '').filter(s => s),
+    )
 
     const variant = new Product(
       `${data.id}-${data.variant}`,
@@ -120,6 +127,9 @@ const scraper: Scraper = async (request, page) => {
     variant.bullets = bullets
     variant.keyValuePairs = keyValuePairs
     variant.availability = data.availability.toUpperCase() === 'IN STOCK'
+    variant.images = images
+
+    products.push( variant )
 
   }
 
