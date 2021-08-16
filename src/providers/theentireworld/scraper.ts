@@ -2,6 +2,7 @@ import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import parseUrl from 'parse-url'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
+import _ from 'lodash'
 
 export default shopifyScraper(
   {
@@ -14,6 +15,24 @@ export default shopifyScraper(
     },
     productFn: async (_request, page) => {
       const extraData: TShopifyExtraData = {}
+
+      /**
+       * Wait for req with authorization Bearer token
+       */
+      const res = await page.waitForResponse(res => {
+        const req = res.request()
+        const headers = req.headers()
+        const url = req.url()
+        return Boolean(
+          url.includes('cdn.contentful.com/spaces/36urz56kgkxo/environments/master/entries') &&
+            headers['authorization'],
+        )
+      })
+
+      const req = res.request()
+      const headers = req.headers()
+      const token = headers['authorization']
+      extraData.token = token
 
       // Wait for the description to load
       await page.waitForSelector('.cb__pr__details__interest')
@@ -84,11 +103,11 @@ export default shopifyScraper(
     },
     variantFn: async (
       _request,
-      _page,
+      page,
       product,
       providerProduct,
       providerVariant,
-      _extraData: TShopifyExtraData,
+      extraData: TShopifyExtraData,
     ) => {
       /**
        * Get the list of options for the variants of this provider
@@ -101,7 +120,74 @@ export default shopifyScraper(
         product.size = optionsObj.Size
       }
 
-      // images [new Set(Array.from(document.querySelectorAll('.product__image-carousel__oflow-wrap')[0].querySelectorAll('picture source')).map(e => e.getAttribute('srcset')?.replace(/\?.*/, '')))]
+      /**
+       * Fetch item's id to then fetch item's images
+       */
+      const imagesResponse = await page.evaluate(
+        async (product, token) => {
+          const idResponse = await (
+            await fetch(
+              `https://cdn.contentful.com/spaces/36urz56kgkxo/environments/master/entries?content_type=productColorVariant&select=fields.categoryReference%2Csys&fields.slug=${product}&include=1&limit=1`,
+              {
+                headers: {
+                  accept: 'application/json, text/plain, */*',
+                  'accept-language': 'es-AR,es-419;q=0.9,es;q=0.8',
+                  authorization: token,
+                  'cache-control': 'no-cache',
+                  pragma: 'no-cache',
+                },
+                method: 'GET',
+                mode: 'cors',
+              },
+            )
+          ).json()
+
+          const id = idResponse.items[0].sys.id
+          if (!id) {
+            return null
+          }
+
+          const imagesResponse = await (
+            await fetch(
+              `https://cdn.contentful.com/spaces/36urz56kgkxo/environments/master/entries?content_type=product&links_to_entry=${id}&select=fields%2Csys.id&include=5&limit=1`,
+              {
+                headers: {
+                  accept: 'application/json, text/plain, */*',
+                  'accept-language': 'es-AR,es-419;q=0.9,es;q=0.8',
+                  authorization: token,
+                  'cache-control': 'no-cache',
+                  pragma: 'no-cache',
+                },
+                method: 'GET',
+                mode: 'cors',
+              },
+            )
+          ).json()
+
+          return imagesResponse
+        },
+        providerProduct.handle,
+        extraData.token || '',
+      )
+
+      /**
+       * Parse color variant from title
+       */
+      const images: string[] = []
+      const variantColorSplit = providerProduct.title.split('.')
+      const variantColor = variantColorSplit[variantColorSplit.length - 2].replace(/\s+/g, '_')
+
+      /**
+       * Get and filter images from response
+       */
+      for (const a of imagesResponse.includes.Asset) {
+        const url: string = a.fields.file.url.slice(2)
+        if (url.includes(variantColor) && !url.includes('Mobile')) {
+          images.push(url)
+        }
+      }
+
+      product.images = _.compact(images)
     },
   },
   {},
