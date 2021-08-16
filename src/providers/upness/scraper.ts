@@ -3,6 +3,20 @@ import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
 export default shopifyScraper(
     { productFn: async (_request, page) => {
       const extraData: TShopifyExtraData = { additionalSections: [] }
+      /**
+      * This site differs from the others and has a particular description included in the HTML (not the JSON)
+      */
+      const description = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.leading-relaxed p')).map(e => e.textContent).filter(e => e !== " ").toString()
+      })
+      if (description) {
+        extraData.additionalSections?.push({
+          name: 'Description',
+          content: description,
+          description_placement: DESCRIPTION_PLACEMENT.MAIN,
+      })
+      }
+
       /** * Get additional descriptions and information */
       const adjacentSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
         // Get a list of titles
@@ -19,15 +33,26 @@ export default shopifyScraper(
         })
         return sections
       }, DESCRIPTION_PLACEMENT)
-      /** * This site differs from the others and has a particular description included in the HTML (not the JSON) */
-      const description = await page.evaluate(() => {
-        return Array.from(document.querySelectorAll('.leading-relaxed p')).map(e => e.textContent).filter(e => e !== " ").toString()
-      })
-      if (description) {
-        extraData.additionalSections?.push({ name: 'Description', content: description, description_placement: DESCRIPTION_PLACEMENT.MAIN,
-      })
-    }
-    extraData.additionalSections = adjacentSections.concat(extraData.additionalSections || [])
+
+      extraData.additionalSections = adjacentSections.concat(extraData.additionalSections || [])
+
+      const accordion = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        // Get a list of titles
+        const keys = Array.from(document.querySelectorAll('.mt-64 div div.border-t button div')).map(e => e?.textContent?.trim())
+        // Get a list of content for the titles above
+        const values = Array.from(document.querySelectorAll('.mt-64 div div.border-t div div div')).map(e => e?.innerHTML?.trim())
+        // Join the two arrays
+        const sections = values.map((value, i) => {
+          return {
+            name: keys[i] || `key_${i}`,
+            content: value || '',
+            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+          }
+        })
+        return sections
+      }, DESCRIPTION_PLACEMENT)
+
+      extraData.additionalSections = accordion.concat(extraData.additionalSections || [])
     return extraData
       }, variantFn: async (_request, page, product, _providerProduct, _providerVariant) => {
 
