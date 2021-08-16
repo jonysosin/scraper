@@ -64,6 +64,11 @@ export default shopifyScraper(
       if (optionsObj.Color) {
         product.color = optionsObj.Color
       }
+      const titleHasColor = product.title.replace(/.+- (.+$)/, '$1')
+      if (titleHasColor) {
+        console.log(titleHasColor)
+        product.color = titleHasColor
+      }
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
