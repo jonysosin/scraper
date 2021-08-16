@@ -59,20 +59,27 @@ export default shopifyScraper(
       /** * Get the list of options for the variants of this provider
       * (7) ["Fill", "Title", "FIll", "Flavor", "Dosage", "Amount", "Scent"]
       */
+
+
+
+     /**
+      * If there´s a higher price in the HTML, use it
+      */
       const higherPrice = await page.evaluate(() => {
         const price = document.querySelector('.leading-tight:not(.mb-4) div.ml-16 span.line-through')?.textContent?.replace('$', '')
       return Number(price)
       })
-
       if (higherPrice) {
         product.higherPrice = higherPrice
       }
 
-        // await page.waitForTimeout(25000)
-        // const video = await page.evaluate(() => {
-        //   return Array.from(document.querySelectorAll('.slick-slide div div div div div iframe'))?.map(e => e?.getAttribute('src'))
-        // })
-        // console.log(video);
+      /**
+       * Get the vides from the gallery
+       */
+        const video = await page.evaluate(() => {
+          return Array.from(document.querySelectorAll('[data-label=product-images] iframe'))?.map(e => e?.getAttribute('src') || '').filter(e => e !== '')
+        })
+        product.videos = video
       },
     },
   {},
