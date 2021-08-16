@@ -126,7 +126,7 @@ const scraper: Scraper = async (request, page) => {
     variant.breadcrumbs = breadcrumbs
     variant.bullets = bullets
     variant.keyValuePairs = keyValuePairs
-    variant.availability = data.availability.toUpperCase() === 'IN STOCK'
+    variant.availability = data.availability.toLowerCase() !== "not available"
     variant.images = images
 
     products.push( variant )

@@ -1,11 +1,12 @@
-spartina449: # add . to the provider name to skip all its urls
+.spartina449: # add . to the provider name to skip all its urls
   - https://www.spartina449.com/lowcountry-pearl-necklace-silver-atlantic-opal.html
-_4ocean:
+._4ocean:
   # - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
   - https://www.4ocean.com/products/4ocean-logo-womens-v-neck-long-sleeve-t-shirt
 
 aritzia:
-  - https://www.aritzia.com/intl/en/product/prospect-shirt-jacket/79830.html?dwvar_79830_color=22813&isort=on_a,on_b,on_c,on_d,on_e,on_f,on_g,on_h,off_a,off_b,off_c,off_d,off_e,off_f,off_g,off_h
+  - https://www.aritzia.com/intl/en/product/variation?pid=79830&dwvar_79830_color=22813&dwvar_79830_size=43
+  # - https://www.aritzia.com/intl/en/product/prospect-shirt-jacket/79830.html?dwvar_79830_color=22813&isort=on_a,on_b,on_c,on_d,on_e,on_f,on_g,on_h,off_a,off_b,off_c,off_d,off_e,off_f,off_g,off_h
   # - https://www.aritzia.com/intl/en/product/tnabutter%E2%84%A2-atmosphere-super-hi-7%2F8-legging/79963.html?dwvar_79963_color=19629&isort=on_a,on_b,on_c,on_d,on_e,on_f,on_g,on_h,off_a,off_b,off_c,off_d,off_e,off_f,off_g,off_h
   # - https://www.aritzia.com/intl/en/product/cozy-fleece-perfect-pocket-sweatpant/79787.html?dwvar_79787_color=19948&isort=on_a,on_b,on_c,on_d,on_e,on_f,on_g,on_h,off_a,off_b,off_c,off_d,off_e,off_f,off_g,off_h
   # - https://www.aritzia.com/intl/en/product/newport-flip-flop/78377.html?dwvar_78377_color=1274&isort=off_a,off_b,off_c,off_d,off_e,off_f,off_g,off_h,on_a,on_b,on_c,on_d,on_e,on_f,on_g,on_h
