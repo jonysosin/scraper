@@ -1,5 +1,4 @@
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
-// import { getSelectorOuterHtml   } from '../../providerHelpers/getSelectorOuterHtml'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
 
@@ -12,9 +11,7 @@ export default shopifyScraper(
        * Get additional descriptions and information
        */
       extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
-        const section = Array.from(
-          document.querySelectorAll('.product-page--description .rte-content'),
-        )
+        // const section = Array.from(document.querySelectorAll('.product-page--description .rte-content'))
 
         // Get a list of titles
         const keys = Array.from(
@@ -38,28 +35,28 @@ export default shopifyScraper(
         return sections
       }, DESCRIPTION_PLACEMENT)
 
-      const goodToKnow = await page.evaluate(() => {
+      const moreFeatures = await page.evaluate(() => {
         const items = Array.from(document.querySelectorAll('.icon__container')).map(
           e => e.outerHTML,
         )
 
         return items.join('\n \n')
       })
-      if (goodToKnow) {
+      if (moreFeatures) {
         extraData.additionalSections?.push({
-          name: 'GOOD TO KNOW',
-          content: goodToKnow,
+          name: 'More Features',
+          content: moreFeatures,
           description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
         })
       }
 
-      const aboutOur = await page.evaluate(() => {
+      const additionalData = await page.evaluate(() => {
         return document.querySelector('.why__container')?.outerHTML
       })
-      if (aboutOur) {
+      if (additionalData) {
         extraData.additionalSections?.push({
-          name: 'ABOUT OUR',
-          content: aboutOur,
+          name: 'Additional Data',
+          content: additionalData,
           description_placement: DESCRIPTION_PLACEMENT.DISTANT,
         })
       }
@@ -69,7 +66,7 @@ export default shopifyScraper(
       })
       if (howTo) {
         extraData.additionalSections?.push({
-          name: 'HOW TO',
+          name: 'How To',
           content: howTo,
           description_placement: DESCRIPTION_PLACEMENT.DISTANT,
         })
@@ -87,25 +84,12 @@ export default shopifyScraper(
     ) => {
       /**
        * Get the list of options for the variants of this provider
-       * (2) ["Color", "Title"]
+       * (2) ["Color", "Title"]
        */
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Color) {
         product.color = optionsObj.Color
       }
-
-      /**
-       * Replace the original description with the one displayed in the website
-       */
-      const description = await page.evaluate(() => {
-        return document
-          .querySelector('.product-page--description .rte-content .rte-content > p > span')
-          ?.textContent?.trim()
-      })
-
-      product.description = description
-
-      product.additionalSections.shift()
     },
   },
   {},
