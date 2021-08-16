@@ -8,6 +8,7 @@ import IScrapeRequest from '../../interfaces/request'
 import type { Page } from 'puppeteer'
 import { TShopifyProduct, TShopifyProductVariant } from './types'
 import { DESCRIPTION_PLACEMENT, IDescriptionSection } from '../../interfaces/outputProduct'
+import parseUrl from 'parse-url'
 
 type TCallbacks<T = { [key: string]: any }> = {
   urls?: (url: string) => { jsonUrl: string; htmlUrl: string }
@@ -34,6 +35,7 @@ export type TShopifyExtraData = {
   images?: string[]
   metadata?: { [key: string]: unknown }
   imagesMap?: { variants: string[]; imageSrc: string }[]
+  token?: string
 }
 
 const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
@@ -217,9 +219,15 @@ const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
       product.videos = [...new Set([...product.videos, ...youtubeVideos, ...vimeoVideos])] // Remove duplicates
 
       /**
-       * Remove image duplicates
+       * Remove image duplicates and sort by featured images first
        */
-      product.images = [...new Set(product.images)]
+      product.images = [...new Set(product.images)].map(imageUrl => parseUrl(imageUrl, true).href)
+      if (providerVariant?.featured_image?.src) {
+        const featuredImagePath = parseUrl(providerVariant.featured_image.src, true).pathname
+        product.images = product.images.sort(image => {
+          return featuredImagePath === parseUrl(image, true).pathname ? -1 : 0
+        })
+      }
 
       /**
        * Try to extract bullets from the additionalSections and remove duplicates

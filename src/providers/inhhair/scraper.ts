@@ -10,14 +10,18 @@ export default shopifyScraper(
       /**
        * Get additional descriptions and information
        */
-       extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
+      extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
         // const section = Array.from(document.querySelectorAll('.product-page--description .rte-content'))
 
         // Get a list of titles
-        const keys = Array.from(document.querySelectorAll('.product-page--description .rte-content .accordion__btn')).map(e => e?.textContent?.trim())
+        const keys = Array.from(
+          document.querySelectorAll('.product-page--description .rte-content .accordion__btn'),
+        ).map(e => e?.textContent?.trim())
 
         // Get a list of content for the titles above
-        const values = Array.from(document.querySelectorAll('.product-page--description .rte-content .accordian__about')).map(e => e?.innerHTML?.trim())
+        const values = Array.from(
+          document.querySelectorAll('.product-page--description .rte-content .accordian__about'),
+        ).map(e => e?.innerHTML?.trim())
 
         // Join the two arrays
         const sections = values.map((value, i) => {
@@ -32,7 +36,9 @@ export default shopifyScraper(
       }, DESCRIPTION_PLACEMENT)
 
       const moreFeatures = await page.evaluate(() => {
-        const items = Array.from(document.querySelectorAll('.icon__container')).map(e => e.outerHTML)
+        const items = Array.from(document.querySelectorAll('.icon__container')).map(
+          e => e.outerHTML,
+        )
 
         return items.join('\n \n')
       })
@@ -70,7 +76,7 @@ export default shopifyScraper(
     },
     variantFn: async (
       _request,
-      page,
+      _page,
       product,
       providerProduct,
       providerVariant,
@@ -78,7 +84,7 @@ export default shopifyScraper(
     ) => {
       /**
        * Get the list of options for the variants of this provider
-       * (2) ["Color", "Title"]
+       * (2) ["Color", "Title"]
        */
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Color) {

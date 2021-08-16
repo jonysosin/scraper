@@ -1,22 +1,18 @@
 /* eslint-disable function-paren-newline */
 /* eslint-disable no-param-reassign */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import type { Page } from 'puppeteer'
 import Product from '../../entities/product'
 import IScraper from '../../interfaces/scraper'
 import screenPage from '../../utils/capture'
-import { extractMetaTags, getLdJsonScripts, mergeMetaTags } from '../../utils/extractors'
 import { WarbyParkerV2, APIV2Products } from './types/warbyparkerv2'
 import { WarbyParkerV3, APIV3Products, APIV2Configurations } from './types/warbyparkerv3'
 import _ from 'lodash'
+import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 
 const scraper: IScraper = async (request, page) => {
   await page.goto(request.pageUrl)
 
   await page.waitForSelector('#mainContent')
-
-  const metaTags = await extractMetaTags(page)
-  const meta = mergeMetaTags(metaTags)
 
   const warby: WarbyParkerV2 | WarbyParkerV3 = await page.evaluate(() => {
     // @ts-ignore
@@ -24,7 +20,6 @@ const scraper: IScraper = async (request, page) => {
   })
 
   await page.waitForSelector('script[type="application/ld+json"]')
-  const ldjson = await getLdJsonScripts(page)
 
   const products: Product[] = []
 
@@ -36,6 +31,23 @@ const scraper: IScraper = async (request, page) => {
     ? 'v3'
     : null
   if (!apiVersion) throw new Error('unsupported api version')
+
+  const bulletsSection = await page.evaluate(() => {
+    const node = document.querySelector('.c-product-details-container')
+    return node ? node.outerHTML : null
+  })
+  const widthSection = await page.evaluate(() => {
+    const node = document.querySelector('.c-width-education')
+    return node ? node.outerHTML : null
+  })
+  const lensSection = await page.evaluate(() => {
+    const node = document.querySelector('.c-lensEducation')
+    return node ? node.outerHTML : null
+  })
+  const includedSection = await page.evaluate(() => {
+    const node = document.querySelector('.c-literary-callout')
+    return node ? node.outerHTML : null
+  })
 
   // -------------------- V2 --------------
   if (apiVersion === 'v2') {
@@ -61,6 +73,53 @@ const scraper: IScraper = async (request, page) => {
       product.itemGroupId = group.id
       product.breadcrumbs = pr.path.split('/')
 
+      if (bulletsSection) {
+        product.addAdditionalSection({
+          content: bulletsSection,
+          description_placement: DESCRIPTION_PLACEMENT.MAIN,
+          name: 'BULLETS',
+        })
+      }
+      if (widthSection) {
+        product.addAdditionalSection({
+          content: widthSection,
+          description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+          name: 'WIDTH',
+        })
+      }
+      if (lensSection) {
+        product.addAdditionalSection({
+          content: lensSection,
+          description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+          name: 'LENSES',
+        })
+      }
+      if (includedSection) {
+        product.addAdditionalSection({
+          content: includedSection,
+          description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+          name: 'INCLUDED',
+        })
+      }
+
+      if (lensSection) {
+        const kvpairs = await page.evaluate(() => {
+          const root = Array.from(
+            document.querySelectorAll('.c-lensEducation .c-details-list__category'),
+          )
+          const ans = {}
+          root.forEach(elem => {
+            const key = elem.querySelector('.c-details-list__title')!.textContent!
+            ans[key] = []
+            elem.querySelectorAll('.c-details-list__bullet').forEach(e => {
+              ans[key].push(e.textContent)
+            })
+          })
+          return ans
+        })
+        product.keyValuePairs = kvpairs
+      }
+
       products.push(product)
     }
   }
@@ -81,9 +140,9 @@ const scraper: IScraper = async (request, page) => {
       if (!productExtra) continue
 
       const color = pr.display_color
-      const size = pr.width
+      const size = pr.display_width
       const images = Object.values(pr.images.default).map(i => i.replace('//', 'https://'))
-      const path = pr.path
+      const path = pr.path ? pr.path : pr.pdp_path.slice(1)
       const itemGroupId = pr.pc_product_id
 
       for (const conf of pr.configurations) {
@@ -95,8 +154,7 @@ const scraper: IScraper = async (request, page) => {
         const metadata = { variant: conf, product: pr }
         const description = productExtra.description
         const bullets = productExtra.details_bullet_points
-        const gender = productExtra.gender
-        const url = `https://www.warbyparker.com/${pr.path}`
+        const url = `https://www.warbyparker.com/${path}`
 
         const product = new Product(variant_id, title, url)
         product.availability = availability
@@ -105,11 +163,61 @@ const scraper: IScraper = async (request, page) => {
         product.metadata = metadata
         product.description = description
         product.bullets = bullets
-        product.gender = gender
+        if (productExtra.gender) {
+          if (productExtra.gender === 'm') product.gender = 'Men'
+          if (productExtra.gender === 'f') product.gender = 'Women'
+        }
         product.color = color
         product.size = `${size}`
         product.images = images
         product.itemGroupId = `${itemGroupId}`
+
+        if (bulletsSection) {
+          product.addAdditionalSection({
+            content: bulletsSection,
+            description_placement: DESCRIPTION_PLACEMENT.MAIN,
+            name: 'BULLETS',
+          })
+        }
+        if (widthSection) {
+          product.addAdditionalSection({
+            content: widthSection,
+            description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+            name: 'WIDTH',
+          })
+        }
+        if (lensSection) {
+          product.addAdditionalSection({
+            content: lensSection,
+            description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+            name: 'LENSES',
+          })
+        }
+        if (includedSection) {
+          product.addAdditionalSection({
+            content: includedSection,
+            description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+            name: 'INCLUDED',
+          })
+        }
+
+        if (lensSection) {
+          const kvpairs = await page.evaluate(() => {
+            const root = Array.from(
+              document.querySelectorAll('.c-lensEducation .c-details-list__category'),
+            )
+            const ans = {}
+            root.forEach(elem => {
+              const key = elem.querySelector('.c-details-list__title')!.textContent!
+              ans[key] = []
+              elem.querySelectorAll('.c-details-list__bullet').forEach(e => {
+                ans[key].push(e.textContent)
+              })
+            })
+            return ans
+          })
+          product.keyValuePairs = kvpairs
+        }
 
         products.push(product)
       }

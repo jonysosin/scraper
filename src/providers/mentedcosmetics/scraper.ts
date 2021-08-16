@@ -1,10 +1,14 @@
+import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
+import parseHtmlTextContent from '../../providerHelpers/parseHtmlTextContent'
+import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
+import { TMediaImage } from '../shopify/types'
 
 export default shopifyScraper(
   {
     productFn: async (_request, page) => {
-      const extraData: TShopifyExtraData = {}
+      const extraData: TShopifyExtraData = { additionalSections: [] }
       /**
        * Get the breadcrumbs
        */
@@ -14,9 +18,46 @@ export default shopifyScraper(
           .filter(e => e !== '')
       })
 
+      /**
+       * Get additional descriptions and information
+       */
+      // The description coming from the json doesnt match the one shown in the page
+      const mainDescription = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        const content = document.querySelector('.ProductMeta__Description')?.outerHTML?.trim() || ''
+        return content
+          ? {
+              name: 'Description',
+              content,
+              description_placement: DESCRIPTION_PLACEMENT.MAIN,
+            }
+          : null
+      }, DESCRIPTION_PLACEMENT)
+
+      if (mainDescription) {
+        extraData.additionalSections?.push(mainDescription)
+      }
+
+       /**
+       * Add the "Products Details" section
+       */
+      const productDetails = await getSelectorOuterHtml(page, '.Product__Details')
+      if (productDetails) {
+        extraData.additionalSections?.push({
+          name: 'Products Details',
+          content: productDetails,
+          description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+        })
+      }
+
       return extraData
     },
-    variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
+    variantFn: async (_request, page, product, providerProduct, providerVariant, extraData) => {
+      /**
+       * Normalize the brand
+       */
+       if (product.brand && ['Mented'].includes(product.brand)) {
+        product.brand = 'Mented Cosmetics'
+      }
       /**
        * Get the list of options for the variants of this provider
        * (5) ["Title", "Color", "Denominations", "Shade", "Combination"]
@@ -25,6 +66,50 @@ export default shopifyScraper(
       if (optionsObj.Color || optionsObj.Shade) {
         product.color = optionsObj.Color || optionsObj.Shade
       }
+
+      /**
+       * Replace all the product images with the ones related by color (only if there're matches)
+       */
+       if (product.color) {
+        const images = (providerProduct.media as TMediaImage[])
+          .filter(e => e.alt !== null)
+          .filter(e => e.alt === product.color)
+          .map(e => e?.src)
+          .filter(e => e !== '')
+
+        if (images.length) {
+          product.images = images
+        }
+      }
+
+      // Remove the first element of the array, as the additional section captured by the generic shopify scraper is not correct in this case
+      product.additionalSections.shift()
+       /**
+       * Replace the original description with the one displayed in the website
+       */
+      await page.evaluate(() => {
+        document.querySelector('.s-product__dropdown-header')?.remove()
+      })
+      const descriptionSection = await page.evaluate(() => {
+        return document.querySelector('.ProductMeta__Description')?.textContent?.trim()
+      })
+
+      if (descriptionSection) {
+        product.description = descriptionSection
+      }
+
+      /**
+       * Get the video by clicking preview images (if it exists)
+       */
+       const videos = await page.evaluate(async () => {
+        return Array.from(document.querySelectorAll('.howtouse-container img')).map(
+          // @ts-ignore
+          e => `https://www.youtube.com/watch?v=${e.dataset?.embed}`,
+        )
+      })
+      videos?.forEach(element => {
+        product.videos.push(element)
+      })
     },
   },
   {},
