@@ -1,6 +1,7 @@
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
+import parseHtmlTextContent from '../../providerHelpers/parseHtmlTextContent'
 
 export default shopifyScraper(
   {
@@ -73,12 +74,10 @@ export default shopifyScraper(
       /**
        * Remove the first element of the array, as the additional section captured by the generic shopify scraper is not correct in this case
        */
-      // product.additionalSections.shift()
+      product.additionalSections.shift()
 
-      product.description = providerProduct.description
-        .replace(/<[^>]*>?/gm, ' ')
-        .replace(/\s+/gm, ' ')
-        .trim()
+      const description = product.additionalSections.find(e => e.name === 'Description')?.content
+      product.description = description ? parseHtmlTextContent(description) : undefined
 
       /**
        * Get the list of options for the variants of this provider
@@ -96,7 +95,7 @@ export default shopifyScraper(
        * Sometimes, the title needs a replacement to remove the color at the end (if exists)
        * Example: "High-Waist Catch The Light Short - Black"
        */
-       product.title = product.title.replace(/ : [^-]+$/, '')
+      product.title = product.title.replace(/ : [^-]+$/, '')
     },
   },
   {},
