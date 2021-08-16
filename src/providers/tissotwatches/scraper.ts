@@ -51,6 +51,9 @@ export default scraper
 async function createBaseProduct(productData: any, page: Page) {
   const product = new Product(productData.id, productData.name, productData.url)
 
+  // Brand
+  product.brand = 'Tissot'
+
   // Subtitle
   const subtitleElement = await page.$('.product-label')
   if (subtitleElement) {
@@ -62,7 +65,7 @@ async function createBaseProduct(productData: any, page: Page) {
   }
 
   // Images
-  const images = await page.$$eval('.product-mosaic .product-mosaic__item img', elements => elements.map((img: any) => img && img.src))
+  const images = await page.$$eval('.product-mosaic .product-mosaic__img-container img', elements => elements.map((img: any) => img && img.src))
   if (images && images.length) {
     product.images = images
   }
@@ -152,6 +155,14 @@ async function createBaseProduct(productData: any, page: Page) {
     }
   }
 
+  // Bullets
+  const bullets: string[] = await page.$$eval(
+    '.tab__content li',
+    (elements) => elements.map((e) => [e.querySelector('h4')?.textContent, e.querySelector('p')?.innerText].join(' '))
+  )
+  if (bullets.length) {
+    product.bullets = bullets
+  }
 
   return product
 }
@@ -171,22 +182,24 @@ async function getAdditionalSections(page: Page): Promise<IDescriptionSection[]>
   const additionalSections: IDescriptionSection[] = []
 
   // Product Specs
-  const productSpecsContent = await page.$eval('div.page-product > div.product-specs', (element: any) => element?.innerHTML.trim())
-  if (productSpecsContent) {
+  const descriptionContent = await page.$eval('.product-form .product-description', (element: any) => element?.innerHTML.trim())
+  if (descriptionContent) {
     additionalSections.push({
-      name: 'Product Specs',
-      description_placement: DESCRIPTION_PLACEMENT.DISTANT,
-      content: productSpecsContent
+      name: 'DESCRIPTION',
+      description_placement: DESCRIPTION_PLACEMENT.MAIN,
+      content: descriptionContent
     })
   }
 
-  // User manual
+  // Product Specs
+  const techSpecContent = await page.$eval('div.page-product > div.product-specs', (element: any) => element?.innerHTML.trim())
   const userManualContent = await page.$eval('#product-user-manual', (element: any) => element?.innerHTML.trim())
-  if (userManualContent) {
+
+  if (userManualContent || techSpecContent) {
     additionalSections.push({
-      name: 'Product Specs',
+      name: 'TECHNICAL SPECS',
       description_placement: DESCRIPTION_PLACEMENT.DISTANT,
-      content: userManualContent
+      content: techSpecContent + userManualContent
     })
   }
 
