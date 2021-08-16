@@ -35,6 +35,7 @@ export type TShopifyExtraData = {
   images?: string[]
   metadata?: { [key: string]: unknown }
   imagesMap?: { variants: string[]; imageSrc: string }[]
+  token?: string
 }
 
 const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
