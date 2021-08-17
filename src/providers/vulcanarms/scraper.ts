@@ -57,7 +57,7 @@ export default shopifyScraper(
     },
     variantFn: async (
       _request,
-      _page,
+      page,
       product,
       providerProduct,
       providerVariant,
@@ -83,6 +83,18 @@ export default shopifyScraper(
       }
       if (optionsObj.Size) {
         product.size = optionsObj.Size
+      }
+
+
+      /**
+       * Get videos
+       */
+      const video = await page.evaluate(() => {
+        return document.querySelector('.full-width-youtube iframe')?.getAttribute('src')
+      })
+
+      if (video) {
+        product.videos.push(video)
       }
     },
   },
