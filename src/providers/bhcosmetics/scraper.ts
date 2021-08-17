@@ -45,12 +45,18 @@ export default shopifyScraper(
         return sections
       }, DESCRIPTION_PLACEMENT)
 
+      /**
+       * Add the bullets on the left
+       */
       extraData.bullets = await page.evaluate(() =>
         Array.from(document.querySelectorAll('.product-detail__icons li'))
           .map(e => e.textContent?.trim() || '')
           .filter(e => e !== ''),
       )
 
+      /**
+       * If there're videos in the sections below, add them
+       */
       extraData.videos = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('.product-detail__video-wrap iframe'))
           .map(e => e.getAttribute('src') || '')
@@ -66,7 +72,7 @@ export default shopifyScraper(
        */
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Color) {
-        product.size = optionsObj.Color
+        product.color = optionsObj.Color
       }
       if (optionsObj.Size) {
         product.size = optionsObj.Size
