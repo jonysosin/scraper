@@ -1,6 +1,7 @@
 import Product from '../../entities/product'
 import Scraper from '../../interfaces/scraper'
 import screenPage from '../../utils/capture'
+import { DESCRIPTION_PLACEMENT } from 'interfaces/outputProduct'
 
 const scraper: Scraper = async (request, page) => {
   await page.goto(request.pageUrl)
@@ -28,6 +29,11 @@ const scraper: Scraper = async (request, page) => {
   )
 
   // sections
+  const sections = await page.$$eval('.ar-pdp-details', list => list.map( section => ({
+    title: section.querySelector('.ar-pdp-tab-label')?.textContent?.trim() || '',
+    content: section.querySelector('.pdp-tab-content')?.innerHTML || '',
+    description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+  })))
 
   // sizeChart
   await page.click('.js-size-chart-link')
@@ -152,8 +158,10 @@ const scraper: Scraper = async (request, page) => {
     variant.images = images
     variant.options = options
     variant.sizeChartHtml = allsizesChartsHTML[data.size]
+    sections.map((section:any) => variant.addAdditionalSection(section))
 
     products.push(variant)
+
   }
 
   const screenshot = await screenPage(page)
