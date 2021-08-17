@@ -58,18 +58,29 @@ export default shopifyScraper(
 
       return extraData
     },
-    variantFn: async (_request, _page, product) => {
+    variantFn: async (_request, page, product) => {
       /**
        * Get a list of videos
        */
-      const videos = await _page.evaluate(() => {
-        return Array.from(document.querySelectorAll('.video-background')).map(
-          e => e?.getAttribute('src') || '',
-        )
+      const videoSelectorExists = await page.evaluate(() => {
+        const videoSelector = document.querySelector('.video-background')
+        // @ts-ignore
+        videoSelector?.click()
+        return !!videoSelector
       })
 
-      if (Array.isArray(videos) && videos.length) {
-        product.videos = [...product.videos, ...videos]
+      if (videoSelectorExists) {
+        await page.waitForSelector('#shopify-section-product-template iframe')
+        const modalVideo = await page.evaluate(() => {
+          return (
+            document
+              .querySelector('#shopify-section-product-template iframe')
+              ?.getAttribute('src') || ''
+          ).replace(/^\/\//, '')
+        })
+        if (modalVideo) {
+          product.videos = [modalVideo, ...product.videos]
+        }
       }
     },
   },
