@@ -26,6 +26,10 @@ export default shopifyScraper(
         '.product__ingredients--content > div > div',
         elements => elements.map(element => element?.textContent?.trim() || ''),
       )
+      extraData.bullets = await page.$$eval(
+        '.product__details--tab-content',
+        elements => elements.map(element => element?.textContent?.trim() || ''),
+      )
 
       /**
        * Replace the product's main description for the one appearing below the title
@@ -35,33 +39,37 @@ export default shopifyScraper(
         return [
           {
             name: 'Description',
-            content: description?.textContent?.trim() || '',
+            content: description?.outerHTML?.trim() || '',
             description_placement: DESCRIPTION_PLACEMENT.MAIN,
           },
         ]
+
       }, DESCRIPTION_PLACEMENT)
 
-      /**
-       * Get additional descriptions and information
-       */
-      extraData.keyValuePairs = await page.evaluate(() => {
+      extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
         // Get a list of titles
         const keys = Array.from(document.querySelectorAll('.product__details--tab > h4'))
 
         // Get a list of content for the titles above
-        const values = Array.from(document.querySelectorAll('.product__details--tab-content'))
-
-        // Join the two arrays in a key value object
-        return values.reduce((acc: Record<string, string>, value, i) => {
-          acc[keys[i].outerHTML?.trim() || `key_${i}`] = value.outerHTML?.trim() || ''
-          return acc
-        }, {})
-      })
+        const values = Array.from(
+          document.querySelectorAll('.product__details--tab-content'),
+        )
+        // Join the two arrays
+        const sections = values.map((value, i) => {
+          return {
+            name: keys[i].textContent?.trim() || `key_${i}`,
+            content: value.innerHTML?.trim() || '',
+            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+          }
+        })
+        return sections
+      }, DESCRIPTION_PLACEMENT)
 
       /**
        * Get Size Chart HTML
        */
-      extraData.sizeChartHtml = await getSelectorOuterHtml(page, 'div[data-remodal-id=size-chart]')
+
+      extraData.sizeChartHtml = await getSelectorOuterHtml(page, '.size-chart-modal-contents')
 
       return extraData
     },
