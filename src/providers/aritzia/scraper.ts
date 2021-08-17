@@ -21,7 +21,7 @@ const scraper: Scraper = async (request, page) => {
   )
 
   const sizesTitles = await page.$$eval('.swatches-size li a', sizes =>
-    sizes.map((size: any) => size.title)
+    sizes.map((size: any) => size.title),
   )
 
   const breadcrumbs = await page.$$eval('.ar-category-breadcrumbs ul li', items =>
@@ -29,21 +29,42 @@ const scraper: Scraper = async (request, page) => {
   )
 
   // sections
-  const sections = await page.$$eval('.ar-pdp-details', list => list.map( section => ({
-    title: section.querySelector('.ar-pdp-tab-label')?.textContent?.trim() || '',
-    content: section.querySelector('.pdp-tab-content')?.innerHTML || '',
-    description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
-  })))
+  const sections = await page.$$eval('.ar-pdp-details', list =>
+    list.map(section => ({
+      title: section.querySelector('.ar-pdp-tab-label')?.textContent?.trim() || '',
+      content: section.querySelector('.pdp-tab-content')?.innerHTML || '',
+    })),
+  )
 
   // sizeChart
-  await page.click('.js-size-chart-link')
-  await page.waitForSelector('.js-sizeguide__swatch-size[title="L"]')
-  const allsizesChartsHTML = {}
-  for(const title of sizesTitles) {
-    await page.click(`.js-sizeguide__swatch-size[title="${title}"]`)
-    await page.waitForSelector('.js-sizeguide__measurements')
+  const allsizesChartsHTML: any = { fixed: null }
+  if ((await page.$('.js-size-chart-link')) !== null) {
+
     // @ts-ignore
-    allsizesChartsHTML[title] = (await page.$eval('.js-sizeguide__measurements', el => el.innerHTML))
+    const isFixedTable = await page.$eval('.js-size-chart-link', el => el.href.includes('&cid='))
+
+    if (isFixedTable) {
+
+      await page.click('.js-size-chart-link')
+      await page.waitForSelector('#sizeguide')
+      allsizesChartsHTML.fixed = await page.$eval('#sizeguide', el => el.innerHTML)
+
+    } else {
+
+      await page.click('.js-size-chart-link')
+      await page.waitForSelector('.ar-sizeguide__product')
+
+      for (const title of sizesTitles) {
+        await page.click(`.js-sizeguide__swatch-size[title="${title}"]`)
+        await page.waitForSelector('.js-sizeguide__measurements')
+        // @ts-ignore
+        allsizesChartsHTML[title] = await page.$eval(
+          '.js-sizeguide__measurements',
+          el => el.innerHTML,
+        )
+      }
+
+    }
   }
 
   const variantsURLs = []
@@ -146,7 +167,7 @@ const scraper: Scraper = async (request, page) => {
     variant.brand = data.brand
     variant.currency = data.currency
     variant.realPrice = data.price
-    variant.higherPrice = data.listPrice || data.price
+    variant.higherPrice = data.listprice || data.price
     variant.sku = data.variant
     variant.itemGroupId = data.id
     variant.color = data.color
@@ -157,11 +178,16 @@ const scraper: Scraper = async (request, page) => {
     variant.availability = data.availability.toLowerCase() !== 'not available'
     variant.images = images
     variant.options = options
-    variant.sizeChartHtml = allsizesChartsHTML[data.size]
-    sections.map((section:any) => variant.addAdditionalSection(section))
+    variant.sizeChartHtml = ( allsizesChartsHTML[data.size] ?? allsizesChartsHTML.fixed ) ?? undefined
+
+    sections.map((section: any) =>
+      variant.addAdditionalSection({
+        ...section,
+        description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+      }),
+    )
 
     products.push(variant)
-
   }
 
   const screenshot = await screenPage(page)
