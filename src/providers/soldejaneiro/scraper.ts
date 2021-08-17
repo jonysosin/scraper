@@ -122,7 +122,7 @@ export default shopifyScraper(
       * If there´s a higher price in the HTML, use it
       */
        const higherPrice = await page.evaluate(() => {
-        let price = document.querySelector('.was_price span.money')?.textContent?.match(/\d+/)
+        let price = document.querySelector('.prod-alt-price .was_price span.money')?.textContent?.match(/\d+/)
         price = Array.from([price])[0]
       return price
       })
