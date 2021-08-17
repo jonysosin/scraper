@@ -77,6 +77,18 @@ const appendProducts = async (sheet: string, products: IOutputProduct[]) => {
 }
 
 async function run() {
+  // String.replaceAll polyfill (native support on Node 15+)
+  if (!String.prototype.replaceAll) {
+    String.prototype.replaceAll = function (str, newStr) {
+      // regex
+      if (Object.prototype.toString.call(str).toLowerCase() === '[object regexp]') {
+        return this.replace(str, newStr)
+      }
+      // string
+      return this.replace(new RegExp(str, 'g'), newStr)
+    }
+  }
+
   const date = format(new Date(), 'yyyy-mm-dd_HH-MM.ss')
   const content: string = await readFile(join(__dirname, '../../run/urls.yml'), {
     encoding: 'utf-8',
