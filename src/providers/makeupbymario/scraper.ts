@@ -45,7 +45,15 @@ export default shopifyScraper(
         })
       }
 
-      // bug, some error happens when i run the code, and no additionalSections are added
+      const videos = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.learn-video video'))
+          .map(e => e.getAttribute('src') || '')
+          .filter(e => e !== '')
+      })
+      if (videos.length) {
+        extraData.videos = videos
+      }
+
       return extraData
     },
     variantFn: async (_request, page, product, providerProduct, providerVariant) => {
@@ -58,6 +66,13 @@ export default shopifyScraper(
         product.color = optionsObj.Color
       }
 
+      await page.waitForSelector('.products .ng-star-inserted .product-parsed-desc')
+      const description = await page.evaluate(() => {
+        return document
+          .querySelector('.products .ng-star-inserted .product-parsed-desc')
+          ?.textContent?.trim()
+      })
+
       const video = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('.learn-video--video')).map(
           e => e.querySelector('video')?.getAttribute('src') || '',
@@ -67,13 +82,6 @@ export default shopifyScraper(
       if (video) {
         product.videos = video
       }
-
-      await page.waitForSelector('.products .ng-star-inserted .product-parsed-desc')
-      const description = await page.evaluate(() => {
-        return document
-          .querySelector('.products .ng-star-inserted .product-parsed-desc')
-          ?.textContent?.trim()
-      })
 
       product.description = description
 
