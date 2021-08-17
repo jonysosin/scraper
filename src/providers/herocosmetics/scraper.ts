@@ -116,6 +116,13 @@ export default shopifyScraper(
           product.videos = [mainVideo, ...product.videos]
         }
       }
+      const videosInImagesContainer = await page.$$eval(
+        '.product-images__container iframe',
+        videos => videos.map(video => video.getAttribute('src') || '').filter(e => e !== ''),
+      )
+      if (videosInImagesContainer.length) {
+        product.videos = [...product.videos, ...videosInImagesContainer]
+      }
 
       /**
        * Get extra images
@@ -131,10 +138,7 @@ export default shopifyScraper(
         )
           .map(e => e.getAttribute('src') || '')
           .filter(e => e.split('=')[2].length > 0)
-        const animatedImage = document
-          .querySelector('.product-images__images-wrapper iframe')
-          ?.getAttribute('src')
-        return [...mainImages, ...bottomImages, animatedImage]
+        return [...mainImages, ...bottomImages]
       })
 
       if (images.length) {
@@ -145,6 +149,7 @@ export default shopifyScraper(
        * Some videos appear in the product.images
        * Filter them and add them to product.videos
        */
+
       const extractedVideos = product.images.filter(e => e.includes('vimeo'))
       product.videos = [...product.videos, ...extractedVideos]
     },
