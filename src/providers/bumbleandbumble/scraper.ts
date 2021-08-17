@@ -49,7 +49,12 @@ async function createProductVariant (product: Product, productData: any, variant
   productVariant.sku = variantData.SKU_BASE_ID
   productVariant.images = [...variantData.LARGE_IMAGE, ...productData.defaultSku.LARGE_ALT_IMAGES].map(url => baseUrl + url)
   productVariant.availability = !!variantData.rs_sku_availability
-  productVariant.size = variantData.PRODUCT_SIZE
+
+  if (variantData.PRODUCT_SIZE) {
+    productVariant.size = variantData.PRODUCT_SIZE
+
+    productVariant.options = { 'size': variantData.PRODUCT_SIZE }
+  }
 
   const { realPrice, higherPrice } = getPrice(variantData)
   productVariant.higherPrice = higherPrice
@@ -75,6 +80,8 @@ async function createBaseProduct(productData: any, page: Page): Promise<Product>
   // Size
   if (productData.defaultSku.PRODUCT_SIZE) {
     baseProduct.size = productData.defaultSku.PRODUCT_SIZE
+
+    baseProduct.options = { 'size': productData.defaultSku.PRODUCT_SIZE }
   }
 
   // Video
