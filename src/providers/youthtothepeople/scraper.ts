@@ -1,3 +1,4 @@
+import { getProductOptions } from '../../providers/shopify/helpers'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { htmlToTextArray } from '../../providerHelpers/parseHtmlTextContent'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
@@ -44,6 +45,20 @@ export default shopifyScraper(
             .trim(),
         }).filter(e => e[1] !== ''),
       )
+
+      /**
+       * Add Main description
+       */
+       const mainDescription = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.description p span')).map(e => e.textContent).toString()
+      })
+      if (mainDescription) {
+        extraData.additionalSections?.push({
+          name: 'Description',
+          content: mainDescription,
+          description_placement: DESCRIPTION_PLACEMENT.MAIN,
+        })
+      }
 
       /**
        * Add "Key Ingredients" section
@@ -132,6 +147,45 @@ export default shopifyScraper(
       })
 
       return extraData
+    },
+    variantFn: async (
+      _request,
+      page,
+      product,
+      providerProduct,
+      providerVariant,
+      extraData: TShopifyExtraData,
+    ) => {
+      /**
+       * Get the list of options for the variants of this provider
+       */
+      const optionsObj = getProductOptions(providerProduct, providerVariant)
+      if (optionsObj.Color) {
+        product.color = optionsObj.Color
+      }
+      if (optionsObj.Size) {
+        product.size = optionsObj.Size
+      }
+
+      /**
+       * Get higher pri
+       */
+      const higherPrice = await page.evaluate(() => {
+        return document.querySelector('span.value span')?.textContent?.trim().match(/\d+/)
+      })
+      if (higherPrice) {
+        product.higherPrice = Number(higherPrice)
+      }
+
+      /**
+       * Cut te first element of additional sections
+       */
+       product.additionalSections?.shift()
+
+      /**
+       * Set a brand
+       */
+      product.brand = 'Youth To The People'
     },
   },
   {},
