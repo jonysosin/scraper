@@ -1,5 +1,6 @@
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
+import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 
 export default shopifyScraper(
   {
@@ -18,15 +19,17 @@ export default shopifyScraper(
           : []
       })
 
+      extraData.sizeChartHtml = await getSelectorOuterHtml(page, 'table')
+
       return extraData
     },
     variantFn: async (
       _request,
-      _page,
+      page,
       product,
       providerProduct,
       providerVariant,
-      _extraData: TShopifyExtraData,
+      extraData: TShopifyExtraData,
     ) => {
       /**
        * Get the list of options for the variants of this provider
