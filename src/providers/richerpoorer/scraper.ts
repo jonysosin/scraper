@@ -39,22 +39,14 @@ export default shopifyScraper(
     },
     variantFn: async (_request, page, product, providerProduct, providerVariant) => {
       /**
-       * Get the list of sizeChartUrls
+       * Get the list of sizeChartLinks
        */
 
-      const sizeChartUrls = await page.evaluate(() => {
-        const sizeGuideFits = document.querySelector('.size-guide-fits')?.outerHTML?.trim() || ''
-
-        const sizeChartUrls = Array.from(document.querySelectorAll('.tabs__tab table')).map(
-          e => e.outerHTML.trim() || '',
-        )
-
-        sizeChartUrls.push(sizeGuideFits)
-
-        return sizeChartUrls
+      const sizeChartHtml = await page.evaluate(() => {
+        return document.querySelector('.size-guide__content table')?.textContent?.trim().replace(/\s/g, '')
       })
 
-      product.sizeChartUrls = sizeChartUrls ? sizeChartUrls : []
+      product.sizeChartHtml = sizeChartHtml ? sizeChartHtml : ''
 
       /**
        * Get the list of options for the variants of this provider
