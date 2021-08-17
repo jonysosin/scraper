@@ -5,7 +5,6 @@ import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 
 const scraper: Scraper = async (request, page) => {
   await page.goto(request.pageUrl)
-  const screenshot = await screenPage(page)
 
   const gaa = await page.evaluate(() => gaa)
 
@@ -56,6 +55,8 @@ const scraper: Scraper = async (request, page) => {
   ).filter(b => b)
 
   const sections = [sectionDescription, ...sectionsAccordion]
+
+  const screenshot = await screenPage(page)
 
   // sizeChart
   const allsizesChartsHTML: any = { fixed: null }
