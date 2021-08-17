@@ -1,7 +1,7 @@
 import Product from '../../entities/product'
 import Scraper from '../../interfaces/scraper'
 import screenPage from '../../utils/capture'
-import { DESCRIPTION_PLACEMENT } from 'interfaces/outputProduct'
+import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 
 const scraper: Scraper = async (request, page) => {
   await page.goto(request.pageUrl)
