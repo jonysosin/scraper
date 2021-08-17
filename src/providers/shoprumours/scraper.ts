@@ -30,8 +30,6 @@ export default shopifyScraper(
           }),
       )
 
-
-
       /**
        * Get additional descriptions and information
        */
@@ -42,13 +40,14 @@ export default shopifyScraper(
             return {
               name,
               content: e.querySelector('div.content')?.outerHTML || '',
-              description_placement: i === 0 ? DESCRIPTION_PLACEMENT.MAIN : DESCRIPTION_PLACEMENT.ADJACENT,
+              description_placement:
+                i === 0 ? DESCRIPTION_PLACEMENT.MAIN : DESCRIPTION_PLACEMENT.ADJACENT,
             }
           },
         )
-         //sections.shift()
-         return sections
-        }, DESCRIPTION_PLACEMENT)
+        //sections.shift()
+        return sections
+      }, DESCRIPTION_PLACEMENT)
 
       /**
        * Get Size Chart HTML
@@ -74,16 +73,13 @@ export default shopifyScraper(
       }
 
       /**
-       * Get higher price
+       * Get product color
        */
-      const higherPrice = await page.evaluate(() => {
-        return document.querySelector('.price s')?.textContent?.match(/\d+/)
+      const productColor = await page.evaluate(() => {
+        return document.querySelector('.variants.colour span.selected')?.textContent || ''
       })
 
-       if (higherPrice) {
-         product.higherPrice = Number(higherPrice)
-       }
-
+      product.color = productColor
 
       /**
        * Remove the first element of the array, as the additional section captured by the generic shopify scraper is not correct in this case
