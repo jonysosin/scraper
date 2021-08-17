@@ -2,6 +2,7 @@ import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
 import { getProductOptions } from '../../providers/shopify/helpers'
 import { getSelectorTextContent } from '../../providerHelpers/getSelectorTextContent'
+import { TMediaImage } from '../shopify/types'
 
 export default shopifyScraper(
   {
@@ -76,6 +77,21 @@ export default shopifyScraper(
       }
       if (optionsObj.Size) {
         product.size = optionsObj.Size
+      }
+
+      /**
+       * Replace all the product images with the ones related by color (only if there're matches)
+       */
+      if (product.color) {
+        const color = product.color.toLowerCase()
+        const images = (providerProduct.media as TMediaImage[])
+          .filter(e => e.alt === `color: ${color}`)
+          .map(e => e?.src)
+          .filter(e => e !== '')
+
+        if (images.length) {
+          product.images = images
+        }
       }
 
       /**
