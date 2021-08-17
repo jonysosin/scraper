@@ -1,5 +1,6 @@
-spartina449: # add . to the provider name to skip all its urls
-  - https://www.spartina449.com/lowcountry-pearl-necklace-silver-atlantic-opal.html
-_4ocean:
-  # - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
-  - https://www.4ocean.com/products/4ocean-logo-womens-v-neck-long-sleeve-t-shirt
+morphe:
+  # - https://www.morphe.com/products/morphe-x-maddie-ziegler-oh-so-berry-lip-cheek-duo?rrec=true
+  # - https://www.morphe.com/products/morphe-x-maddie-ziegler-peach-that-pops-lip-cheek-duo?rrec=true
+  # - https://www.morphe.com/products/morphe-x-maddie-ziegler-dew-bomb-face-gloss-stick?rrec=true
+  # - https://www.morphe.com/products/quad-goals-multi-palette-fresh-peach?rrec=true
+  - https://www.morphe.com/products/dixie-s-go-to-faves-3-piece-makeup-set-bag?rrec=true

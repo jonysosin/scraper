@@ -19,10 +19,11 @@ export default shopifyScraper(
 
         // Join the two arrays
         const sections = values.map((value, i) => {
+          const name = keys[i].textContent?.trim() || `key_${i}`
           return {
-            name: keys[i].textContent?.trim() || `key_${i}`,
+            name,
             content: value.innerHTML?.trim() || '',
-            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+            description_placement: name === 'DESCRIPTION' ? DESCRIPTION_PLACEMENT.MAIN : DESCRIPTION_PLACEMENT.ADJACENT,
           }
         })
 
@@ -34,7 +35,7 @@ export default shopifyScraper(
 
     variantFn: async (
       _request,
-      _page,
+      page,
       product,
       providerProduct,
       providerVariant,
@@ -48,6 +49,32 @@ export default shopifyScraper(
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Color) {
         product.color = optionsObj.Color
+      }
+
+      const brandsDictionary = ['COCA COLA',
+        'ARIEL',
+        'AVANI GREGG',
+        'JACLYN HILL',
+        'JAMES CHARLES',
+        'LISA FRANK',
+        'MADDIE ZIEGLER',
+        'MADISON BEER',
+        'NIKITA DRAGUN'
+        ]
+      const matchedSubBrand = product.title.match(' X ') && product.title.match(brandsDictionary.join('|'))?.[0]
+      if (matchedSubBrand) {
+        product.subBrand = matchedSubBrand
+        product.brand = product.brand
+      }
+
+      /**
+       * Get higher price
+       */
+      const higherPrice = await page.evaluate(() => {
+        return document.querySelector('#product-price .p-value')?.textContent?.trim().match(/\d+/)
+      })
+      if (higherPrice) {
+        product.higherPrice = Number(higherPrice)
       }
 
       /**
