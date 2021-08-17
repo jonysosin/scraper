@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { join } from 'path'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
-import { extractBullets } from '../../providerHelpers/parseHtmlTextContent'
+import { htmlToTextArray } from '../../providerHelpers/parseHtmlTextContent'
 import { extractMetaTags } from '../../utils/extractors'
 import Product from '../../entities/product'
 import Scraper from '../../interfaces/scraper'
@@ -78,8 +78,18 @@ const scraper: Scraper = async (request, page) => {
       })
 
     product.bullets = [
-      ...extractBullets(model.product.additionalDescription || ''),
-      ...extractBullets(model.product.longDescription || ''),
+      ...htmlToTextArray(model.product.additionalDescription || ''),
+      ...htmlToTextArray(model.product.longDescription || ''),
+    ]
+
+    /**
+     * Try to extract bullets from the additionalSections and remove duplicates
+     */
+    product.bullets = [
+      ...new Set([
+        ...(product.bullets || []),
+        ...product.additionalSections.map(section => htmlToTextArray(section.content)).flat(),
+      ]),
     ]
 
     product.breadcrumbs = model.breadcrumbs.map(breadcrumb => breadcrumb.label)
