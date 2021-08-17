@@ -70,6 +70,20 @@ export default shopifyScraper(
         })
       }
 
+      /**
+       * Get brazilian babe tip
+       */
+       const fragance = await page.evaluate(() => {
+        return document.querySelector('.fragrance-text')?.outerHTML?.trim() || ''
+      })
+      if (brazilianBabeTip) {
+        extraData.additionalSections?.push({
+          name: 'Fragance',
+          content: fragance,
+          description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+        })
+      }
+
       return extraData
     },
     variantFn: async (_request, page, product, providerProduct, providerVariant) => {
