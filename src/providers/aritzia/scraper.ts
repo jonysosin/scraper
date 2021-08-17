@@ -30,22 +30,30 @@ const scraper: Scraper = async (request, page) => {
   )
 
   // sections
-  const sectionDescription = await page.$eval('.designer-notes-container', section => ({
-    title: section.querySelector('.pdp-short-description')?.textContent?.trim() || '',
-    content: section.querySelector('.js-product-accordion__content.f0')?.textContent?.trim() || '',
-  }))
+  const sectionDescription = {
+    ...(await page.$eval('.designer-notes-container', section => ({
+      title: section.querySelector('.pdp-short-description')?.textContent?.trim() || '',
+      content:
+        section.querySelector('.js-product-accordion__content.f0')?.textContent?.trim() || '',
+    }))),
+    description_placement: DESCRIPTION_PLACEMENT.MAIN,
+  }
 
-  const sectionsAccordion = await page.$$eval('.ar-pdp-details', list =>
-    list.map(section => ({
-      title: section.querySelector('.ar-pdp-tab-label')?.textContent?.trim() || '',
-      content: section.querySelector('.pdp-tab-content')?.innerHTML || '',
-    })),
-  )
+  const sectionsAccordion = (
+    await page.$$eval('.ar-pdp-details', list =>
+      list.map(section => ({
+        title: section.querySelector('.ar-pdp-tab-label')?.textContent?.trim() || '',
+        content: section.querySelector('.pdp-tab-content')?.innerHTML || '',
+      })),
+    )
+  ).map(section => ({ ...section, description_placement: DESCRIPTION_PLACEMENT.ADJACENT }))
 
   // bullets
-  const bullets = await page.$$eval('.js-product-accordion__content li', items =>
-    items.map(li => li.textContent?.trim() || ''),
-  ).filter(b=>b)
+  const bullets = (
+    await page.$$eval('.js-product-accordion__content li', items =>
+      items.map(li => li.textContent?.trim() || ''),
+    )
+  ).filter(b => b)
 
   const sections = [sectionDescription, ...sectionsAccordion]
 
@@ -187,14 +195,8 @@ const scraper: Scraper = async (request, page) => {
     variant.images = images
     variant.options = options
     variant.sizeChartHtml = allsizesChartsHTML[data.size] ?? allsizesChartsHTML.fixed ?? undefined
-
-    sections.map((section: any) =>
-      variant.addAdditionalSection({
-        ...section,
-        description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
-      }),
-    )
-
+    variant.bullets = bullets
+    sections.map((section: any) => variant.addAdditionalSection(section))
     products.push(variant)
   }
 
