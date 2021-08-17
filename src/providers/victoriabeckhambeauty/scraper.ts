@@ -1,19 +1,36 @@
+import parseUrl from 'parse-url'
 import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
 
 export default shopifyScraper(
   {
-    productFn: async (_request, page) => {
+    urls: url => {
+      const parsedUrl = parseUrl(url)
+      return {
+        jsonUrl: `https://shop.victoriabeckhambeauty.com${parsedUrl.pathname}`,
+        htmlUrl: `https://victoriabeckhambeauty.com${parsedUrl.pathname}`,
+      }
+    },
+    productFn: async (_request, page, providerProduct) => {
       const extraData: TShopifyExtraData = {}
+
+      /**
+       * This page has custom data per variant
+       */
+      const contentData = await page.goto(
+        `https://www.victoriabeckhambeauty.com/assets/data/products/${providerProduct}/index.json`,
+      )
+
       /**
        * Get the breadcrumbs
        */
       extraData.breadcrumbs = await page.evaluate(() => {
-        const breadcrumbsSelector = document.querySelector('nav.breadcrumbs')
-        return breadcrumbsSelector?.textContent
-          ? breadcrumbsSelector.textContent.replace(/\n/gim, '').split('›')
-          : []
+        return Array.from(
+          document.querySelectorAll('.breadcrumb > a, .breadcrumb > span:not(.breadcrumb__spacer)'),
+        )
+          .map(e => e.textContent?.trim() || '')
+          .filter(e => e !== '')
       })
 
       /**
@@ -53,15 +70,12 @@ export default shopifyScraper(
        * (6) ["Color", "Title", "Size", "Shade", "+ Sharpener", "Palette"]
        */
       const optionsObj = getProductOptions(providerProduct, providerVariant)
-      if (optionsObj.Color) {
-        product.color = optionsObj.Color
+      if (optionsObj.Color || optionsObj.Shade || optionsObj.Palette) {
+        product.color = optionsObj.Color || optionsObj.Shade || optionsObj.Palette
       }
-
-      /**
-       * Sometimes, the title needs a replacement to remove the color at the end (if exists)
-       * Example: "High-Waist Catch The Light Short - Black"
-       */
-      product.title = product.title.replace(/ - [^-]+$/, '')
+      if (optionsObj.Size) {
+        product.size = optionsObj.Size
+      }
     },
   },
   {},
