@@ -36,9 +36,16 @@ const scraper: Scraper = async (request, page) => {
       const product = baseProduct.clone()
 
       product.id = id
-      product.size = await getProductVariantAttribute('size', product, page)
-      product.color = await getProductVariantAttribute('color', product, page)
       product.availability = await isProductVariantAvailable(product, page)
+
+      // Options
+      const options = await getProductOptions(product.id, page)
+      if (Object.keys(options).length) {
+        product.options = options
+
+        product.size = options.size
+        product.color = options.color
+      }
 
       // Variant Product Images
       const variantProductImages = await getProductVariantImages(product, page)
@@ -88,8 +95,9 @@ async function createBaseProduct (page: Page): Promise<Product> {
   }
 
   // Prices
-  product.realPrice = productMetadata.special_price || productMetadata.final_price
-  product.higherPrice = productMetadata.max_price
+  const prices = productMetadata.price_info
+  product.realPrice = prices.minimal_price
+  product.higherPrice = prices.max_price
   product.currency = productMetadata.currency_code
 
   // SKU
@@ -134,9 +142,15 @@ async function createBaseProduct (page: Page): Promise<Product> {
   }
 
   // Size Chart
-  const sizeChartHtml = await page.evaluate(() => document.querySelector('size-guide-row2')?.innerHTML)
+  const sizeChartHtml = await page.evaluate(() => document.querySelector('.size-guide-row2')?.innerHTML)
   if (sizeChartHtml) {
     product.sizeChartHtml = sizeChartHtml
+  }
+
+  // Brand
+  const brand = await page.$eval('[data-brand]', element => element.getAttribute('data-brand'))
+  if (brand) {
+    product.brand = brand
   }
 
   return product
@@ -189,17 +203,18 @@ async function getProductVariantPrice (product: Product, page: Page): Promise<{ 
   return { higherPrice: prices?.oldPrice?.amount, realPrice: prices?.finalPrice?.amount }
 }
 
-async function getProductVariantAttribute(attributeKey: string, product: Product, page: Page) {
+async function getProductOptions (productId: string, page: Page): Promise<{ [key: string]: string }> {
   const productConfiguration = await getProductVariantConfigurations(page)
 
-  const attribute: any = Object.values(productConfiguration.attributes).find((attribute: any) => attribute && attribute.code == attributeKey)
-  if (attribute) {
-    const attributeValue = attribute.options.find(option => [...option.products, ...option.instockproducts].includes(product.id))
-    if (!attributeValue) {
-      const a= 1
-    }
-    return attributeValue.label
-  }
+  const productConfigurationMap: any = Object.values(productConfiguration.attributes).reduce((prev: any, curr: any) => {
+    const attributeValue = curr?.options.find(option => option.instockproducts.concat(option.products).includes(productId))
+
+    prev[curr.code] = attributeValue.label
+
+    return prev
+  }, {})
+
+  return productConfigurationMap
 }
 
 let productVariantConfigurationCache: any = null
