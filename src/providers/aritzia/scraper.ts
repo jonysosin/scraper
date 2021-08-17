@@ -5,6 +5,7 @@ import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 
 const scraper: Scraper = async (request, page) => {
   await page.goto(request.pageUrl)
+  const screenshot = await screenPage(page)
 
   const gaa = await page.evaluate(() => gaa)
 
@@ -29,28 +30,36 @@ const scraper: Scraper = async (request, page) => {
   )
 
   // sections
-  const sections = await page.$$eval('.ar-pdp-details', list =>
+  const sectionDescription = await page.$eval('.designer-notes-container', section => ({
+    title: section.querySelector('.pdp-short-description')?.textContent?.trim() || '',
+    content: section.querySelector('.js-product-accordion__content.f0')?.textContent?.trim() || '',
+  }))
+
+  const sectionsAccordion = await page.$$eval('.ar-pdp-details', list =>
     list.map(section => ({
       title: section.querySelector('.ar-pdp-tab-label')?.textContent?.trim() || '',
       content: section.querySelector('.pdp-tab-content')?.innerHTML || '',
     })),
   )
 
+  // bullets
+  const bullets = await page.$$eval('.js-product-accordion__content li', items =>
+    items.map(li => li.textContent?.trim() || ''),
+  ).filter(b=>b)
+
+  const sections = [sectionDescription, ...sectionsAccordion]
+
   // sizeChart
   const allsizesChartsHTML: any = { fixed: null }
   if ((await page.$('.js-size-chart-link')) !== null) {
-
     // @ts-ignore
     const isFixedTable = await page.$eval('.js-size-chart-link', el => el.href.includes('&cid='))
 
     if (isFixedTable) {
-
       await page.click('.js-size-chart-link')
       await page.waitForSelector('#sizeguide')
       allsizesChartsHTML.fixed = await page.$eval('#sizeguide', el => el.innerHTML)
-
     } else {
-
       await page.click('.js-size-chart-link')
       await page.waitForSelector('.ar-sizeguide__product')
 
@@ -63,7 +72,6 @@ const scraper: Scraper = async (request, page) => {
           el => el.innerHTML,
         )
       }
-
     }
   }
 
@@ -178,7 +186,7 @@ const scraper: Scraper = async (request, page) => {
     variant.availability = data.availability.toLowerCase() !== 'not available'
     variant.images = images
     variant.options = options
-    variant.sizeChartHtml = ( allsizesChartsHTML[data.size] ?? allsizesChartsHTML.fixed ) ?? undefined
+    variant.sizeChartHtml = allsizesChartsHTML[data.size] ?? allsizesChartsHTML.fixed ?? undefined
 
     sections.map((section: any) =>
       variant.addAdditionalSection({
@@ -189,8 +197,6 @@ const scraper: Scraper = async (request, page) => {
 
     products.push(variant)
   }
-
-  const screenshot = await screenPage(page)
 
   return {
     screenshot,
