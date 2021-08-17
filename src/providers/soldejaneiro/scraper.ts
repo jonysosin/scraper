@@ -59,7 +59,6 @@ export default shopifyScraper(
       /**
        * Get brazilian babe tip
        */
-
        const brazilianBabeTip = await page.evaluate(() => {
         return document.querySelector('.product-tip')?.outerHTML?.trim()
       })
