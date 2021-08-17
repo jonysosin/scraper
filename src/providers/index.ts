@@ -130,6 +130,7 @@ export * as spartina449 from './spartina449'
 export * as tods from './tods'
 export * as smashbox from './smashbox'
 export * as kiplingusa from './kiplingusa'
+export * as bumbleandbumble from './bumbleandbumble'
 
 export function getProvider(name: string) {
   const provider: IProvider = exports[name]

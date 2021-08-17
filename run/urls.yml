@@ -1,5 +1,20 @@
-spartina449: # add . to the provider name to skip all its urls
+.spartina449: # add . to the provider name to skip all its urls
   - https://www.spartina449.com/lowcountry-pearl-necklace-silver-atlantic-opal.html
-_4ocean:
+._4ocean:
   # - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
   - https://www.4ocean.com/products/4ocean-logo-womens-v-neck-long-sleeve-t-shirt
+bumbleandbumble:
+  - https://www.bumbleandbumble.com/product/19055/75317/style/pre-stylers/pret-a-powder-post-workout-dry-shampoo-mist#/sku/115720
+  - https://www.bumbleandbumble.com/product/19053/85067/care/treatments/bbbond-building-repair-treatment#/sku/128504
+  - https://www.bumbleandbumble.com/product/19057/178/style/cremes/brilliantine#/sku/212 # one size
+  - https://www.bumbleandbumble.com/product/19048/90795/care/conditioners/bbilluminated-blonde-conditioner#/sku/136186 # multiple sizes
+  - https://www.bumbleandbumble.com/product/19047/188/care/shampoos/creme-de-coco-shampoo#/sku/330 # multiple sizes
+  - https://www.bumbleandbumble.com/product/19048/31246/care/conditioners/hairdressers-invisible-oil-conditioner#/sku/62924 # multiple sizes
+  - https://www.bumbleandbumble.com/product/19047/79677/care/shampoos/curl-moisturizing-shampoo#/sku/121624 # multiple sizes
+  - https://www.bumbleandbumble.com/product/19055/31247/style/pre-stylers/hairdressers-invisible-oil-heatuv-protective-primer#/sku/66176 # multiple sizes
+  - https://www.bumbleandbumble.com/product/19053/59673/care/treatments/thickening-go-big-treatment#/sku/94984 # one variant OOS and video
+  - https://www.bumbleandbumble.com/product/19057/85644/style/cremes/bbbond-building-repair-styling-cream#/sku/129413
+  - https://www.bumbleandbumble.com/product/19055/208/style/pre-stylers/prep-primer#/sku/205
+  - https://www.bumbleandbumble.com/product/19057/15957/style/cremes/bbtexture#/sku/32450
+  - https://www.bumbleandbumble.com/product/19880/87395/style/sets/suncare-for-hair-set#/sku/131785
+  - https://www.bumbleandbumble.com/product/19880/87397/style/sets/treat-hair-hydration-set#/sku/131787 # No size
