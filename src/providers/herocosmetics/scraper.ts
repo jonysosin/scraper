@@ -140,6 +140,13 @@ export default shopifyScraper(
       if (images.length) {
         product.images = _.compact(images)
       }
+
+      /**
+       * Some videos appear in the product.images
+       * Filter them and add them to product.videos
+       */
+      const extractedVideos = product.images.filter(e => e.includes('vimeo'))
+      product.videos = [...product.videos, ...extractedVideos]
     },
   },
   {},
