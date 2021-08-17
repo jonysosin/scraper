@@ -113,6 +113,12 @@ const scraper: Scraper = async (request, page) => {
       detailsURL.replace('&format=ajax', ''),
     )
 
+    const options = {
+      size: data.size,
+      color: data.color,
+      collection: page.url()?.split('_collection=')[1]?.split('&')[0] ?? undefined
+    }
+
     variant.subTitle = subTitle
     variant.description = description
     variant.brand = data.brand
@@ -128,6 +134,7 @@ const scraper: Scraper = async (request, page) => {
     variant.keyValuePairs = keyValuePairs
     variant.availability = data.availability.toLowerCase() !== "not available"
     variant.images = images
+    variant.options = options
 
     products.push( variant )
 
