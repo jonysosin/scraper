@@ -25,6 +25,11 @@ export default shopifyScraper(
           }
         })
 
+        // Exclude the some sections that are not relevant
+        return sections.filter(
+          e => !['Shipping & Exchanges'].includes(e.name),
+        )
+
         return sections
       }, DESCRIPTION_PLACEMENT)
 
@@ -51,13 +56,6 @@ export default shopifyScraper(
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
-
-      /**
-       * Remove the first element of the array, as the additional section captured by
-       * the generic shopify scraper is not correct in this case
-       */
-      product.additionalSections.shift()
-
     },
   },
   {},
