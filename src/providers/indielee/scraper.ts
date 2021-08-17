@@ -9,6 +9,16 @@ export default shopifyScraper(
       const extraData: TShopifyExtraData = {}
 
       /**
+       * Get the breadcrumbs
+       */
+      extraData.breadcrumbs = await page.evaluate(() => {
+        return document
+          .querySelector('nav.breadcrumb')
+          ?.textContent?.split('›')
+          .map(e => e.trim())
+      })
+
+      /**
        * Get additional descriptions and information
        */
       extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
@@ -79,7 +89,7 @@ export default shopifyScraper(
     },
     variantFn: async (
       _request,
-      _page,
+      page,
       product,
       providerProduct,
       providerVariant,
@@ -98,8 +108,13 @@ export default shopifyScraper(
        * This page has some videos in the alt of the pictures in "media"
        */
       const videos = providerProduct.media.filter(e => e.alt?.match(/video/)).map(e => e.alt || '')
+
+      const mainVideo = await page.evaluate(() => {
+        return document.querySelector('.VideoElement iframe')?.getAttribute('data-src') || ''
+      })
+
       if (videos && videos.length) {
-        product.videos = [...videos]
+        product.videos = [...product.videos, ...videos, mainVideo]
       }
     },
   },
