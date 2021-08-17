@@ -1,3 +1,4 @@
+import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
@@ -5,19 +6,40 @@ import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
 export default shopifyScraper(
   {
     productFn: async (_request, page) => {
-      const extraData: TShopifyExtraData = {}
+      const extraData: TShopifyExtraData = { additionalSections: [] }
+
       /**
        * Get the breadcrumbs
        */
-
-      //@ts-ignore
       extraData.breadcrumbs = await page.evaluate(() => {
         const breadcrumbsSelector = document.querySelectorAll('ul.breadcrumbs li')
 
         return breadcrumbsSelector?.length
-          ? Array.from(breadcrumbsSelector).map(e => e.textContent)
+          ? Array.from(breadcrumbsSelector).map(e => e.textContent || '')
           : []
       })
+
+      /**
+       * Add missing bullets
+       */
+      extraData.bullets = await page.$$eval(
+        '.product__ingredients--content > div > div',
+        elements => elements.map(element => element?.textContent?.trim() || ''),
+      )
+
+      /**
+       * Replace the product's main description for the one appearing below the title
+       */
+      extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        const description = document.querySelector('.product-info__content')
+        return [
+          {
+            name: 'Description',
+            content: description?.textContent?.trim() || '',
+            description_placement: DESCRIPTION_PLACEMENT.MAIN,
+          },
+        ]
+      }, DESCRIPTION_PLACEMENT)
 
       /**
        * Get additional descriptions and information
@@ -45,12 +67,20 @@ export default shopifyScraper(
     },
     variantFn: async (
       _request,
-      _page,
+      page,
       product,
       providerProduct,
       providerVariant,
       _extraData: TShopifyExtraData,
     ) => {
+      /**
+       * Remove the auto generated Main description and replace product description
+       */
+      product.additionalSections.shift()
+      product.description = await page.$eval('.product-info__content', e => {
+        return e?.textContent?.trim() || ''
+      })
+
       /**
        * Get the list of options for the variants of this provider
        */
@@ -67,6 +97,16 @@ export default shopifyScraper(
        * Example: "High-Waist Catch The Light Short - Black"
        */
       product.title = product.title.replace(/ - [^-]+$/, '')
+
+      /**
+       * Remove higher price as it doesn't appear in the pages
+       */
+      product.higherPrice = undefined
+
+      /**
+       * Remove .m3u8 video
+       */
+      product.videos = product.videos.filter(video => !video.includes('.m3u8'))
     },
   },
   {},
