@@ -1,9 +1,17 @@
+import parseUrl from 'parse-url'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
 
 export default shopifyScraper(
   {
+    urls: url => {
+      const parsedUrl = parseUrl(url)
+      return {
+        jsonUrl: `https://shop.makeupbymario.com${parsedUrl.pathname}`,
+        htmlUrl: `https://www.makeupbymario.com${parsedUrl.pathname}`,
+      }
+    },
     productFn: async (_request, page) => {
       const extraData: TShopifyExtraData = { additionalSections: [] }
 
