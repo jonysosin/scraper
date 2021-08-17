@@ -70,18 +70,30 @@ const scraper: Scraper = async (request, page) => {
         description_placement: DESCRIPTION_PLACEMENT.DISTANT,
       })
 
+    if (model.product.applicationTips)
+      product.addAdditionalSection({
+        name: 'How to Apply',
+        content: model.product.applicationTips,
+        description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+      })
+
     product.bullets = [
       ...extractBullets(model.product.additionalDescription || ''),
       ...extractBullets(model.product.longDescription || ''),
     ]
 
     product.breadcrumbs = model.breadcrumbs.map(breadcrumb => breadcrumb.label)
-    product.images = [
-      ...new Set([...sibling.images.map(i => i.imageSrc)]),
-    ].map(link => `https:${link}`)
-    product.videos = [model.product.shortVideo?.videoSrc]
-      .filter(v => !!v)
-      .map(link => `https:${link}`)
+    product.images = [...new Set([...sibling.images.map(i => i.imageSrc)])].map(
+      link => `https:${link}`,
+    )
+
+    const videoSrc = model.product.shortVideo?.videoSrc
+    product.videos = [
+      ...new Set([
+        videoSrc && `https://${videoSrc}`,
+        ...model.widgets.flatMap(widget => Object.values(widget)).map(widget => widget?.videoUrl),
+      ]),
+    ].filter(v => !!v)
     product.metadata = { model, metaTags }
 
     return product

@@ -4,7 +4,7 @@ import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
 
 export default shopifyScraper(
   {
-    productFn: async (_request, page) => {
+    productFn: async (request, page) => {
       const extraData: TShopifyExtraData = { additionalSections: [] }
       /**
        * Get the breadcrumbs
@@ -49,8 +49,14 @@ export default shopifyScraper(
        * Add "Benefits" section
        */
       const benefitsSection = await page.evaluate(() => {
-        return document.querySelectorAll('.section-star-ingredients .detailsSection')?.[1]
-          ?.outerHTML
+        const benefits = document.querySelectorAll('.section-star-ingredients .detailsSection')?.[1]
+        /**
+         * Removing images
+         */
+        if (benefits) {
+          Array.from(benefits.querySelectorAll('img')).forEach(e => e.remove())
+        }
+        return benefits?.outerHTML
       })
       if (benefitsSection) {
         extraData.additionalSections?.push({
@@ -61,16 +67,24 @@ export default shopifyScraper(
       }
 
       /**
-       * Add "Key Ingredients" section
+       * Add distant section
        */
-      const keyIngredientsSection = await page.evaluate(() => {
-        return document.querySelector('.key-ingredients')?.outerHTML
+      const distantSection = await page.evaluate(() => {
+        const name = document.querySelector('.key-ingredients h2')?.textContent?.trim()
+        const content = document.querySelector('.key-ingredients')
+
+        content?.querySelector('h2')?.remove()
+        return {
+          name,
+          content: content?.outerHTML?.trim(),
+        }
       })
-      if (keyIngredientsSection) {
+
+      if (Object.keys(distantSection).length) {
         extraData.additionalSections?.push({
-          name: 'Key Ingredients',
-          content: keyIngredientsSection,
-          description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+          name: distantSection.name || '',
+          content: distantSection.content || '',
+          description_placement: DESCRIPTION_PLACEMENT.DISTANT,
         })
       }
 
@@ -90,12 +104,13 @@ export default shopifyScraper(
 
       return extraData
     },
-    variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
+    variantFn: async (_request, page, product, providerProduct, providerVariant) => {
       /**
        * Get the list of options for the variants of this provider
        */
       // (2) ["Size", "Title"]
       const optionsObj = getProductOptions(providerProduct, providerVariant)
+
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
@@ -104,6 +119,19 @@ export default shopifyScraper(
        * Remove the first element of the array, as the additional section captured by the generic shopify scraper is not correct in this case
        */
       product.additionalSections.shift()
+
+      const images = await page.evaluate(() => {
+        let imagesSelector = document.querySelectorAll('img.ingredient-image')
+        if (imagesSelector) {
+          return Array.from(imagesSelector)
+            .map(e => e.getAttribute('src')?.trim() || '')
+            .filter(e => e !== '')
+        }
+        return []
+      })
+      if (images && images.length) {
+        images.forEach(img => product.images.push(img))
+      }
     },
   },
   {},

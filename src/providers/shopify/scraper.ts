@@ -5,14 +5,20 @@ import { extractMetaTags } from '../../utils/extractors'
 import { getProductJson, getProductOptions, getShopifyImages, getShopifyVideos } from './helpers'
 import parseHtmlTextContent, { htmlToTextArray } from '../../providerHelpers/parseHtmlTextContent'
 import IScrapeRequest from '../../interfaces/request'
-import type { Page } from 'puppeteer'
+import type { HTTPResponse, Page } from 'puppeteer'
 import { TShopifyProduct, TShopifyProductVariant } from './types'
 import { DESCRIPTION_PLACEMENT, IDescriptionSection } from '../../interfaces/outputProduct'
+import parseUrl from 'parse-url'
 
 type TCallbacks<T = { [key: string]: any }> = {
   urls?: (url: string) => { jsonUrl: string; htmlUrl: string }
   // Callbacks for the scrapper
-  productFn?: (request: IScrapeRequest, page: Page, providerProduct: TShopifyProduct) => Promise<T>
+  productFn?: (
+    request: IScrapeRequest,
+    page: Page,
+    providerProduct: TShopifyProduct,
+    responses: Map<string, HTTPResponse>,
+  ) => Promise<T>
   variantFn?: (
     request: IScrapeRequest,
     page: Page,
@@ -34,6 +40,7 @@ export type TShopifyExtraData = {
   images?: string[]
   metadata?: { [key: string]: unknown }
   imagesMap?: { variants: string[]; imageSrc: string }[]
+  token?: string
 }
 
 const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
@@ -50,6 +57,14 @@ const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
     // Get the product data from the Shopify website
     const providerProduct = await getProductJson(page, jsonUrl)
 
+    // Catch all request
+    let resIndex = 0
+    const responses = new Map<string, HTTPResponse>()
+    page.on('response', res => {
+      const url = res.url()
+      responses.set(url + '@' + resIndex++, res)
+    })
+
     // Navigate to the regular
     await page.goto(htmlUrl)
 
@@ -62,7 +77,7 @@ const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
     // Get data from the product page that can be used later in the variants
     let productExtractedData: TShopifyExtraData = {}
     if (typeof productFn === 'function') {
-      productExtractedData = await productFn(request, page, providerProduct)
+      productExtractedData = await productFn(request, page, providerProduct, responses)
     }
 
     // Iterate over the variants
@@ -217,9 +232,15 @@ const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
       product.videos = [...new Set([...product.videos, ...youtubeVideos, ...vimeoVideos])] // Remove duplicates
 
       /**
-       * Remove image duplicates
+       * Remove image duplicates and sort by featured images first
        */
-      product.images = [...new Set(product.images)]
+      product.images = [...new Set(product.images)].map(imageUrl => parseUrl(imageUrl, true).href)
+      if (providerVariant?.featured_image?.src) {
+        const featuredImagePath = parseUrl(providerVariant.featured_image.src, true).pathname
+        product.images = product.images.sort(image => {
+          return featuredImagePath === parseUrl(image, true).pathname ? -1 : 0
+        })
+      }
 
       /**
        * Try to extract bullets from the additionalSections and remove duplicates
