@@ -29,10 +29,29 @@ export default shopifyScraper(
         return sections
       }, DESCRIPTION_PLACEMENT)
 
+      const productDescription = await page.evaluate(() => {
+        return document.querySelector('div.courier-regular-12.text-uppercase.mb-3')?.textContent?.trim()
+      })
+      if (productDescription) {
+        extraData.additionalSections?.push({
+          name: 'Description',
+          content: productDescription,
+          description_placement: DESCRIPTION_PLACEMENT.MAIN,
+        })
+      }
+
+      /**
+       * Bullets
+       */
+       extraData.bullets = await page.evaluate(() => {
+        const sectionLis = Array.from(document.querySelectorAll('.gt-america-light-11'))
+        return sectionLis.map(li => li.textContent?.trim() || '') || []
+      })
+
       /**
        * Get Size Chart HTML
        */
-       extraData.sizeChartHtml = await getSelectorOuterHtml(page, '.my-lg-5')
+       extraData.sizeChartHtml = await getSelectorOuterHtml(page, ('.col-lg-4 .m-0').trim())
 
       return extraData
     },
@@ -52,7 +71,7 @@ export default shopifyScraper(
        */
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Color || optionsObj['COLOR']) {
-        product.color = optionsObj.Color
+        product.color = optionsObj.Color || optionsObj['COLOR']
       }
 
       /**
