@@ -37,13 +37,19 @@ export default shopifyScraper(
 
       return extraData
     },
-    variantFn: async (_request, page, product, providerProduct, providerVariant) => {
+    variantFn: async (
+      _request,
+      page,
+      product,
+      providerProduct,
+      providerVariant,
+      extraData: TShopifyExtraData,
+    ) => {
       /**
        * Get the list of sizeChartLinks
        */
-
       const sizeChartHtml = await page.evaluate(() => {
-        return document.querySelector('.size-guide__content table')?.textContent?.trim().replace(/\s/g, '')
+        return document.querySelector('.size-guide__content table')?.outerHTML?.trim()
       })
 
       product.sizeChartHtml = sizeChartHtml ? sizeChartHtml : ''
@@ -59,6 +65,13 @@ export default shopifyScraper(
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
+
+      /**
+       * Filter only images for this variant
+       */
+      product.images = providerProduct.images.filter(
+        img => providerVariant.featured_image.src.split('v=')[1] === img.split('v=')[1],
+      )
     },
   },
   {},
