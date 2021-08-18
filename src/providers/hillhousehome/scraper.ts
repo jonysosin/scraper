@@ -1,3 +1,4 @@
+import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
@@ -46,6 +47,11 @@ export default shopifyScraper(
 
       extraData.additionalSections = details.concat(extraData.additionalSections || [])
 
+      /**
+       * Get Size Chart HTML
+       */
+      extraData.sizeChartHtml = await getSelectorOuterHtml(page, '.cSizingTable')
+
       return extraData
     },
     variantFn: async (_request, page, product, providerProduct, providerVariant) => {
@@ -91,7 +97,7 @@ export default shopifyScraper(
       /**
        * Replace all the product images with the ones related by color (only if there're matches)
        */
-      await page.waitForTimeout(8000)
+      await page.waitForTimeout(9000)
       if (product.color) {
         const colorSlug = product.color
           .replace(/\//g, '-') // Bylt replaces / with - in color for images
@@ -104,6 +110,29 @@ export default shopifyScraper(
         if (images.length) {
           product.images = images
         }
+      }
+
+      /**
+       * Replace a realPrice
+       */
+      product.realPrice = await page.evaluate(() => {
+        return Number(
+          /\d.*/gm.exec(document.querySelector('.product__price')?.textContent || '')?.join(),
+        )
+      })
+
+      /**
+       * Add higherPrice
+       */
+      const higherPrice = await page.evaluate(() => {
+        return Number(
+          /\d.*/gm
+            .exec(document.querySelector('.product__priceCompare')?.textContent || '')
+            ?.join(),
+        )
+      })
+      if (higherPrice) {
+        product.higherPrice = higherPrice
       }
 
       /**
