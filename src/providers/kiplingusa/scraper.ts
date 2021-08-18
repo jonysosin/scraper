@@ -72,10 +72,13 @@ const scraper: Scraper = async (request, page) => {
 
     const product = new Product(id, mainTitle, url)
 
-    await page.waitForSelector('.big-img-gallery')
-    product.images = await page.$$eval('.big-img-gallery', imgs =>
+    await page.waitForSelector('.zoomImg')
+    await page.waitForFunction(()=>{
       // @ts-ignore
-      imgs.map(img => img.dataset.src)
+      return Array.from(document.querySelectorAll('.zoomImg')).every(img=>img.complete)
+    })
+    product.images = await page.$$eval('.zoomImg', imgs =>
+      imgs.map(img => img.getAttribute('src')!),
     )
 
     product.description = await page.$eval('.pdp-description-wrapper', e => e.textContent!.trim())
