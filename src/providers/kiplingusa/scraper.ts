@@ -73,6 +73,7 @@ const scraper: Scraper = async (request, page) => {
     const product = new Product(id, mainTitle, url)
 
     await page.waitForSelector('.zoomImg')
+    await page.waitForTimeout(3000)
     await page.waitForFunction(()=>{
       // @ts-ignore
       return Array.from(document.querySelectorAll('.zoomImg')).every(img=>img.complete)
