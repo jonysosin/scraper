@@ -20,6 +20,30 @@ export default shopifyScraper(
       )
 
       /**
+       * Get additional descriptions and information
+       */
+      extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        const section = Array.from(document.querySelectorAll('.accordion-container .set'))
+
+        // Get a list of titles
+        const keys = section.map(e => e.querySelector('a')?.textContent?.trim())
+
+        // Get a list of content for the titles above
+        const values = section.map(e => e.querySelector('.content')?.innerHTML?.trim())
+
+        // Join the two arrays
+        const sections = values.map((value, i) => {
+          return {
+            name: keys[i] || `key_${i}`,
+            content: value || '',
+            description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+          }
+        })
+
+        return sections
+      }, DESCRIPTION_PLACEMENT)
+
+      /**
        * This site differs from the others and has a particular description included in the HTML (not the JSON)
        */
       const description = await page.evaluate(() => {
@@ -44,30 +68,6 @@ export default shopifyScraper(
         })
       }
 
-      /**
-       * Get additional descriptions and information
-       */
-      extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
-        const section = Array.from(document.querySelectorAll('.accordion-container .set'))
-
-        // Get a list of titles
-        const keys = section.map(e => e.querySelector('a')?.textContent?.trim())
-
-        // Get a list of content for the titles above
-        const values = section.map(e => e.querySelector('.content')?.innerHTML?.trim())
-
-        // Join the two arrays
-        const sections = values.map((value, i) => {
-          return {
-            name: keys[i] || `key_${i}`,
-            content: value || '',
-            description_placement: DESCRIPTION_PLACEMENT.DISTANT,
-          }
-        })
-
-        return sections
-      }, DESCRIPTION_PLACEMENT)
-
       return extraData
     },
     variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
@@ -87,6 +87,14 @@ export default shopifyScraper(
       if (color) {
         product.color = color
       }
+
+      /**
+       * Cut a first element to array additionalSections
+       */
+      product.additionalSections.shift()
+
+      // Default always to the same name
+      product.brand = 'eos'
     },
   },
   {},

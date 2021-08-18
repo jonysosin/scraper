@@ -13,22 +13,25 @@ export default shopifyScraper(
         // Get a list of titles
         const keys = Array.from(
           document.querySelectorAll(
-            'div.productAccordion div.productAccordion__card:not(:first-child) .productAccordion__cardHeader button',
+            'div.productAccordion div.productAccordion__card .productAccordion__cardHeader button',
           ),
         ).map(e => e?.textContent?.trim())
 
         // Get a list of content for the titles above
         const values = Array.from(
           document.querySelectorAll(
-            'div.productAccordion div.productAccordion__card:not(:first-child) [data-parent]',
+            'div.productAccordion div.productAccordion__card [data-parent]',
           ),
-        ).map(e => e?.outerHTML?.trim())
+        ).map(e => {
+          e.querySelector('hr')?.remove()
+          return e?.outerHTML?.trim()
+        })
 
         // Join the two arrays
         const sections = values.map((value, i) => {
           const name = keys[i] || `key_${i}`
           return {
-            name: keys[i] || `key_${i}`,
+            name,
             content: value || '',
             description_placement:
               name === 'Why we love it'
@@ -88,26 +91,25 @@ export default shopifyScraper(
       /**
        * Replace all the product images with the ones related by color (only if there're matches)
        */
+      await page.waitForTimeout(8000)
       if (product.color) {
-        const images = await page.evaluate(
-          color => {
-            return Array.from(
-              document.querySelectorAll(
-                `.Product__SlideItem--image div img[data-color="${color}"]`,
-              ),
-            )
-              .map(e => e.getAttribute('src') || e.getAttribute('data-srcset') || '')
-              .filter(e => e !== '')
-          },
-          product.color
-            .replace(/\//g, '-') // Bylt replaces / with - in color for images
-            .replace(/\s.*/, '') // Bylt keeps only first word before space
-            .toLowerCase(),
+        const colorSlug = product.color
+          .replace(/\//g, '-') // Bylt replaces / with - in color for images
+          .replace(/\s.*/, '') // Bylt keeps only first word before space
+        const images = await page.$$eval(
+          `.Product__SlideItem--image div img[data-color="${colorSlug}"]`,
+          imgs => imgs.map(img => img.getAttribute('data-original-src') || '').filter(i => i),
         )
+
         if (images.length) {
           product.images = images
         }
       }
+
+      /**
+       * Remove the first element of the array, as we capture the description from the HTML
+       */
+      product.additionalSections.shift()
 
       /**
        * Sometimes, the title needs a replacement to remove the color at the end (if exists)

@@ -35,7 +35,7 @@ const scraper: Scraper = async (request, page) => {
 
   const screenshot = await screenPage(page)
 
-  const id = _.last(request.pageUrl.split('/'))!
+  const id = _.last(request.pageUrl.split('/').filter(subpath => subpath.length > 0))!
 
   const productResponses = await page.evaluate(
     async (id, PRODUCTS_API_URL) => {

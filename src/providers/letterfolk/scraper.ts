@@ -22,14 +22,16 @@ export default shopifyScraper(
 
         // Join the two arrays
         const sections = values.map((value, i) => {
+          let name = keys[i] || `key_${i}`
           return {
-            name: keys[i] || `key_${i}`,
+            name,
             content: value || '',
-            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+            description_placement: name === 'Description' ? DESCRIPTION_PLACEMENT.MAIN : DESCRIPTION_PLACEMENT.ADJACENT,
           }
         })
 
-        return sections
+        // Filter some sections
+        return sections.filter(e => !['Shipping'].includes(e.name))
       }, DESCRIPTION_PLACEMENT)
 
       extraData.additionalSections = details.concat(extraData.additionalSections || [])

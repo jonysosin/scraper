@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import Product from '../../entities/product'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
-import { extractBullets } from '../../providerHelpers/parseHtmlTextContent'
+import { htmlToTextArray } from '../../providerHelpers/parseHtmlTextContent'
 import { IScraperConstructor } from '../../interfaces/scraper'
 import { ProductCatalog, ProductPrices, WDDataSet } from './types'
 
@@ -75,7 +75,7 @@ const wdBuilder: IScraperConstructor<void, void> = () => async (request, page) =
       })
 
       product.bullets = product.additionalSections
-        .flatMap(({ content }) => extractBullets(content))
+        .flatMap(({ content }) => htmlToTextArray(content))
         .map(bullet => bullet.replace(/\W/gm, ' ').replace(/\s+/gm, ' '))
 
       product.keyValuePairs = product.bullets

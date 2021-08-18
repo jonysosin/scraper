@@ -1,3 +1,4 @@
+import { TMediaImage } from '../shopify/types'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
@@ -11,12 +12,14 @@ export default shopifyScraper(
        * This site differs from the others and has a particular description included in the HTML (not the JSON)
        */
       const introduction = await page.evaluate(() => {
-        return document.querySelector('#shopify-section-pdp p.text-redViolet.tracking-wider')
+        return document
+          .querySelector('#shopify-section-pdp p.text-redViolet.tracking-wider')
+          ?.outerHTML?.trim()
       })
       if (introduction) {
         extraData.additionalSections?.push({
           name: 'Introduction',
-          content: introduction?.outerHTML?.trim(),
+          content: introduction,
           description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
         })
       }
@@ -66,6 +69,15 @@ export default shopifyScraper(
         })
       }
 
+      /**
+       * Add videos
+       */
+      extraData.videos = await page.evaluate(() =>
+        Array.from(document.querySelectorAll('video source'))
+          .map(e => e.getAttribute('src') || '')
+          .filter(e => e !== ''),
+      )
+
       return extraData
     },
     variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
@@ -79,6 +91,33 @@ export default shopifyScraper(
       }
       if (optionsObj.Color) {
         product.color = optionsObj.Color
+      }
+
+      /**
+       * Replace all the product images with the ones related by color (only if there're matches)
+       */
+      if (product.color) {
+        const color = product.color
+        const images = (providerProduct.media as TMediaImage[])
+          .filter(e => {
+            const relatedVariants =
+              e.alt
+                ?.split(',')
+                .map(e => e.trim().split('|'))
+                .flat()
+                .map(e => e.replace(/\*/g, '')?.trim()) || []
+            return relatedVariants.includes(color)
+          })
+          .map(e => e?.src || '')
+          .filter(e => e !== '')
+
+        // Add the featured image at the beginning
+        if (providerVariant?.featured_image.src) {
+          images.unshift(providerVariant?.featured_image?.src)
+        }
+        if (images.length) {
+          product.images = images
+        }
       }
     },
   },
