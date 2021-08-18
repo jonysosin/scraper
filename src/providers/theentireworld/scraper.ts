@@ -9,8 +9,9 @@ export default shopifyScraper(
   {
     urls: url => {
       const parsedUrl = parseUrl(url)
+
       return {
-        jsonUrl: `https://entireworld.myshopify.com${parsedUrl.pathname}`,
+        jsonUrl: `https://entireworld.myshopify.com/products/${parsedUrl.pathname.split('/').reverse()[0]}`,
         htmlUrl: `https://theentireworld.com${parsedUrl.pathname}`,
       }
     },

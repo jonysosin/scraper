@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
@@ -53,7 +54,7 @@ export default shopifyScraper(
 
       return extraData
     },
-    variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
+    variantFn: async (_request, page, product, providerProduct, providerVariant) => {
       /**
        * Replacing the description for the last pushed to additionalSections (corresponds to DESCRIPTION_MAIN)
        */
@@ -72,6 +73,23 @@ export default shopifyScraper(
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
+
+      product.keyValuePairs = _.fromPairs(
+        await page.$$eval('.bar-value .selected', bars =>
+          (bars as HTMLDivElement[]).map(bar => [
+            bar.dataset.vdvalue
+              ?.split('][')
+              .reverse()[0]
+              .replace(/[\'\]]/gm, '') || '',
+            bar.dataset.vdmatch || '',
+          ]),
+        ),
+      )
+    },
+    postProcess: async (product, page) => {
+      product.bullets = await page.$$eval('.badges .badge', badges =>
+        badges.map(e => (e as HTMLElement).innerText || ''),
+      )
     },
   },
   {},

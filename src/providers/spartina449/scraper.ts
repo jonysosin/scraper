@@ -8,6 +8,11 @@ import _ from 'lodash'
 
 async function getImageUrls(page: Page) {
   await page.waitForSelector('.fotorama__active img.fotorama__img')
+  try {
+    await page.waitForSelector('.fotorama__thumb img.fotorama__img')
+  } catch (e) {
+    //ignored
+  }
   // full image urls are infered from the thumbnails
   const allImages = await page.$$eval('img.fotorama__img', images =>
     images.map(img => img.getAttribute('src')!),
@@ -64,8 +69,9 @@ const scraper: Scraper = async (request, page) => {
     product.breadcrumbs = await page.$$eval('.breadcrumbs li.item a', elems =>
       elems.map(e => e.innerHTML),
     )
-    product.description = // @ts-ignore
-    (await page.$eval('#product-short-description', match => match.innerText ?? '')).trim()
+    product.description = ( // @ts-ignore
+      await page.$eval('#product-short-description', match => match.innerText ?? '')
+    ).trim()
     product.bullets = await page.$$eval('#product-description > ul li', lis => {
       return lis
         .filter(li => !li.innerHTML.includes('Style #'))

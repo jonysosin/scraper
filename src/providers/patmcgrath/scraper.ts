@@ -13,7 +13,7 @@ export default shopifyScraper(
        */
 
       const variantTitle = providerVariant.title
-      product.additionalSections = await page.evaluate(
+      const additionalSections = await page.evaluate(
         (DESCRIPTION_PLACEMENT, variantTitle) => {
           function getWorkingSelector(selectors: string[]) {
             for (let i = 0; i < selectors.length; i++) {
@@ -48,6 +48,16 @@ export default shopifyScraper(
         DESCRIPTION_PLACEMENT,
         variantTitle,
       )
+
+      product.additionalSections = [...product.additionalSections, ...additionalSections]
+      // If there're 2 main descriptions, we need to remove one
+      if (
+        product.additionalSections?.filter(
+          e => e.description_placement === DESCRIPTION_PLACEMENT.MAIN,
+        )?.length > 1
+      ) {
+        product.additionalSections.shift()
+      }
 
       /**
        * Get the list of options for the variants of this provider
