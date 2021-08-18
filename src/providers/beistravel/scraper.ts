@@ -1,23 +1,39 @@
 import { getProductOptions } from '../../providers/shopify/helpers'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
+import parseHtmlTextContent from '../../providerHelpers/parseHtmlTextContent'
 import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
+import _ from 'lodash'
 
 export default shopifyScraper(
   {
     productFn: async (_request, page) => {
       const extraData: TShopifyExtraData = {}
+      /**
+       * Get the breadcrumbs
+       */
+      extraData.breadcrumbs = await page.evaluate(() => {
+        const breadcrumbsSelector = document.querySelector('nav.productBreadcrumb')
+        return breadcrumbsSelector?.textContent
+          ?.replace(/\n/gim, '')
+          .split('/')
+          .map(e => e.trim())
+      })
 
       /**
        * Get additional descriptions and information
        */
-      const aditionalSection = await page.evaluate(DESCRIPTION_PLACEMENT => {
+      const additionalSection = await page.evaluate(DESCRIPTION_PLACEMENT => {
         // Get a list of titles
-        const arrayData = Array.from(document.querySelectorAll(".productDesc table tr:not(.open):not([style='display: block;'])"))
-        const keys:any = []
-        const values:any = []
-        for (let i = 0; i< arrayData.length ; i++){
-          i % 2 == 0? keys.push(arrayData[i]) : values.push(arrayData[i])
+        const arrayData = Array.from(
+          document.querySelectorAll(
+            ".productDesc table tr:not(.open):not([style='display: block;'])",
+          ),
+        )
+        const keys: any = []
+        const values: any = []
+        for (let i = 0; i < arrayData.length; i++) {
+          i % 2 == 0 ? keys.push(arrayData[i]) : values.push(arrayData[i])
         }
 
         // Join the two arrays
@@ -34,10 +50,10 @@ export default shopifyScraper(
 
       const productStory = await page.evaluate(DESCRIPTION_PLACEMENT => {
         // Get a list of titles
-        const values = Array.from(document.querySelectorAll(".product-story"))
+        const values = Array.from(document.querySelectorAll('.product-story'))
 
         // Join the two arrays
-        const sections = values.map((value) => {
+        const sections = values.map(value => {
           return {
             name: `Product Story`,
             content: value?.outerHTML?.trim() || '',
@@ -53,22 +69,23 @@ export default shopifyScraper(
         const values = Array.from(document.querySelectorAll('.js-product-description table tr'))[1]
 
         // Join the two arrays
-        const sections = [{
+        const sections = [
+          {
             name: `Description`,
             content: values.outerHTML?.trim() || '',
             description_placement: DESCRIPTION_PLACEMENT.MAIN,
-          }
+          },
         ]
 
         return sections
       }, DESCRIPTION_PLACEMENT)
 
-      extraData.additionalSections =[...mainDescription, ...aditionalSection, ...productStory ]
+      extraData.additionalSections = [...mainDescription, ...additionalSection, ...productStory]
 
       /**
        * Get Size Chart HTML
        */
-      extraData.sizeChartHtml = await getSelectorOuterHtml(page, "div.human-mode")
+      extraData.sizeChartHtml = await getSelectorOuterHtml(page, 'div.human-mode')
 
       return extraData
     },
