@@ -56,18 +56,27 @@ export default shopifyScraper(
       }
       if (optionsObj.Size) {
         product.size = optionsObj.Size
-      }      
+      }
+
+      /**
+       * Add image from adjacent description in the product gallery
+       */
+       const adjacentImages = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.table-layout__cell > img.product-inspiration__feature-img'))
+          .map(e => e.getAttribute('src') || '')
+          .filter(e => e !== '')
+      })
 
       /**
        * Add images in the product gallery
        */
        const variantId = providerVariant.id.toString()
-       
+
       const images = await page.evaluate(variantId => {
         // return Array.from(document.querySelectorAll('div[data-variant]')).filter(e=> e.getAttribute('data-variant') === variantId).map(e => Array.from(e.querySelectorAll('img')).map(e => e.getAttribute('data-src'))).flat()
         return [...new Set(Array.from(document.querySelectorAll('div[data-variant]')).filter(e=> e.getAttribute('data-variant') === variantId).map(e => Array.from(e.querySelectorAll('img')).map(e => e.getAttribute('data-src') || '')).flat().filter(e => e !== ''))] || []
       }, variantId)
-      product.images = [...images]
+      product.images = [...images, ...adjacentImages]
 
       /**
       * Add tutorial video
@@ -83,7 +92,7 @@ export default shopifyScraper(
       if (Array.isArray(videos) && videos.length) {
         product.videos = [...product.videos, ...videos]
       }
-      
+
       /**
        * Sometimes, the title needs a replacement to remove the color at the end (if exists)
        * Example: "High-Waist Catch The Light Short - Black"
