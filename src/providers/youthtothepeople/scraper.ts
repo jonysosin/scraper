@@ -49,8 +49,10 @@ export default shopifyScraper(
       /**
        * Add Main description
        */
-       const mainDescription = await page.evaluate(() => {
-        return Array.from(document.querySelectorAll('.description p span')).map(e => e.textContent).toString()
+      const mainDescription = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.description p span'))
+          .map(e => e.textContent)
+          .toString()
       })
       if (mainDescription) {
         extraData.additionalSections?.push({
@@ -173,14 +175,20 @@ export default shopifyScraper(
       const higherPrice = await page.evaluate(() => {
         return document.querySelector('span.value span')?.textContent?.trim().match(/\d+/)
       })
-      if (higherPrice) {
-        product.higherPrice = Number(higherPrice)
+      console.log(product.realPrice)
+
+      if (product.realPrice === 0 && product.higherPrice) {
+        product.realPrice = product.higherPrice
+      } else {
+        if (higherPrice && product.realPrice && product.realPrice < Number(higherPrice[0])) {
+          product.higherPrice = Number(higherPrice)
+        }
       }
 
       /**
        * Cut te first element of additional sections
        */
-       product.additionalSections?.shift()
+      product.additionalSections?.shift()
 
       /**
        * Set a brand
