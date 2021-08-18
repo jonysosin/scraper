@@ -1,4 +1,5 @@
 
+import { getSelectorOuterHtml } from 'providerHelpers/getSelectorOuterHtml'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
@@ -27,8 +28,44 @@ export default shopifyScraper(
           }
         })
 
+        sections.shift()
+
         return sections
       }, DESCRIPTION_PLACEMENT)
+
+       /**
+       * Add main description
+       */
+        const mainDescription = await page.evaluate(() => {
+          return document.querySelector('.resp-tab-content p')?.outerHTML.trim()
+        })
+        if (mainDescription) {
+          extraData.additionalSections.push({
+            name: 'Description',
+            content: mainDescription,
+            description_placement: DESCRIPTION_PLACEMENT.MAIN,
+          })
+        }
+
+      /**
+       * Add adjacent description
+       */
+        const adjacentDescription = await page.evaluate(() => {
+          const paragraphs = Array.from(document.querySelectorAll(".resp-tab-content:not(.tt-u-clip-hide) > p")).map(e => e?.outerHTML.trim())
+          paragraphs.shift()
+          paragraphs.shift()
+          // paragraphs.pop()
+          const  ul = Array.from(document.querySelectorAll(".resp-tab-content:not(.tt-u-clip-hide) > ul")).map(e => e?.outerHTML.trim())
+          const adjacent = [...paragraphs, ...ul]
+          return adjacent.toString()
+        })
+        if (adjacentDescription) {
+          extraData.additionalSections.push({
+            name: 'Adjacent Description',
+            content: adjacentDescription,
+            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+          })
+        }
 
       return extraData
     },
@@ -76,6 +113,15 @@ export default shopifyScraper(
       if (higherPrice) {
         product.higherPrice = Number(higherPrice)
       }
+
+      /**
+       * Add video from adjacent description
+       */
+      product.videos = await page.evaluate(() => {
+        return [document.querySelector('.videoWrapper iframe')?.getAttribute('src') || '']
+      })
+      console.log(product.videos);
+
 
       /**
        * Remove the first element of the array, as the additional section captured by
