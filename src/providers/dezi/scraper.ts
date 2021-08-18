@@ -40,8 +40,10 @@ export default shopifyScraper(
         })
       }
 
+
+
       /**
-       * Bullets
+       * Bullets .filter(e => !e.includes('Chart'))
        */
        extraData.bullets = await page.evaluate(() => {
         const sectionLis = Array.from(document.querySelectorAll('.gt-america-light-11'))
@@ -51,7 +53,11 @@ export default shopifyScraper(
       /**
        * Get Size Chart HTML
        */
-       extraData.sizeChartHtml = await getSelectorOuterHtml(page, ('.col-lg-4 .m-0').trim())
+       //
+       const size__chart = await getSelectorOuterHtml(page, ('#size').trim())
+       if (size__chart){
+        extraData.sizeChartHtml = await getSelectorOuterHtml(page, ('.col-lg-4 .m-0').trim())
+       }
 
       return extraData
     },
@@ -64,7 +70,7 @@ export default shopifyScraper(
       providerVariant,
       _extraData: TShopifyExtraData,
     ) => {
-      /**
+
       /**
        * Get the list of options for the variants of this provider
        * (1) ["COLOR"]
@@ -75,10 +81,30 @@ export default shopifyScraper(
       }
 
       /**
+       * Delete videos (only 2, product 1)
+       */
+      if (product.videos) {
+        product.videos = []
+      }
+
+      /**
        * Remove the first element of the array, as the additional section captured by
        * the generic shopify scraper is not correct in this case
        */
       product.additionalSections.shift()
+
+      /**
+       * Replace all the product images
+       */
+       const pageImage = await _page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.product .flex-nowrap img'))
+          .map(e => e.getAttribute('src') || '')
+          .filter(e => e !== '')
+      })
+
+      if (pageImage.length) {
+        product.images = pageImage
+      }
 
     },
   },
