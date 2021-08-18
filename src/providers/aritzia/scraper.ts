@@ -28,6 +28,13 @@ const scraper: Scraper = async (request, page) => {
     items.map((e: any) => e.textContent?.split('—')[0]?.trim() || '').filter(s => s),
   )
 
+  // bullets
+  const bullets = (
+    await page.$$eval('.js-product-accordion__content li', items =>
+      items.map(li => li.textContent?.trim() || ''),
+    )
+  ).filter(b => b)
+
   // sections
   const sectionDescription = {
     ...(await page.$eval('.designer-notes-container', section => ({
@@ -46,13 +53,6 @@ const scraper: Scraper = async (request, page) => {
       })),
     )
   ).map(section => ({ ...section, description_placement: DESCRIPTION_PLACEMENT.ADJACENT }))
-
-  // bullets
-  const bullets = (
-    await page.$$eval('.js-product-accordion__content li', items =>
-      items.map(li => li.textContent?.trim() || ''),
-    )
-  ).filter(b => b)
 
   const sections = [sectionDescription, ...sectionsAccordion]
 
@@ -146,12 +146,6 @@ const scraper: Scraper = async (request, page) => {
       e => e.textContent?.trim() || '',
     )
 
-    const bullets = await page.evaluate(() =>
-      Array.from(document.querySelectorAll('.js-product-accordion ul')[0].querySelectorAll('li'))
-        .map(i => i.textContent?.trim() || '')
-        .filter(s => s),
-    )
-
     const keyValuePairs = await page.evaluate(() =>
       Object.fromEntries(
         Array.from(document.querySelectorAll('.js-product-accordion ul')[1].querySelectorAll('li'))
@@ -196,7 +190,6 @@ const scraper: Scraper = async (request, page) => {
     variant.images = images
     variant.options = options
     variant.sizeChartHtml = allsizesChartsHTML[data.size] ?? allsizesChartsHTML.fixed ?? undefined
-    variant.bullets = bullets
     sections.map((section: any) => variant.addAdditionalSection(section))
     products.push(variant)
   }
