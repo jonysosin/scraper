@@ -10,54 +10,42 @@ export default shopifyScraper(
       /**
        * Add "Description" section
        */
-      const mainDescription = await page.evaluate(() => {
-        return document.querySelector('.product-description .desc p')?.outerHTML.trim()
-      })
-      if (mainDescription) {
-        extraData.additionalSections?.push({
+      const mainSection = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        const mainDescription = document.querySelector('#tab-1 p')?.outerHTML.trim() || ''
+        const alternativeDescription = document.querySelector('.desc span')?.outerHTML.trim() || ''
+
+        const main = {
           name: 'Description',
-          content: mainDescription,
+          content: mainDescription ? mainDescription : alternativeDescription,
           description_placement: DESCRIPTION_PLACEMENT.MAIN,
-        })
-      }
+        }
 
+        return main
+      }, DESCRIPTION_PLACEMENT)
       /**
-       * Get additional descriptions and information
+       * If exists, also add "Product specifications" section
        */
-      // Add "PRODUCT SPECIFICATIONS" section
-      const productSpecificationSection = await getSelectorOuterHtml(
-        page,
-        '.product-specifications .product-specs',
-      )
-      if (productSpecificationSection) {
-        extraData.additionalSections?.push({
-          name: 'Product Specifications',
-          content: productSpecificationSection,
-          description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
-        })
-      }
+      const distantSection = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        const productSpecifications = document.querySelector('.product-specs')?.outerHTML || ''
 
-      // Add "PRODUCT SPECIFICATIONS" section
-      const featuredContentSection = await getSelectorOuterHtml(
-        page,
-        '#shopify-section-product-featured-content',
-      )
-      if (featuredContentSection) {
-        extraData.additionalSections?.push({
-          name: 'Featured content',
-          content: featuredContentSection,
+        const distant = {
+          name: document.querySelector('.product-specifications h6')?.textContent || '',
+          content: productSpecifications,
           description_placement: DESCRIPTION_PLACEMENT.DISTANT,
-        })
+        }
+
+        return distant
+      }, DESCRIPTION_PLACEMENT)
+
+      extraData.additionalSections?.push(mainSection)
+
+      if (!Object.values(distantSection).includes('')) {
+        extraData.additionalSections?.push(distantSection)
       }
 
       return extraData
     },
     variantFn: async (_request, page, product, providerProduct, providerVariant) => {
-      /**
-       * Get the list of options for the variants of this provider
-       * (1) ["Title"]
-       */
-
       /**
        * Set fixed brand
        */
@@ -72,25 +60,19 @@ export default shopifyScraper(
        * Cut a title from | until the final
        */
       product.title = product.title.split(' | ')[0]
-
-      /**
-       * Get the color of the product
-       */
-      const color = await page.evaluate(() => {
-        return (
-          document
-            .querySelector('#bundles__oos')
-            // @ts-ignore
-            ?.innerText?.split(' ')
-            .map(word => word[0] + word.slice(1).toLowerCase())
-            .join(' ') || ''
-        )
-      })
-
-      if (color) {
-        product.color = color
-      }
     },
   },
   {},
 )
+
+// images = document.evaluate(
+//   "//style[contains(., 'image-')]",
+//   document,
+//   null,
+//   XPathResult.ANY_TYPE,
+//   null,
+// )
+// // @ts-ignore
+// allImages = images.iterateNext().innerHTML
+
+// lala = allImages.replace(/(image-\d).*url\((.*)\)/gim, '$1: $2')
