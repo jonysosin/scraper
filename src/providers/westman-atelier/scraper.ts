@@ -7,6 +7,17 @@ export default shopifyScraper(
     productFn: async (_request, page) => {
       const extraData: TShopifyExtraData = {}
       /**
+       * Get the breadcrumbs
+       */
+      // NOT APPLICABLE
+      // extraData.breadcrumbs = await page.evaluate(() => {
+      //   const breadcrumbsSelector = document.querySelector('nav.breadcrumbs')
+      //   return breadcrumbsSelector?.textContent
+      //     ? breadcrumbsSelector.textContent.replace(/\n/gim, '').split('›')
+      //     : []
+      // })
+
+      /**
        * Get additional descriptions and information
        */
       extraData.keyValuePairs = await page.evaluate(() => {
@@ -41,7 +52,7 @@ export default shopifyScraper(
     },
     variantFn: async (
       _request,
-      page,
+      _page,
       product,
       providerProduct,
       providerVariant,
@@ -56,41 +67,6 @@ export default shopifyScraper(
       }
       if (optionsObj.Size) {
         product.size = optionsObj.Size
-      }
-
-      /**
-       * Add image from adjacent description in the product gallery
-       */
-       const adjacentImages = await page.evaluate(() => {
-        return Array.from(document.querySelectorAll('.table-layout__cell > img.product-inspiration__feature-img'))
-          .map(e => e.getAttribute('src') || '')
-          .filter(e => e !== '')
-      })
-
-      /**
-       * Add images in the product gallery
-       */
-       const variantId = providerVariant.id.toString()
-
-      const images = await page.evaluate(variantId => {
-        // return Array.from(document.querySelectorAll('div[data-variant]')).filter(e=> e.getAttribute('data-variant') === variantId).map(e => Array.from(e.querySelectorAll('img')).map(e => e.getAttribute('data-src'))).flat()
-        return [...new Set(Array.from(document.querySelectorAll('div[data-variant]')).filter(e=> e.getAttribute('data-variant') === variantId).map(e => Array.from(e.querySelectorAll('img')).map(e => e.getAttribute('data-src') || '')).flat().filter(e => e !== ''))] || []
-      }, variantId)
-      product.images = [...images, ...adjacentImages]
-
-      /**
-      * Add tutorial video
-      */
-      await page.click('.product-tutorial__cover-link')
-      await page.waitForTimeout(3000)
-      const videos = await page.evaluate(() => {
-        return Array.from(document.querySelectorAll('#product-tutorial-video')).map(
-          e => e?.getAttribute('src') || '',
-        )
-      })
-
-      if (Array.isArray(videos) && videos.length) {
-        product.videos = [...product.videos, ...videos]
       }
 
       /**
