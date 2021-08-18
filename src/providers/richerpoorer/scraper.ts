@@ -67,11 +67,9 @@ export default shopifyScraper(
       }
 
       /**
-       * Filter only images for this variant
+       * Replace all the product images with the ones related by color (only if there're matches)
        */
-      product.images = providerProduct.images.filter(
-        img => providerVariant.featured_image.src.split('v=')[1] === img.split('v=')[1],
-      )
+      product.images = providerProduct.images.filter(img => img.includes(providerVariant.sku))
     },
   },
   {},
