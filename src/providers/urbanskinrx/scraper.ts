@@ -1,3 +1,4 @@
+import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
@@ -9,7 +10,6 @@ export default shopifyScraper(
       /**
        * Get the breadcrumbs
        */
-
       //@ts-ignore
       extraData.breadcrumbs = await page.evaluate(() => {
         const breadcrumbsSelector = document.querySelectorAll('ul.breadcrumbs li')
@@ -18,10 +18,6 @@ export default shopifyScraper(
           ? Array.from(breadcrumbsSelector).map(e => e.textContent)
           : []
       })
-
-      /**
-       * Add main
-       */
 
       /**
        * Get additional descriptions and information
@@ -39,6 +35,42 @@ export default shopifyScraper(
           return acc
         }, {})
       })
+
+      /**
+       * Replace the product's main description for the one appearing below the title
+       */
+      extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        const description = document.querySelector('.product-info__content')
+        const descriptionAdjacent = {
+          name: document.querySelector('.product__details--tab h4'),
+          content: Array.from(document.querySelectorAll('.product__details--tab-content'))
+            .map(e => e.outerHTML.trim())
+            .join(),
+        }
+        const distantDescription = {
+          name: document.querySelector('.grid-container.product__ingredients--container h2'),
+          content: Array.from(document.querySelectorAll('.grid-x.product__ingredients--grid'))
+            .map(e => e.outerHTML.trim())
+            .join(''),
+        }
+        return [
+          {
+            name: 'Description',
+            content: description?.textContent?.trim() || '',
+            description_placement: DESCRIPTION_PLACEMENT.MAIN,
+          },
+          {
+            name: descriptionAdjacent.name?.textContent || '',
+            content: descriptionAdjacent.content,
+            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+          },
+          {
+            name: distantDescription.name?.textContent || '',
+            content: distantDescription.content,
+            description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+          },
+        ]
+      }, DESCRIPTION_PLACEMENT)
 
       /**
        * Get Size Chart HTML
@@ -71,6 +103,13 @@ export default shopifyScraper(
        * Example: "High-Waist Catch The Light Short - Black"
        */
       product.title = product.title.replace(/ - [^-]+$/, '')
+
+      /**
+       * Get product higher price
+       */
+      product.higherPrice = providerProduct.price_max / 100
+
+      product.additionalSections.shift()
     },
   },
   {},
