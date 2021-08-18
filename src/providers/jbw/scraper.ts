@@ -7,6 +7,19 @@ export default shopifyScraper(
   {
     productFn: async (_request, page) => {
       const extraData: TShopifyExtraData = { additionalSections: [] }
+      /**
+       * Add "Description" section
+       */
+      const mainDescription = await page.evaluate(() => {
+        return document.querySelector('.product-description .desc p')?.outerHTML.trim()
+      })
+      if (mainDescription) {
+        extraData.additionalSections?.push({
+          name: 'Description',
+          content: mainDescription,
+          description_placement: DESCRIPTION_PLACEMENT.MAIN,
+        })
+      }
 
       /**
        * Get additional descriptions and information
@@ -44,6 +57,21 @@ export default shopifyScraper(
        * Get the list of options for the variants of this provider
        * (1) ["Title"]
        */
+
+      /**
+       * Set fixed brand
+       */
+      product.brand = 'JBW'
+
+      /**
+       * Cut the fist element from additional sections
+       */
+      product.additionalSections.shift()
+
+      /**
+       * Cut a title from | until the final
+       */
+      product.title = product.title.split(' | ')[0]
     },
   },
   {},
