@@ -1,4 +1,4 @@
-import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
+import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
 
 export default shopifyScraper(
@@ -9,7 +9,13 @@ export default shopifyScraper(
       /**
        * Get Size Chart HTML
        */
-      extraData.sizeChartHtml = await getSelectorOuterHtml(page, '.modal__content')
+      await page.click('.product-selector__option--title__link a')
+      await page.waitForTimeout(4000)
+ 
+      extraData.sizeChartHtml = await page.evaluate(() => {
+        const element = document.querySelector('.size-chart__table')
+        return element?.outerHTML
+      }) 
 
       return extraData
     },
@@ -17,9 +23,33 @@ export default shopifyScraper(
       _request,
       _page,
       product,
-
+      providerProduct, 
+      providerVariant,
       _extraData: TShopifyExtraData,
     ) => {
+
+        /**
+       * Get the list of options for the variants of this provider
+       * ["Size"]
+       */
+         const optionsObj = getProductOptions(providerProduct, providerVariant)
+         if (optionsObj.Size) {
+           product.size = optionsObj.Size
+         }
+
+         /**
+       * Replace all the product images 
+       */
+         const pageImage = await _page.evaluate(() => {
+          return Array.from(document.querySelectorAll('section img'))
+            .map(e => e.getAttribute('src') || '')
+            .filter(e => e !== '')
+        })
+  
+
+        if (pageImage.length) {
+          product.images = pageImage
+        }
   
       /**
        * Sometimes, the title needs a replacement to remove the color at the end (if exists)
