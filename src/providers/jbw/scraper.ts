@@ -72,6 +72,24 @@ export default shopifyScraper(
        * Cut a title from | until the final
        */
       product.title = product.title.split(' | ')[0]
+
+      /**
+       * Get the color of the product
+       */
+      const color = await page.evaluate(() => {
+        return (
+          document
+            .querySelector('#bundles__oos')
+            // @ts-ignore
+            ?.innerText?.split(' ')
+            .map(word => word[0] + word.slice(1).toLowerCase())
+            .join(' ') || ''
+        )
+      })
+
+      if (color) {
+        product.color = color
+      }
     },
   },
   {},
