@@ -55,6 +55,40 @@ const scraper: Scraper = async (request, page) => {
     document.querySelector('.how-to-use-wrapper iframe')?.getAttribute('src'),
   )
 
+  const bullets = await page.$$eval('div.main-description-wrapper ul li', lis =>
+    lis.map(li => li.textContent ?? ''),
+  )
+
+  bullets.push(
+    ...((await page.evaluate(() =>
+      document
+        .querySelector('div.how-to-use-wrapper')
+        ?.textContent?.split('\n')
+        .map(x => x.trim())
+        .filter(x => x.charAt(0) === '-'),
+    )) || []),
+  )
+
+  bullets.push(
+    ...(await page.evaluate(() =>
+      Array.from(document.querySelectorAll('div.cms-content-important p'))
+        .map(
+          x =>
+            x?.textContent
+              ?.split('\n')
+              .map(x => x.trim())
+              .filter(x => x.charAt(0) === '-') || '',
+        )
+        .flat(),
+    )),
+  )
+
+  // Remove this so it's not included in the description section
+  await page.evaluate(() => {
+    document.querySelector('div.composition-wrapper')?.remove()
+  })
+
+  product.availability = data2.is_salable === '1'
   product.sku = product.id
   product.realPrice = data2.price_info.final_price
   product.higherPrice = data2.price_info.regular_price
@@ -65,9 +99,7 @@ const scraper: Scraper = async (request, page) => {
   product.brand = data.brand
   product.description = await getDescription(page)
   product.keyValuePairs = { size: product.size }
-  product.bullets = await page.$$eval('div.main-description-wrapper ul li', lis =>
-    lis.map(li => li.textContent ?? ''),
-  )
+  product.bullets = bullets
   product.addAdditionalSection({
     name: 'DESCRIPTION',
     content: await page.$eval('div.main-description-wrapper', e =>
