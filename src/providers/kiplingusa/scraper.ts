@@ -52,7 +52,7 @@ const scraper: Scraper = async (request, page) => {
           const node = document.querySelector('.product-variations .selected-value')!
           if (!node) return false
           // @ts-ignore
-          return node.innerText === selection
+          return node.innerText.trim() === selection.trim()
         },
         {},
         title!,
@@ -72,9 +72,10 @@ const scraper: Scraper = async (request, page) => {
 
     const product = new Product(id, mainTitle, url)
 
-    await page.waitForSelector('.zoomImg')
-    product.images = await page.$$eval('.zoomImg', imgs =>
-      imgs.map(img => img.getAttribute('src')!),
+    await page.waitForSelector('.big-img-gallery')
+    product.images = await page.$$eval('.big-img-gallery', imgs =>
+      // @ts-ignore
+      imgs.map(img => img.dataset.src)
     )
 
     product.description = await page.$eval('.pdp-description-wrapper', e => e.textContent!.trim())
