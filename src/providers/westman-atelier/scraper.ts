@@ -70,15 +70,6 @@ export default shopifyScraper(
       }
 
       /**
-       * Add image from adjacent description in the product gallery
-       */
-       const adjacentImages = await page.evaluate(() => {
-        return Array.from(document.querySelectorAll('.table-layout__cell > img.product-inspiration__feature-img'))
-          .map(e => e.getAttribute('src') || '')
-          .filter(e => e !== '')
-      })
-
-      /**
        * Sometimes, the title needs a replacement to remove the color at the end (if exists)
        * Example: "High-Waist Catch The Light Short - Black"
        */
