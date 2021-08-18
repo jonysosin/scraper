@@ -60,10 +60,6 @@ export default shopifyScraper(
       }
 
       /**
-       *
-       */
-
-      /**
        * Get the list of options for the variants of this provider
        * (5) ["Title", "Color", "Style", "Amount", "Size"]
        */
