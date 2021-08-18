@@ -39,8 +39,7 @@ const scraper: Scraper = async (request, page) => {
   const sectionDescription = {
     ...(await page.$eval('.designer-notes-container', section => ({
       title: section.querySelector('.pdp-short-description')?.textContent?.trim() || '',
-      content:
-        section.querySelector('.js-product-accordion__content.f0')?.textContent?.trim() || '',
+      content: section.querySelector('.js-product-accordion__content.f0')?.innerHTML,
     }))),
     description_placement: DESCRIPTION_PLACEMENT.MAIN,
   }
