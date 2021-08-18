@@ -40,10 +40,16 @@ export const getProductJson = async (page: Page, productUrl: string) => {
 const scraper: IScraper = async (request, page) => {
   const { protocol, resource, pathname } = parseUrl(request.pageUrl)
 
-  const pid = last(pathname.split('/'))?.split('.html')[0] || ''
-  const baseProductUrl = `https://www.altardstate.com/on/demandware.store/Sites-altardstate-Site/default/Product-Variation?pid=${pid}`
-  console.log(baseProductUrl)
-  const baseProductData = await getProductJson(page, baseProductUrl)
+  let pid = last(pathname.split('/'))?.split('.html')[0] || ''
+  let baseProductUrl = `https://www.altardstate.com/on/demandware.store/Sites-altardstate-Site/default/Product-Variation?pid=${pid}`
+  console.log('base', baseProductUrl)
+  let baseProductData = await getProductJson(page, baseProductUrl)
+  if (baseProductData.product.productType !== 'master') {
+    pid = baseProductData.product.masterPID
+    baseProductUrl = `https://www.altardstate.com/on/demandware.store/Sites-altardstate-Site/default/Product-Variation?pid=${pid}`
+    baseProductData = await getProductJson(page, baseProductUrl)
+  }
+  console.log('base', baseProductUrl)
 
   // Website screenshot
   await page.goto(request.pageUrl)
@@ -79,7 +85,7 @@ const scraper: IScraper = async (request, page) => {
   for (const variantData of variantsData) {
     const { id, url } = variantData
 
-    console.log(url)
+    console.log('varian', url)
 
     const productData = await getProductJson(page, url)
     const title = productData.product.productName
