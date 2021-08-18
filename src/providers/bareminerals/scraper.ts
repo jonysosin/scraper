@@ -1,6 +1,6 @@
 import type { Page } from 'puppeteer'
 import Product from '../../entities/product'
-import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
+import { DESCRIPTION_PLACEMENT, IDescriptionSection } from '../../interfaces/outputProduct'
 import IScraper from '../../interfaces/scraper'
 import screenPage from '../../utils/capture'
 import { extractMetaTags, mergeMetaTags } from '../../utils/extractors'
@@ -8,7 +8,7 @@ import { autoScroll } from '../../providerHelpers/autoScroll'
 
 const scraper: IScraper = async (request, page) => {
   // Website screenshot
-  await page.goto(request.pageUrl)
+  await page.goto(request.pageUrl, { waitUntil: 'networkidle0' })
   const screenshot = await screenPage(page)
 
   // Products / Variants
@@ -50,7 +50,7 @@ async function getProduct(page: Page, productUrl: string) {
   const id = await page.$eval('div#pdpMain', e => e.getAttribute('tealium-product-master-id') || '')
   const title = await page.$eval(
     'h1.product-name',
-    e => e.textContent?.replaceAll('\n', '').trim() || '',
+    e => e.textContent?.replaceAll('\n', '').trim().toUpperCase() || '',
   )
 
   const variantData = await page.$eval('div.product-variations', e =>
@@ -68,9 +68,15 @@ async function getProduct(page: Page, productUrl: string) {
     imgs.map(img => img?.getAttribute('src')?.replace('//', '') || ''),
   )
 
+  const videos: string[] = []
   const video = await page.evaluate(() =>
     document.querySelector('.video-container iframe')?.getAttribute('src')?.replace('//', ''),
   )
+  if (video) videos.push(video)
+  const video2 = await page.evaluate(() =>
+    document.querySelector('.pdp-video-wrapper iframe')?.getAttribute('src')?.replace('//', ''),
+  )
+  if (video2) videos.push(video2)
 
   const [sizeKey, sizeValue] = await page.$eval(
     '.size-label .text-copy',
@@ -80,21 +86,38 @@ async function getProduct(page: Page, productUrl: string) {
     [sizeKey]: sizeValue,
   }
 
-  const additionSections = await page.evaluate(
-    DESCRIPTION_PLACEMENT =>
-      Array.from(document.querySelectorAll('.tab-pane')).map(tab => {
-        const name = tab.getAttribute('id')?.split('-')[1].toUpperCase() || ''
-        const content =
-          tab
-            .querySelector('.product-tab-content')
-            ?.outerHTML.replaceAll('\n', '')
-            .replaceAll('\t', '')
-            .trim() || ''
-        const description_placement =
-          name === 'DETAILS' ? DESCRIPTION_PLACEMENT.MAIN : DESCRIPTION_PLACEMENT.ADJACENT
-        return { name, content, description_placement }
-      }),
-    DESCRIPTION_PLACEMENT,
+  const additionalSections: IDescriptionSection[] = []
+
+  additionalSections.push({
+    name: 'DESCRIPTION',
+    content: await page.evaluate(
+      () =>
+        document
+          .querySelector('.short-description')
+          ?.outerHTML.replaceAll('\n', '')
+          .replaceAll('\t', '')
+          .trim() || '',
+    ),
+    description_placement: DESCRIPTION_PLACEMENT.MAIN,
+  })
+
+  additionalSections.push(
+    ...(await page.evaluate(
+      DESCRIPTION_PLACEMENT =>
+        Array.from(document.querySelectorAll('.tab-pane')).map(tab => {
+          return {
+            name: tab.getAttribute('id')?.split('-')[1].toUpperCase() || '',
+            content:
+              tab
+                .querySelector('.product-tab-content')
+                ?.outerHTML.replaceAll('\n', '')
+                .replaceAll('\t', '')
+                .trim() || '',
+            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+          }
+        }),
+      DESCRIPTION_PLACEMENT,
+    )),
   )
 
   const bullets = await page.evaluate(() =>
@@ -107,7 +130,23 @@ async function getProduct(page: Page, productUrl: string) {
 
   bullets.push(
     ...(await page.evaluate(() =>
+      Array.from(document.querySelectorAll('#tab-details.tab-pane ul li')).map(
+        e => e.textContent?.replaceAll('\t', '') || '',
+      ),
+    )),
+  )
+
+  bullets.push(
+    ...(await page.evaluate(() =>
       Array.from(document.querySelectorAll('#tab-benefits.tab-pane ul li')).map(
+        e => e.textContent?.replaceAll('\t', '') || '',
+      ),
+    )),
+  )
+
+  bullets.push(
+    ...(await page.evaluate(() =>
+      Array.from(document.querySelectorAll('#tab-instructions.tab-pane ul li')).map(
         e => e.textContent?.replaceAll('\t', '') || '',
       ),
     )),
@@ -129,15 +168,15 @@ async function getProduct(page: Page, productUrl: string) {
   }
 
   product.subTitle = await page.$eval('p.sub-header', e => e.textContent || '')
+  product.itemGroupId = id
   product.sku = variantId // TODO: find real sku
-  product.brand = metaTags['og:site_name']
+  product.brand = 'bareMinerals'
   product.images = images
-  if (video) {
-    product.videos = [video]
-  }
+  product.videos = videos
   product.size = sizeValue
   if (variantData?.SkinShade?.displayValue) {
     product.color = variantData.SkinShade.displayValue
+    product.options = { SkinShade: variantData.SkinShade.displayValue }
   }
   product.realPrice = realPrice
   product.higherPrice = higherPrice
@@ -152,7 +191,7 @@ async function getProduct(page: Page, productUrl: string) {
     elements.map(e => e.textContent || ''),
   )
   product.metadata = { metaTags }
-  product.addAdditionalSections(additionSections)
+  product.addAdditionalSections(additionalSections)
 
   return product
 }

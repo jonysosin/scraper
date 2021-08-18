@@ -81,7 +81,6 @@ export default shopifyScraper(
       }, DESCRIPTION_PLACEMENT)
 
       extraData.additionalSections = [...mainDescription, ...additionalSection, ...productStory]
-
       /**
        * Get Size Chart HTML
        */
@@ -89,14 +88,21 @@ export default shopifyScraper(
 
       return extraData
     },
-    variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
+    variantFn: async (_request, page, product, providerProduct, providerVariant) => {
       /**
-       * (2) ["Title", "Color"]
+       * Get the color of the product
        */
-      const optionsObj = getProductOptions(providerProduct, providerVariant)
-      if (optionsObj.Color) {
-        product.color = optionsObj.Color
+      const color = await page.evaluate(() => {
+        return document.querySelector('.product__current-color')?.textContent?.trim() || ''
+      })
+
+      if (color) {
+        product.color = color
       }
+      /**
+       * Adding product selected color into options
+       */
+      product.options = { ...product.options, Color: color }
 
       /**
        * Cut the first element from array
