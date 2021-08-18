@@ -18,7 +18,7 @@ export default shopifyScraper(
 
         // Get a list of content for the titles above
         const values = Array.from(document.querySelectorAll('div.content > section')).map(e =>
-          e?.outerHTML?.trim(),
+          e?.outerHTML?.trim().replace(/\<img.+\>/g, ''),
         )
 
         // Join the two arrays
@@ -34,10 +34,25 @@ export default shopifyScraper(
       /**
        * This site differs from the others and has a particular description included in the HTML (not the JSON)
        */
-      const description = await page.evaluate(() => {
-        return document.querySelector('.product-single__meta > p')?.outerHTML?.trim()
+      let description = await page.evaluate(() => {
+        /**
+         * In case there is main description right under the product title, we use it as MAIN.
+         * Else use Technology & Features
+         */
+        const mainDescription = document.querySelector('.product-single__meta > p')
+
+        if (mainDescription?.textContent) {
+          return document.querySelector('.product-single__meta > p')?.outerHTML?.trim()
+        }
+        return false
       })
-      if (description) {
+
+      /**
+       * If no main description was find, we use the first element we got in additionalSections
+       */
+      if (!description) {
+        extraData.additionalSections[0].description_placement = DESCRIPTION_PLACEMENT.MAIN
+      } else {
         extraData.additionalSections?.push({
           name: 'Description',
           content: description,
@@ -70,12 +85,16 @@ export default shopifyScraper(
         const descriptionSection = extraData.additionalSections.find(s => s.name === 'Description')
         if (descriptionSection) {
           product.description = parseHtmlTextContent(descriptionSection.content)
+        } else {
+          product.description = parseHtmlTextContent(extraData.additionalSections[0].content)
+            .replace(/\[.*\]/g, '')
+            .trim()
         }
       }
 
       /**
        * Get the list of options for the variants of this provider
-       * (6) ["Title", "Plans", "Size", "Model", "Card Amount", "Color"]
+       * (6) ["Title", "Plans", "Size", "Model", "Card Amount", "Color"]
        */
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Color) {
@@ -85,17 +104,29 @@ export default shopifyScraper(
         product.size = optionsObj.Size
       }
 
-
       /**
        * Get videos
        */
       const video = await page.evaluate(() => {
         return document.querySelector('.full-width-youtube iframe')?.getAttribute('src')
       })
-
       if (video) {
         product.videos.push(video)
       }
+
+      /**
+       * Get image adjacent
+       */
+      const images = await page.evaluate(() => {
+        return document.querySelector('.section-col > img')?.getAttribute('src') || []
+      })
+
+      product.images.push(images.toString())
+
+      /**
+       * Remove the auto generated main description
+       */
+      product.additionalSections.shift()
     },
   },
   {},
