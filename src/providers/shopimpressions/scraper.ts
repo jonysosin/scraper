@@ -60,10 +60,14 @@ export default shopifyScraper(
     ) => {
    /**
        * Get the list of options for the variants of this provider
+       * (2) ["Size", "Color"]
        */
     const optionsObj = getProductOptions(providerProduct, providerVariant)
     if (optionsObj.Color) {
       product.color = optionsObj.Color
+    }
+    if (optionsObj.Size) {
+      product.size = optionsObj.Size
     }
     /**
      * Cut the first element of array
