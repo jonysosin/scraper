@@ -9,7 +9,7 @@ export default shopifyScraper(
       /**
        * Get Size Chart HTML
        */
-      await page.click('.product-selector__option--title__link a')
+      await page.click('.product-selector__options .product-selector__option--title__link a')
       await page.waitForTimeout(4000)
  
       extraData.sizeChartHtml = await page.evaluate(() => {
