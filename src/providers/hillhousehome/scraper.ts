@@ -146,7 +146,7 @@ export default shopifyScraper(
       }
 
       /**
-       * Add correct real price from variant price
+       * Add correct real price
        */
       const realPrice = await page.evaluate(() => {
         return document.querySelector('.product__priceList p')?.textContent?.trim().replace('$', '')
