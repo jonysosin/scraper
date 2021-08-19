@@ -1,7 +1,5 @@
-thetinytassel:
-  - https://thetinytassel.com/products/happy-birthyay-cocktail-napkins-20-pk
-  # - https://thetinytassel.com/products/birthday-cake-shaped-napkins?pr_prod_strat=copurchase&pr_rec_pid=5977439928483&pr_ref_pid=6827272568995&pr_seq=uniform
-  # - https://thetinytassel.com/products/the-elliot-earring-blush
-  # - https://thetinytassel.com/products/copy-of-the-cumberland-midi-dress-in-navy-gingham?variant=40868773298339
-  # - https://thetinytassel.com/products/the-elliot-earring-blush?pr_prod_strat=copurchase&pr_rec_pid=5683275038883&pr_ref_pid=7066282524835&pr_seq=uniform
-  # - https://thetinytassel.com/products/the-lemon-earring?pr_prod_strat=copurchase&pr_rec_pid=5683275169955&pr_ref_pid=5683275038883&pr_seq=uniform
+spartina449: # add . to the provider name to skip all its urls
+  - https://www.spartina449.com/lowcountry-pearl-necklace-silver-atlantic-opal.html
+_4ocean:
+  # - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
+  - https://www.4ocean.com/products/4ocean-logo-womens-v-neck-long-sleeve-t-shirt
