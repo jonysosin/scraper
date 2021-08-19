@@ -1,3 +1,4 @@
+import { TMediaImage } from '../shopify/types'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 import { getProductOptions } from '../shopify/helpers'
@@ -40,14 +41,12 @@ export default shopifyScraper(
         })
       }
 
-
-
       /**
-       * Bullets .filter(e => !e.includes('Chart'))
+       * Bullets
        */
        extraData.bullets = await page.evaluate(() => {
         const sectionLis = Array.from(document.querySelectorAll('.gt-america-light-11'))
-        return sectionLis.map(li => li.textContent?.trim() || '') || []
+        return sectionLis.map(li => li.textContent?.trim() || '').filter(e => !e.includes('Chart')) || []
       })
 
       /**
@@ -93,18 +92,71 @@ export default shopifyScraper(
        */
       product.additionalSections.shift()
 
-      /**
-       * Replace all the product images
-       */
-       const pageImage = await _page.evaluate(() => {
-        return Array.from(document.querySelectorAll('.product .flex-nowrap img'))
-          .map(e => e.getAttribute('src') || '')
-          .filter(e => e !== '')
-      })
+      // const pageImage = await _page.evaluate(() => {
+      //   return Array.from(document.querySelectorAll('.product .flex-nowrap img'))
+      //     .map(e => e.getAttribute('src') || '')
+      //     .filter(e => e !== '')
+      // })
 
-      if (pageImage.length) {
-        product.images = pageImage
+      // if (pageImage.length) {
+      //   product.images = pageImage
+      // }
+
+      /**
+       * Replace all the product images with the ones related by color (only if there're matches)
+       */
+       if (product.color) {
+        const color = product.color
+        const images = (providerProduct.media as TMediaImage[])
+          .filter(e => {
+            const relatedVariants =
+              e.alt
+                ?.split(',')
+                .map(e => e.trim().split('|'))
+                .flat()
+                .map(e => e.replace(/\*/g, '')?.trim()) || []
+            return relatedVariants.includes(color)
+          })
+          .map(e => e?.src || '')
+          .filter(e => e !== '')
+
+        // Add the featured image at the beginning
+        if (providerVariant?.featured_image.src) {
+          images.unshift(providerVariant?.featured_image?.src)
+        }
+        if (images.length) {
+          product.images = images
+        }
       }
+
+
+            /**
+       * Replace all the product images with the ones related by color (only if there're matches)
+       */
+      //        if (product.color) {
+      //         const images = await page.evaluate(
+      //           color => {
+      //             return Array.from(
+      //               document.querySelectorAll(
+      //                 `.product .flex-nowrap.flex-lg-wrap.no-gutters[data-color="${color}"] img`,
+      //               ),
+      //             )
+      //               .map(e => e.getAttribute('data-src') || '')
+      //               .filter(e => e !== '')
+      //           },
+      //           product.color
+      //             .replace(/\//g, '-') // Bylt replaces / with - in color for images
+      //             .replace(/\s.*/, '') // Bylt keeps only first word before space
+      //             .toLowerCase(),
+      //         )
+      //         if (images.length) {
+      //           product.images = images
+      //         }
+      //       }
+
+      // if (pageImage.length) {
+      //   product.images = pageImage
+      // }
 
     },
   },
