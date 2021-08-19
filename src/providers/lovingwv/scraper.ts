@@ -2,11 +2,13 @@ import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
 import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
+import { remove } from 'lodash'
 
 export default shopifyScraper(
   {
-    productFn: async (_request, page) => {
-      const extraData: TShopifyExtraData = {}
+    productFn: async (_request, page, providerProduct) => {
+      const extraData: TShopifyExtraData = { additionalSections: ({} = []), sizeChartUrls: [] }
+
       /**
        * Get the breadcrumbs
        */
@@ -20,42 +22,63 @@ export default shopifyScraper(
           : []
       })
 
+      /**
+       * Get sizeChart from description. Can be image or table
+       */
+      const sizeChartImg = await page.evaluate(() => {
+        const sizeChartImg = document.querySelector('.description img')?.getAttribute('src')
+        return sizeChartImg || null
+      })
+
+      if (sizeChartImg) {
+        extraData.sizeChartUrls?.push(sizeChartImg)
+      }
+
       extraData.sizeChartHtml = await getSelectorOuterHtml(page, 'table')
 
       /**
-       * Get additional descriptions and information
+       * Get description and remove sizecharts from product description
        */
-      extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
-        const section = Array.from(document.querySelectorAll('.description > :not(table, meta)'))
+      const description = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        /**
+         * Remove sizeChart <table> if exists
+         */
+        const sizeChartTable = document.querySelector('.description table')
 
-        // Get a list of content for the titles above
-        const values = section.map(e => e?.outerHTML?.trim())
+        if (sizeChartTable) {
+          sizeChartTable.remove()
+        }
 
-        // Join the two arrays
-        const sections = values.map((value, i) => {
-          return {
-            name: 'Adjacent description',
-            content: value || '',
-            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+        /**
+         * Get the <p> elements and iterate through them removing every one since the
+         * first 'Sizing:' or 'Free shipping:' appearance
+         */
+        const parsedDescription = Array.from(document.querySelectorAll('.description > p')) || []
+
+        let remove = false
+        for (let i = 0; i < parsedDescription.length; i++) {
+          if (
+            ['sizing:', 'free shipping!', 'free shipping'].includes(
+              parsedDescription[i].textContent?.toLowerCase() || '',
+            )
+          ) {
+            remove = true
           }
-        })
+          if (remove) {
+            parsedDescription[i].remove()
+          }
+        }
 
-        sections.shift()
-
-        return sections
+        return [
+          {
+            name: 'Description',
+            content: document.querySelector('.description')?.outerHTML?.trim() || '',
+            description_placement: DESCRIPTION_PLACEMENT.MAIN,
+          },
+        ]
       }, DESCRIPTION_PLACEMENT)
 
-      /**
-       * The description comes with a size chart
-       */
-      const description = await page.evaluate(() => {
-        return document.querySelector('.description > :not(table, meta)')?.outerHTML || ''
-      })
-      extraData.additionalSections.push({
-        name: 'Description',
-        content: description,
-        description_placement: DESCRIPTION_PLACEMENT.MAIN,
-      })
+      extraData.additionalSections?.push(...description)
 
       return extraData
     },
@@ -68,6 +91,11 @@ export default shopifyScraper(
       extraData: TShopifyExtraData,
     ) => {
       /**
+       * Remove auto generated main description
+       */
+      product.additionalSections.shift()
+
+      /**
        * Get the list of options for the variants of this provider
        * (6) ["Title", "Size", "Color", "Display Stand", "Denominations", "Hat Color"]
        */
@@ -78,11 +106,6 @@ export default shopifyScraper(
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
-
-      /**
-       * Cut the first element from array
-       */
-      product.additionalSections.shift()
     },
   },
   {},
