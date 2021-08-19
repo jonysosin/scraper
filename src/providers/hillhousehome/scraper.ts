@@ -97,11 +97,9 @@ export default shopifyScraper(
       /**
        * Replace all the product images with the ones related by color (only if there're matches)
        */
-      await page.waitForTimeout(9000)
+      await page.waitForTimeout(11000)
       if (product.color) {
-        const colorSlug = product.color
-          .replace(/\//g, '-') // Bylt replaces / with - in color for images
-          .replace(/\s.*/, '') // Bylt keeps only first word before space
+        const colorSlug = product.color.replace(/\//g, '-')
         const images = await page.$$eval(
           `.Product__SlideItem--image div img[data-color="${colorSlug}"]`,
           imgs => imgs.map(img => img.getAttribute('data-original-src') || '').filter(i => i),
