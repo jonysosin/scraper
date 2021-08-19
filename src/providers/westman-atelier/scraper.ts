@@ -70,7 +70,7 @@ export default shopifyScraper(
       })
 
       /**
-       * Add image from adjacent description in the product gallery
+       * Add center png image
        */
       const pngImage1 = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('.product-float-img__product-img'))
@@ -81,7 +81,7 @@ export default shopifyScraper(
       })
 
       /**
-       * Add image from adjacent description in the product gallery
+       * Add center png image
        */
       const pngImage2 = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('.product__feature-img__smear-overlay'))
