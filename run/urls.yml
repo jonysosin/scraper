@@ -1,12 +1,5 @@
-crete:
-  - https://www.crete.co/products/asphalt-nail-paint
-  - https://www.crete.co/products/concrete-brick
-  - https://www.crete.co/products/sheetrock-nail-paint
-  - https://www.crete.co/products/feels-like-summer-nail-sticker-pack
-  - https://www.crete.co/products/heartbreak-red
-  - https://www.crete.co/products/negatives-nail-sticker-pack
-  - https://www.crete.co/products/heatwave-002-collection-set
-  - https://www.crete.co/products/sunset-orange
-  - https://www.crete.co/products/sunflower-yellow
-  - https://www.crete.co/products/constructed-nail-sticker-pack
-  - https://www.crete.co/products/solstice-nail-sticker-pack
+spartina449: # add . to the provider name to skip all its urls
+  - https://www.spartina449.com/lowcountry-pearl-necklace-silver-atlantic-opal.html
+_4ocean:
+  # - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
+  - https://www.4ocean.com/products/4ocean-logo-womens-v-neck-long-sleeve-t-shirt
