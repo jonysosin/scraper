@@ -13,14 +13,12 @@ export default shopifyScraper(
        */
       const mainSection = await page.evaluate(DESCRIPTION_PLACEMENT => {
         /**
-         * get ALL the variants for the description selectors
+         * Title selector can change depending on the product
          */
         const description = Object.values({
           first: document.querySelector('#tab-1 p')?.outerHTML.trim() || '',
           second: document.querySelector('.desc span')?.outerHTML.trim() || '',
-          third: document.querySelector("[class*='product-description']")?.outerHTML.trim() || '',
-          fourth: document.querySelector('.second_chance_desc p')?.outerHTML.trim() || '',
-          fifth: document.querySelector('.warranty-title p')?.outerHTML.trim() || '',
+          third: document.querySelector('.second_chance_desc p')?.outerHTML.trim() || '',
         })
           .filter(e => e.length)
           .join('')
@@ -33,9 +31,35 @@ export default shopifyScraper(
 
         return main
       }, DESCRIPTION_PLACEMENT)
+
+      extraData.additionalSections?.push(mainSection)
+
       /**
-       * If exists, also add "Product specifications" section
-       * NOTE: Sometimes, it does exists, but it doesn't have any text in it's body
+       * If exists, also add "Specifications" as adjacent
+       */
+
+      const adjacentSection = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        const key = document.querySelector('.tabs span:nth-child(2)')?.textContent || ''
+        const value = document.querySelector('.tabs ul')?.outerHTML || ''
+
+        const adjacent = {
+          name: key,
+          content: value,
+          description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+        }
+
+        return adjacent
+      }, DESCRIPTION_PLACEMENT)
+
+      if (adjacentSection.content) {
+        extraData.additionalSections?.push(adjacentSection)
+      }
+
+      extraData.bullets = [adjacentSection.content]
+
+      /**
+       * Again, if exists, add "Product specifications" section as distant
+       * NOTE: Sometimes, it does exists, but it doesn't have any content
        */
       const distantSection = await page.evaluate(DESCRIPTION_PLACEMENT => {
         const productSpecifications = document.querySelector('.product-specs')?.outerHTML || ''
@@ -49,9 +73,7 @@ export default shopifyScraper(
         return distant
       }, DESCRIPTION_PLACEMENT)
 
-      extraData.additionalSections?.push(mainSection)
-
-      if (!Object.values(distantSection).includes('')) {
+      if (distantSection.content) {
         extraData.additionalSections?.push(distantSection)
       }
 
