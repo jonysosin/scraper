@@ -184,6 +184,7 @@ const scraper: Scraper = async (request, page) => {
     // @ts-ignore
     product.breadcrumbs = await getBreadcrumbs(page)
     product.bullets = await getBullets(page)
+    product.brand = 'Kipling'
 
     await addSections(product, page)
 
