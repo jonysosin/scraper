@@ -76,8 +76,6 @@ export default shopifyScraper(
         return Array.from(document.querySelectorAll('.product-float-img__product-img'))
           .map(e => e.getAttribute('src') || '')
           .filter(e => e !== '')
-
-        // return document.querySelector('.product-float-img__product-img')?.getAttribute('src')
       })
 
       /**
@@ -87,8 +85,6 @@ export default shopifyScraper(
         return Array.from(document.querySelectorAll('.product__feature-img__smear-overlay'))
           .map(e => e.getAttribute('src') || '')
           .filter(e => e !== '')
-
-        // return document.querySelector('.product__feature-img__smear-overlay')?.getAttribute('src')
       })
 
       /**
@@ -96,8 +92,7 @@ export default shopifyScraper(
        */
       const variantId = providerVariant.id.toString()
 
-      const images = await page.evaluate(variantId => {
-        // return Array.from(document.querySelectorAll('div[data-variant]')).filter(e=> e.getAttribute('data-variant') === variantId).map(e => Array.from(e.querySelectorAll('img')).map(e => e.getAttribute('data-src'))).flat()
+      let images = await page.evaluate(variantId => {
         return (
           [
             ...new Set(
@@ -112,6 +107,9 @@ export default shopifyScraper(
           ] || []
         )
       }, variantId)
+
+      const videosGallery = images.filter(e => e.includes('player'))
+      images = images.filter(e => !e.includes('player'))
       product.images = [...images, ...adjacentImages, ...pngImage1, ...pngImage2]
 
       /**
@@ -126,7 +124,7 @@ export default shopifyScraper(
       })
 
       if (Array.isArray(videos) && videos.length) {
-        product.videos = [...product.videos, ...videos]
+        product.videos = [...product.videos, ...videos, ...videosGallery]
       }
 
       /**
