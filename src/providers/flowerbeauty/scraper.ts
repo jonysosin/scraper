@@ -99,6 +99,7 @@ export default shopifyScraper(
       if (product.color) {
         const color = product.color
         const images = (providerProduct.media as TMediaImage[])
+          .filter(e => !!e.alt)
           .filter(e => {
             const relatedVariants =
               e.alt
@@ -112,7 +113,7 @@ export default shopifyScraper(
           .filter(e => e !== '')
 
         // Add the featured image at the beginning
-        if (providerVariant?.featured_image.src) {
+        if (providerVariant?.featured_image?.src) {
           images.unshift(providerVariant?.featured_image?.src)
         }
         if (images.length) {
