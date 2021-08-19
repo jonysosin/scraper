@@ -40,13 +40,23 @@ export default shopifyScraper(
        * Replace the product's main description for the one appearing below the title
        */
       extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
-        const description = document.querySelector('.product-info__content')
-        const descriptionAdjacent = {
-          name: document.querySelector('.product__details--tab h4'),
-          content: Array.from(document.querySelectorAll('.product__details--tab-content'))
-            .map(e => e.outerHTML.trim())
-            .join(),
-        }
+        const description = document.querySelector('.product-info__content')?.outerHTML.trim()
+
+        const keys = Array.from(document.querySelectorAll('.product__details--tab h4')).map(e =>
+          e.textContent?.trim(),
+        )
+        const values = Array.from(document.querySelectorAll('.product__details--tab-content')).map(
+          e => e.outerHTML.trim(),
+        )
+
+        const sections = values.map((item, i) => {
+          return {
+            name: keys[i] || `key_${i}`,
+            content: item || '',
+            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+          }
+        })
+
         const distantDescription = {
           name: document.querySelector('.grid-container.product__ingredients--container h2'),
           content: Array.from(document.querySelectorAll('.grid-x.product__ingredients--grid'))
@@ -56,26 +66,25 @@ export default shopifyScraper(
         return [
           {
             name: 'Description',
-            content: description?.textContent?.trim() || '',
+            content: description || '',
             description_placement: DESCRIPTION_PLACEMENT.MAIN,
-          },
-          {
-            name: descriptionAdjacent.name?.textContent || '',
-            content: descriptionAdjacent.content,
-            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
           },
           {
             name: distantDescription.name?.textContent || '',
             content: distantDescription.content,
             description_placement: DESCRIPTION_PLACEMENT.DISTANT,
           },
-        ]
+        ].concat(sections)
       }, DESCRIPTION_PLACEMENT)
 
       /**
        * Get Size Chart HTML
        */
-      extraData.sizeChartHtml = await getSelectorOuterHtml(page, 'div[data-remodal-id=size-chart]')
+      // extraData.sizeChartHtml = await getSelectorOuterHtml(page, 'div[data-remodal-id=size-chart]')
+
+      extraData.sizeChartHtml = await page.evaluate(() => {
+        return document.querySelector('.size-chart-modal-contents')?.outerHTML.trim()
+      })
 
       return extraData
     },
@@ -103,11 +112,6 @@ export default shopifyScraper(
        * Example: "High-Waist Catch The Light Short - Black"
        */
       product.title = product.title.replace(/ - [^-]+$/, '')
-
-      /**
-       * Get product higher price
-       */
-      product.higherPrice = providerProduct.price_max / 100
 
       product.additionalSections.shift()
     },
