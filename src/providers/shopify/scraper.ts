@@ -27,6 +27,8 @@ type TCallbacks<T = { [key: string]: any }> = {
     providerVariant: TShopifyProductVariant,
     extraData: T,
   ) => Promise<void>
+  setupFn?: (page: Page) => Promise<void>
+  postProcess?: (product: Product, page: Page) => Promise<void>
 }
 
 export type TShopifyExtraData = {
@@ -44,9 +46,11 @@ export type TShopifyExtraData = {
 }
 
 const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
-  ({ urls, productFn, variantFn }, { currency = 'USD' }) =>
+  ({ urls, productFn, variantFn, setupFn, postProcess }, { currency = 'USD' }) =>
   async (request, page) => {
     console.log('scraping', request)
+
+    if (setupFn) await setupFn(page)
 
     const url = request.pageUrl
 
@@ -251,6 +255,8 @@ const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
           ...product.additionalSections.map(section => htmlToTextArray(section.content)).flat(),
         ]),
       ]
+
+      if (postProcess) await postProcess(product, page)
 
       products.push(product)
     }

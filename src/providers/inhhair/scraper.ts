@@ -76,7 +76,7 @@ export default shopifyScraper(
     },
     variantFn: async (
       _request,
-      _page,
+      page,
       product,
       providerProduct,
       providerVariant,
@@ -90,6 +90,11 @@ export default shopifyScraper(
       if (optionsObj.Color) {
         product.color = optionsObj.Color
       }
+      const color = await page.evaluate(() => {
+        //@ts-ignore
+        return document.querySelector('#bundles__oos')?.innerText
+      })
+      product.color = color
     },
   },
   {},
