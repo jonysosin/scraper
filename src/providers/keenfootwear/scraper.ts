@@ -145,26 +145,27 @@ async function getProduct(page: Page, productUrl: string) {
     () => document.querySelector('div.product-price div.price-sales')?.textContent?.split('$')[1],
   )
 
-  // This price code looks over complicated, but it need to be like these to deal with a weird bug, ask Mathias Efron for more info
-  const oldPriceNumber = oldPrice && parseFloat(oldPrice)
-  const newPriceNumber = newPrice && parseFloat(newPrice)
-  const priceNumber = price && parseFloat(price)
-  let realPrice
-  let higherPrice
+  const salePrice = await page
+    .$eval('.product-detail-hero--product-info .old-price:not(:empty)', e =>
+      (e as HTMLElement).innerText.replace(/[\n\r]/gm, '').replace('$', ''),
+    )
+    .catch(() => null)
 
-  if (priceNumber && !oldPriceNumber && !newPriceNumber) {
-    // no sale - no bug
-    realPrice = priceNumber
-    higherPrice = priceNumber
-  } else if (priceNumber && oldPriceNumber && newPriceNumber && priceNumber === oldPriceNumber) {
-    // sale
-    realPrice = newPriceNumber
-    higherPrice = oldPriceNumber
-  } else if (priceNumber && oldPriceNumber && newPriceNumber && priceNumber !== oldPriceNumber) {
-    // no sale - bug
-    realPrice = priceNumber
-    higherPrice = priceNumber
-  }
+  const saleNormalPrice = await page
+    .$eval('.product-detail-hero--product-info .old-price:not(:empty)~.price', e =>
+      (e as HTMLElement).innerText.replace(/[\n\r]*/gm, '').replace('$', ''),
+    )
+    .catch(() => null)
+
+  const normalPrice = await page.$eval(
+    '.product-detail-hero .product-content-container .product-price .price-sales.price',
+    e => (e as HTMLElement).innerText.replace(/[\n\r]*/gm, '').replace('$', ''),
+  )
+
+  // This price code looks over complicated, but it need to be like these to deal with a weird bug, ask Matias Pierobon for more info
+
+  const realPrice = salePrice ? Number(salePrice) : Number(normalPrice)
+  const higherPrice = salePrice ? Number(saleNormalPrice) : undefined
 
   product.itemGroupId = id?.split('-')[0]
   product.sku = id // TODO: find real sku

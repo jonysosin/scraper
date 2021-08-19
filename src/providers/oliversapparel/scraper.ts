@@ -34,6 +34,7 @@ export default shopifyScraper(
       const description = await page.evaluate(() => {
         return document.querySelector('form[novalidate]')?.firstElementChild?.outerHTML
       })
+
       if (description) {
         extraData.additionalSections?.push({
           name: 'Description',
@@ -43,69 +44,26 @@ export default shopifyScraper(
       }
 
       /**
-       * Get the Details section
+       * Get  additional sections
        */
-      const detailsSection = await page.evaluate(() => {
-        const header = document.evaluate(
-          "//button[contains(., 'Details')]",
-          document,
-          null,
-          XPathResult.ANY_TYPE,
-          null,
-        )
-        const thisHeading = header.iterateNext()
-        return thisHeading?.parentElement?.nextElementSibling?.outerHTML
-      })
-      if (detailsSection) {
-        extraData.additionalSections?.push({
-          name: 'Details',
-          content: detailsSection,
-          description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
-        })
-      }
 
-      /**
-       * Get the Details section
-       */
-      const fabricSection = await page.evaluate(() => {
-        const header = document.evaluate(
-          "//button[contains(., 'Fabric')]",
-          document,
-          null,
-          XPathResult.ANY_TYPE,
-          null,
+      const adjacentDescription = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        const accordions = Array.from(
+          document.querySelectorAll('form > div[class*=css] > div[class^=collapsible]'),
         )
-        const thisHeading = header.iterateNext()
-        return thisHeading?.parentElement?.nextElementSibling?.outerHTML
-      })
-      if (fabricSection) {
-        extraData.additionalSections?.push({
-          name: 'Fabric',
-          content: fabricSection,
-          description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
-        })
-      }
 
-      /**
-       * Get the Details section
-       */
-      const productCareSection = await page.evaluate(() => {
-        const header = document.evaluate(
-          "//button[contains(., 'Product Care')]",
-          document,
-          null,
-          XPathResult.ANY_TYPE,
-          null,
-        )
-        const thisHeading = header.iterateNext()
-        return thisHeading?.parentElement?.nextElementSibling?.outerHTML
-      })
-      if (productCareSection) {
-        extraData.additionalSections?.push({
-          name: 'Product Care',
-          content: productCareSection,
+        const keys = accordions.map(e => e.querySelector('div:first-of-type'))
+        const values = accordions.map(e => e.querySelector('div:last-of-type'))
+
+        return values.map((value, i) => ({
+          name: keys[i]?.textContent?.trim() || `key_${i}`,
+          content: value?.outerHTML?.trim() || '',
           description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
-        })
+        }))
+      }, DESCRIPTION_PLACEMENT)
+
+      if (adjacentDescription) {
+        extraData.additionalSections?.push(...adjacentDescription)
       }
 
       /**

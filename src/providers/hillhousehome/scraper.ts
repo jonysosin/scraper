@@ -91,22 +91,16 @@ export default shopifyScraper(
       /**
        * Replace all the product images with the ones related by color (only if there're matches)
        */
+      await page.waitForTimeout(8000)
       if (product.color) {
-        const images = await page.evaluate(
-          color => {
-            return Array.from(
-              document.querySelectorAll(
-                `.Product__SlideItem--image div img[data-color="${color}"]`,
-              ),
-            )
-              .map(e => e.getAttribute('src') || e.getAttribute('data-srcset') || '')
-              .filter(e => e !== '')
-          },
-          product.color
-            .replace(/\//g, '-') // Bylt replaces / with - in color for images
-            .replace(/\s.*/, '') // Bylt keeps only first word before space
-            .toLowerCase(),
+        const colorSlug = product.color
+          .replace(/\//g, '-') // Bylt replaces / with - in color for images
+          .replace(/\s.*/, '') // Bylt keeps only first word before space
+        const images = await page.$$eval(
+          `.Product__SlideItem--image div img[data-color="${colorSlug}"]`,
+          imgs => imgs.map(img => img.getAttribute('data-original-src') || '').filter(i => i),
         )
+
         if (images.length) {
           product.images = images
         }
