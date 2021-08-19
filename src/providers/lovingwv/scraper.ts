@@ -5,8 +5,9 @@ import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 
 export default shopifyScraper(
   {
-    productFn: async (_request, page) => {
-      const extraData: TShopifyExtraData = {}
+    productFn: async (_request, page, providerProduct) => {
+      const extraData: TShopifyExtraData = { additionalSections: ({} = []) }
+
       /**
        * Get the breadcrumbs
        */
@@ -20,42 +21,15 @@ export default shopifyScraper(
           : []
       })
 
-      extraData.sizeChartHtml = await getSelectorOuterHtml(page, 'table')
-
-      /**
-       * Get additional descriptions and information
-       */
-      extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
-        const section = Array.from(document.querySelectorAll('.description > :not(table, meta)'))
-
-        // Get a list of content for the titles above
-        const values = section.map(e => e?.outerHTML?.trim())
-
-        // Join the two arrays
-        const sections = values.map((value, i) => {
-          return {
-            name: 'Adjacent description',
-            content: value || '',
-            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
-          }
-        })
-
-        sections.shift()
-
-        return sections
-      }, DESCRIPTION_PLACEMENT)
-
-      /**
-       * The description comes with a size chart
-       */
-      const description = await page.evaluate(() => {
-        return document.querySelector('.description > :not(table, meta)')?.outerHTML || ''
-      })
-      extraData.additionalSections.push({
+      const description = {
         name: 'Description',
-        content: description,
+        content: providerProduct.description.replace(/\<table.*\/table\>/g, ''),
         description_placement: DESCRIPTION_PLACEMENT.MAIN,
-      })
+      }
+
+      extraData.additionalSections?.push(description)
+
+      extraData.sizeChartHtml = await getSelectorOuterHtml(page, 'table')
 
       return extraData
     },
@@ -80,9 +54,8 @@ export default shopifyScraper(
       }
 
       /**
-       * Cut the first element from array
+       * Remove meta and sizechart from main description
        */
-      product.additionalSections.shift()
     },
   },
   {},
