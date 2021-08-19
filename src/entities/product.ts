@@ -61,7 +61,7 @@ export default class Product {
   }
 
   /**
-   * Adds new additional sections to the product
+   * Adds a new additional sections to the product
    * @param sections TAdditionalSection[]
    */
   addAdditionalSections(sections: IDescriptionSection[]) {
@@ -79,8 +79,8 @@ export default class Product {
       link: this.url,
       metadata: {
         ...this.metadata,
-        sku: this.sku,
       },
+      sku: this.sku,
       image_links: this.images,
       videos: this.videos,
       description: this.description,
