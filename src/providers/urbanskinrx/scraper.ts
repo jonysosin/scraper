@@ -108,6 +108,11 @@ export default shopifyScraper(
       }
 
       /**
+       * Delete higher price why don't use it
+       */
+      delete product.higherPrice
+
+      /**
        * Sometimes, the title needs a replacement to remove the color at the end (if exists)
        * Example: "High-Waist Catch The Light Short - Black"
        */
