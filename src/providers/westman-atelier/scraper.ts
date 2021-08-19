@@ -61,26 +61,62 @@ export default shopifyScraper(
       /**
        * Add image from adjacent description in the product gallery
        */
-       const adjacentImages = await page.evaluate(() => {
-        return Array.from(document.querySelectorAll('.table-layout__cell > img.product-inspiration__feature-img'))
+      const adjacentImages = await page.evaluate(() => {
+        return Array.from(
+          document.querySelectorAll('.table-layout__cell > img.product-inspiration__feature-img'),
+        )
           .map(e => e.getAttribute('src') || '')
           .filter(e => e !== '')
       })
 
       /**
+       * Add image from adjacent description in the product gallery
+       */
+      const pngImage1 = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.product-float-img__product-img'))
+          .map(e => e.getAttribute('src') || '')
+          .filter(e => e !== '')
+
+        // return document.querySelector('.product-float-img__product-img')?.getAttribute('src')
+      })
+
+      /**
+       * Add image from adjacent description in the product gallery
+       */
+      const pngImage2 = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.product__feature-img__smear-overlay'))
+          .map(e => e.getAttribute('src') || '')
+          .filter(e => e !== '')
+
+        // return document.querySelector('.product__feature-img__smear-overlay')?.getAttribute('src')
+      })
+
+      /**
        * Add images in the product gallery
        */
-       const variantId = providerVariant.id.toString()
+      const variantId = providerVariant.id.toString()
 
       const images = await page.evaluate(variantId => {
         // return Array.from(document.querySelectorAll('div[data-variant]')).filter(e=> e.getAttribute('data-variant') === variantId).map(e => Array.from(e.querySelectorAll('img')).map(e => e.getAttribute('data-src'))).flat()
-        return [...new Set(Array.from(document.querySelectorAll('div[data-variant]')).filter(e=> e.getAttribute('data-variant') === variantId).map(e => Array.from(e.querySelectorAll('img')).map(e => e.getAttribute('data-src') || '')).flat().filter(e => e !== ''))] || []
+        return (
+          [
+            ...new Set(
+              Array.from(document.querySelectorAll('div[data-variant]'))
+                .filter(e => e.getAttribute('data-variant') === variantId)
+                .map(e =>
+                  Array.from(e.querySelectorAll('img')).map(e => e.getAttribute('data-src') || ''),
+                )
+                .flat()
+                .filter(e => e !== ''),
+            ),
+          ] || []
+        )
       }, variantId)
-      product.images = [...images, ...adjacentImages]
+      product.images = [...images, ...adjacentImages, ...pngImage1, ...pngImage2]
 
       /**
-      * Add tutorial video
-      */
+       * Add tutorial video
+       */
       await page.click('.product-tutorial__cover-link')
       await page.waitForTimeout(3000)
       const videos = await page.evaluate(() => {
