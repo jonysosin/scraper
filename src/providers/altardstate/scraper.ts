@@ -143,9 +143,7 @@ const getProductVariantUrls = (
   )
   const combinedVariants = combine(variants)
 
-  // console.log('combinedVariants', combinedVariants)
-
-  const variantsData: { id: string, url: string }[] = []
+  const variantsData: { id: string; url: string }[] = []
   combinedVariants.forEach(variant => {
     let url = baseProductUrl
     variant.split('-').forEach((attr: string) => {
