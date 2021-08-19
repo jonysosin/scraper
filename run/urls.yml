@@ -1,17 +1,5 @@
-herocosmetics:
-  - https://www.herocosmetics.us/products/lightning-wand?utm_content=Facebook_UA&utm_source=facebook&variant=39284083490858
-  - https://www.herocosmetics.us/products/mighty-patch-original?utm_content=Facebook_UA&utm_source=facebook&variant=12879846866986
-  - https://www.herocosmetics.us/products/supercharged-reset-mist?utm_content=Facebook_UA&utm_source=facebook&variant=39393358643242
-  - https://www.herocosmetics.us/products/micropoint-for-dark-spots?utm_content=Facebook_UA&utm_source=facebook&variant=31256943558698
-  - https://www.herocosmetics.us/products/mighty-patch-variety-pack?utm_content=Facebook_UA&utm_source=facebook&variant=14433622458410
-  - https://www.herocosmetics.us/products/lightning-wand?utm_content=Facebook_UA&utm_source=facebook&variant=39346081136682
-  - https://www.herocosmetics.us/products/superlight-sunscreen-spf-30?utm_content=Facebook_UA&utm_source=facebook&variant=39302519423018
-  - https://www.herocosmetics.us/products/force-shield-balance-duo?utm_content=Facebook_UA&utm_source=facebook&variant=39433618456618
-  - https://www.herocosmetics.us/products/mighty-patch-invisible?utm_content=Facebook_UA&utm_source=facebook&variant=13478124847146
-  - https://www.herocosmetics.us/products/rescue-balm?utm_content=Facebook_UA&utm_source=facebook&variant=31364300931114
-  - https://www.herocosmetics.us/products/clear-collective-trio?utm_content=Facebook_UA&utm_source=facebook&variant=32307634536490
-  - https://www.herocosmetics.us/products/balancing-capsule-toner?utm_content=Facebook_UA&utm_source=facebook&variant=32259553394730
-  - https://www.herocosmetics.us/products/superfuel-serum-stick?utm_content=Facebook_UA&utm_source=facebook&variant=39393358413866
-  - https://www.herocosmetics.us/products/mighty-patch-surface?utm_content=Facebook_UA&utm_source=facebook&variant=14099357335594
-  - https://www.herocosmetics.us/products/clarifying-prebiotic-moisturizer?utm_content=Facebook_UA&utm_source=facebook&variant=32259553591338
-  - https://www.herocosmetics.us/products/mighty-patch-original?utm_content=Facebook_UA&utm_source=facebook&variant=11723218878506
+spartina449: # add . to the provider name to skip all its urls
+  - https://www.spartina449.com/lowcountry-pearl-necklace-silver-atlantic-opal.html
+_4ocean:
+  # - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
+  - https://www.4ocean.com/products/4ocean-logo-womens-v-neck-long-sleeve-t-shirt
