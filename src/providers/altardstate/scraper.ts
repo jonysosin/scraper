@@ -86,9 +86,6 @@ const scraper: IScraper = async (request, page) => {
     const { id, url } = variantData
 
     const productData = await getProductJson(page, url)
-    if (productData.product.productType !== 'variant') {
-      continue
-    }
 
     const title = productData.product.productName
     const productUrl = `${protocol}://${resource}${productData.product.selectedProductUrl}`
