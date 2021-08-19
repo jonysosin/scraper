@@ -114,6 +114,13 @@ const scraper: Scraper = async (request, page) => {
     ),
     description_placement: DESCRIPTION_PLACEMENT.DISTANT,
   })
+  product.addAdditionalSection({
+    name: 'INGREDIENTS',
+    content: await page.$eval('div.product-ingredients-container', e =>
+      e.outerHTML.replaceAll('\n', '').replaceAll('\t', '').trim(),
+    ),
+    description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+  })
 
   product.metadata = { metaTags }
 
