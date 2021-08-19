@@ -172,7 +172,7 @@ const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
 
       // Size chart URLs
       if (productExtractedData.sizeChartUrls) {
-        product.videos = productExtractedData.sizeChartUrls
+        product.sizeChartUrls = productExtractedData.sizeChartUrls
       }
 
       /**
