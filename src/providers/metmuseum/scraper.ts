@@ -180,7 +180,7 @@ async function getAdditionalSections (page: Page): Promise<IDescriptionSection[]
       const descriptionSection: IDescriptionSection = {
         content,
         name,
-        description_placement: DESCRIPTION_PLACEMENT.MAIN
+        description_placement: name === 'Description' ? DESCRIPTION_PLACEMENT.MAIN : DESCRIPTION_PLACEMENT.ADJACENT
       }
 
       additionalSections.push(descriptionSection)
