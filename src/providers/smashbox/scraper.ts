@@ -30,6 +30,10 @@ const scraper: Scraper = async (request, page) => {
 
   const responseData = response.data.products.items
 
+  const bullets = await page.$$eval('#slot_2_spp_content .benefits-block__text-content', results =>
+    results.map(a => (a as HTMLElement).innerText).flatMap(x => x.split('\n')),
+  )
+
   const products: Product[] = []
 
   for (const res of responseData) {
@@ -76,6 +80,7 @@ const scraper: Scraper = async (request, page) => {
             .filter(x => x !== '/')
             .filter(x => x),
         )
+        product.bullets = bullets
 
         const additionalDescription = await page.evaluate(() => {
           const match = document.querySelector('.js-product-overview')
