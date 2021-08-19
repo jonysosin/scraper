@@ -86,9 +86,6 @@ const scraper: IScraper = async (request, page) => {
     const { id, url } = variantData
 
     const productData = await getProductJson(page, url)
-    if (productData.product.productType !== 'variant') {
-      continue
-    }
 
     const title = productData.product.productName
     const productUrl = `${protocol}://${resource}${productData.product.selectedProductUrl}`
@@ -146,9 +143,7 @@ const getProductVariantUrls = (
   )
   const combinedVariants = combine(variants)
 
-  // console.log('combinedVariants', combinedVariants)
-
-  const variantsData: { id: string, url: string }[] = []
+  const variantsData: { id: string; url: string }[] = []
   combinedVariants.forEach(variant => {
     let url = baseProductUrl
     variant.split('-').forEach((attr: string) => {

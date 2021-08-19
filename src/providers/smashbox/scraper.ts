@@ -7,6 +7,8 @@ import { Response } from './types'
 import _ from 'lodash'
 
 const scraper: Scraper = async (request, page) => {
+  // disable request headers because site does not work with them
+  await page.setExtraHTTPHeaders({})
   const navigationPromise = page.goto(request.pageUrl)
 
   const response: { data: Response } = await new Promise<any>((res, rej) => {
