@@ -1,66 +1,67 @@
 apparelOnepeloton:
-  # - https://apparel.onepeloton.com/products/white-opal-hw-capri
-  # - https://apparel.onepeloton.com/products/sp121-peloton-restore-full-zip
-  # - https://apparel.onepeloton.com/products/sp121-peloton-limitless-9-lined-accelerate-short
-  # - https://apparel.onepeloton.com/products/sp121-peloton-caught-in-the-midi-high-waist-legging
-  # - https://apparel.onepeloton.com/products/speed-up-bra-2
-  # - https://apparel.onepeloton.com/products/speed-up-bra-1
-  # - https://apparel.onepeloton.com/products/cadence-legging-6
-  # - https://apparel.onepeloton.com/products/studio-side-slit-muscle-tank
-  # - https://apparel.onepeloton.com/products/golf-visor
-  # - https://apparel.onepeloton.com/products/golf-skirt
-  # - https://apparel.onepeloton.com/products/golf-tank
-  # - https://apparel.onepeloton.com/products/fa220-peloton-tech-polo
-  # - https://apparel.onepeloton.com/products/sp121-peloton-teal-swift-tank
-  # - https://apparel.onepeloton.com/products/sp121-peloton-limitless-oversized-crewneck
-  # - https://apparel.onepeloton.com/products/sp121-peloton-dash-stripe-tank
-  # - https://apparel.onepeloton.com/products/sp121-peloton-bolt-7-short
-  # - https://apparel.onepeloton.com/products/peloton-metal-vent-tech-1-2-zip-2-0-mineral-blue
-  # - https://apparel.onepeloton.com/products/peloton-pace-breaker-9-lined
-  # - https://apparel.onepeloton.com/products/peloton-midnight-metal-vent-tech-short-sleeve
-  # - https://apparel.onepeloton.com/products/sp221-peloton-purple-9-lined-accelerate-short
-  # - https://apparel.onepeloton.com/products/peloton-high-waist-midi-legging
-  # - https://apparel.onepeloton.com/products/peloton-work-it-out-bra
-  # - https://apparel.onepeloton.com/products/brooklyn-hoodie
-  # - https://apparel.onepeloton.com/products/hudson-fanny-pack
-  # - https://apparel.onepeloton.com/products/peloton-metal-vent-tech-ss-2-0
-  # - https://apparel.onepeloton.com/products/peloton-wunder-train-hr-tight-25
-  # - https://apparel.onepeloton.com/products/peloton-7-flex-stride-short
-  # - https://apparel.onepeloton.com/products/peloton-rise-365-short-sleeve
-  # - https://apparel.onepeloton.com/products/peloton-swoosh-bra-1
-  # - https://apparel.onepeloton.com/products/peloton-one-luxe-tight
-  # - https://apparel.onepeloton.com/products/peloton-oil-slick-podium-bottle
-  # - https://apparel.onepeloton.com/products/peloton-teal-towel
-  # - https://apparel.onepeloton.com/products/peloton-sunrise-towel
-  # - https://apparel.onepeloton.com/products/peloton-logo-patch
-  # - https://apparel.onepeloton.com/products/peloton-kitchen-sink-tote-2
-  # - https://apparel.onepeloton.com/products/peloton-summer-ultra-light-no-show-tab-socks-1
-  # - https://apparel.onepeloton.com/products/peloton-oasis-block-party-bracelet
-  # - https://apparel.onepeloton.com/products/expedition-strappy-bra
-  # - https://apparel.onepeloton.com/products/everyday-crewneck
-  # - https://apparel.onepeloton.com/products/flow-muscle-tank-1
-  # - https://apparel.onepeloton.com/products/flow-muscle-tank
-  # - https://apparel.onepeloton.com/products/expedition-high-waist-capri
-  # - https://apparel.onepeloton.com/products/su221-peloton-8-lined-turin-short-blue
-  # - https://apparel.onepeloton.com/products/6-inch-lined-short
-  # - https://apparel.onepeloton.com/products/all-over-print-8-inch-lined-turin-short
-  # - https://apparel.onepeloton.com/products/su221-peloton-8-lined-turin-short-black
-  # - https://apparel.onepeloton.com/products/cell-phone-pocket-legging
-  # - https://apparel.onepeloton.com/products/cadence-legging-3
-  # - https://apparel.onepeloton.com/products/high-neck-bra-1
-  # - https://apparel.onepeloton.com/products/double-layer-bra
-  # - https://apparel.onepeloton.com/products/high-neck-bra
-  # - https://apparel.onepeloton.com/products/slash-shoulder-tank
-  # - https://apparel.onepeloton.com/products/peloton-cinch-tank
-  # - https://apparel.onepeloton.com/products/essential-legging
-  # - https://apparel.onepeloton.com/products/tulip-hem-legging
-  # - https://apparel.onepeloton.com/products/racerback-bra
-  # - https://apparel.onepeloton.com/products/cropped-muscle-tank-blue-glass
-  # - https://apparel.onepeloton.com/products/shirttail-tank-1
-  # - https://apparel.onepeloton.com/products/go-to-racer-tank
-  # - https://apparel.onepeloton.com/products/1-4-zip-hoodie
-  # - https://apparel.onepeloton.com/products/baseball-tee
-  # - https://apparel.onepeloton.com/products/denim-type-jacket
-  # - https://apparel.onepeloton.com/products/sweat-short
-  # - https://apparel.onepeloton.com/products/white-opal-hw-capri?variant=32720971595872
-  - https://apparel.onepeloton.com/products/sp121-peloton-limitless-9-lined-accelerate-short?variant=32606256955488
+  - https://apparel.onepeloton.com/products/white-opal-hw-capri
+  - https://apparel.onepeloton.com/products/sp121-peloton-restore-full-zip
+  - https://apparel.onepeloton.com/products/sp121-peloton-limitless-9-lined-accelerate-short
+  - https://apparel.onepeloton.com/products/sp121-peloton-caught-in-the-midi-high-waist-legging
+  - https://apparel.onepeloton.com/products/speed-up-bra-2
+  - https://apparel.onepeloton.com/products/speed-up-bra-1
+  - https://apparel.onepeloton.com/products/cadence-legging-6
+  - https://apparel.onepeloton.com/products/studio-side-slit-muscle-tank
+  - https://apparel.onepeloton.com/products/golf-visor
+  - https://apparel.onepeloton.com/products/golf-skirt
+  - https://apparel.onepeloton.com/products/golf-tank
+  - https://apparel.onepeloton.com/products/fa220-peloton-tech-polo
+  - https://apparel.onepeloton.com/products/sp121-peloton-teal-swift-tank
+  - https://apparel.onepeloton.com/products/sp121-peloton-limitless-oversized-crewneck
+  - https://apparel.onepeloton.com/products/sp121-peloton-dash-stripe-tank
+  - https://apparel.onepeloton.com/products/sp121-peloton-bolt-7-short
+  - https://apparel.onepeloton.com/products/peloton-metal-vent-tech-1-2-zip-2-0-mineral-blue
+  - https://apparel.onepeloton.com/products/peloton-pace-breaker-9-lined
+  - https://apparel.onepeloton.com/products/peloton-midnight-metal-vent-tech-short-sleeve
+  - https://apparel.onepeloton.com/products/sp221-peloton-purple-9-lined-accelerate-short
+  - https://apparel.onepeloton.com/products/peloton-high-waist-midi-legging
+  - https://apparel.onepeloton.com/products/peloton-work-it-out-bra
+  - https://apparel.onepeloton.com/products/brooklyn-hoodie
+  - https://apparel.onepeloton.com/products/hudson-fanny-pack
+  - https://apparel.onepeloton.com/products/peloton-metal-vent-tech-ss-2-0
+  - https://apparel.onepeloton.com/products/peloton-wunder-train-hr-tight-25
+  - https://apparel.onepeloton.com/products/peloton-7-flex-stride-short
+  - https://apparel.onepeloton.com/products/peloton-rise-365-short-sleeve
+  - https://apparel.onepeloton.com/products/peloton-swoosh-bra-1
+  - https://apparel.onepeloton.com/products/peloton-one-luxe-tight
+  - https://apparel.onepeloton.com/products/peloton-oil-slick-podium-bottle
+  - https://apparel.onepeloton.com/products/peloton-teal-towel
+  - https://apparel.onepeloton.com/products/peloton-sunrise-towel
+  - https://apparel.onepeloton.com/products/peloton-logo-patch
+  - https://apparel.onepeloton.com/products/peloton-kitchen-sink-tote-2
+  - https://apparel.onepeloton.com/products/peloton-summer-ultra-light-no-show-tab-socks-1
+  - https://apparel.onepeloton.com/products/peloton-oasis-block-party-bracelet
+  - https://apparel.onepeloton.com/products/expedition-strappy-bra
+  - https://apparel.onepeloton.com/products/everyday-crewneck
+  - https://apparel.onepeloton.com/products/flow-muscle-tank-1
+  - https://apparel.onepeloton.com/products/flow-muscle-tank
+  - https://apparel.onepeloton.com/products/expedition-high-waist-capri
+  - https://apparel.onepeloton.com/products/su221-peloton-8-lined-turin-short-blue
+  - https://apparel.onepeloton.com/products/6-inch-lined-short
+  - https://apparel.onepeloton.com/products/all-over-print-8-inch-lined-turin-short
+  - https://apparel.onepeloton.com/products/su221-peloton-8-lined-turin-short-black
+  - https://apparel.onepeloton.com/products/cell-phone-pocket-legging
+  - https://apparel.onepeloton.com/products/cadence-legging-3
+  - https://apparel.onepeloton.com/products/high-neck-bra-1
+  - https://apparel.onepeloton.com/products/double-layer-bra
+  - https://apparel.onepeloton.com/products/high-neck-bra
+  - https://apparel.onepeloton.com/products/slash-shoulder-tank
+  - https://apparel.onepeloton.com/products/peloton-cinch-tank
+  - https://apparel.onepeloton.com/products/essential-legging
+  - https://apparel.onepeloton.com/products/tulip-hem-legging
+  - https://apparel.onepeloton.com/products/racerback-bra
+  - https://apparel.onepeloton.com/products/cropped-muscle-tank-blue-glass
+  - https://apparel.onepeloton.com/products/shirttail-tank-1
+  - https://apparel.onepeloton.com/products/go-to-racer-tank
+  - https://apparel.onepeloton.com/products/1-4-zip-hoodie
+  - https://apparel.onepeloton.com/products/baseball-tee
+  - https://apparel.onepeloton.com/products/denim-type-jacket
+  - https://apparel.onepeloton.com/products/sweat-short
+  - https://apparel.onepeloton.com/products/white-opal-hw-capri?variant=32720971595872
+  - https://apparel.onepeloton.com/products/white-opal-hw-capri?variant=32720971464800
+  - https://apparel.onepeloton.com/products/golf-skirt?variant=39263686328416

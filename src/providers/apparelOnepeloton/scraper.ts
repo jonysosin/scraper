@@ -1,19 +1,25 @@
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
+import { autoScroll } from '../../providerHelpers/autoScroll'
+import { request } from 'http'
+
 
 export default shopifyScraper(
   {
-    productFn: async (_request, page) => {
+    productFn: async (request, page) => {
       const extraData: TShopifyExtraData = {}
-
+      await page.evaluate(() => {
+        localStorage.setItem("userLocationStore", "US");
+        localStorage.setItem("ajs_user_traits", '{"country":"US"}');
+      });
+      await page.goto(request.pageUrl)
       /**
        * Get Size Chart HTML
        */
+       await page.waitForSelector('.product-selector__options .product-selector__option--title__link a')
       await page.click('.product-selector__options .product-selector__option--title__link a')
-      await page.waitForTimeout(4000)
- 
       extraData.sizeChartHtml = await page.evaluate(() => {
-        const element = document.querySelector('.size-chart__table')
+        const element = document.querySelector('.modal__content .size-chart')
         return element?.outerHTML
       }) 
 
@@ -40,7 +46,9 @@ export default shopifyScraper(
          /**
        * Replace all the product images 
        */
+          await autoScroll(_page)
          const pageImage = await _page.evaluate(() => {
+           
           return Array.from(document.querySelectorAll('section img'))
             .map(e => e.getAttribute('src') || '')
             .filter(e => e !== '')
