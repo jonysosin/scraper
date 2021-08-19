@@ -49,7 +49,11 @@ export default shopifyScraper(
        * Get the list of sizeChartLinks
        */
       const sizeChartHtml = await page.evaluate(() => {
-        return document.querySelector('.size-guide__content table')?.outerHTML?.trim()
+        //return document.querySelector('.size-guide__content table')?.outerHTML?.trim()
+
+        //document.querySelector('.size-guide__content .tabs__tab.style(display: "block" )')
+        return Array.from(document.querySelectorAll('.size-guide-charts .tabs__tab'))
+        .filter(e => (e as any).style.display ==='block')[0]?.innerHTML?.trim()
       })
 
       product.sizeChartHtml = sizeChartHtml ? sizeChartHtml : ''
