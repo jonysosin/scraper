@@ -36,6 +36,7 @@ const scraper: Scraper = async (request, page) => {
       const product = baseProduct.clone()
 
       product.id = id
+      product.itemGroupId = baseProduct.id
       product.availability = await isProductVariantAvailable(product, page)
 
       // Options
@@ -107,7 +108,10 @@ async function createBaseProduct (page: Page): Promise<Product> {
   }
 
   // Images
-  product.images = (await productMetadata.images || []).map(i => i.url)
+  const images = await page.$$eval('[data-zoom-image]', elements => elements.map((i: any) => i.getAttribute('data-zoom-image')))
+  if (images.length) {
+    product.images = images
+  }
 
   const additionalSections = await getAdditionalSections(page)
   if (additionalSections && additionalSections.length) {
@@ -130,9 +134,13 @@ async function createBaseProduct (page: Page): Promise<Product> {
   }
 
   // Key value pairs
-  const keyValuePairs = await page.$$eval('.product.info.detailed table tr', (items: any) => items.reduce((prev: any, curr: any) => {
-    const key = curr.children[0].innerText
-      prev[key] = curr.children[1].innerText
+  const keyValuePairs = await page.$$eval('.data.item.content li', (items: any) => items
+    .filter(i => i.innerText.includes(':'))
+    .reduce((prev: any, curr: any) => {
+      const data = String(curr.textContent).split(':')
+      const key = String(data[0]).trim()
+
+      prev[key] = String(data[1]).trim()
 
       return prev
   }, {}))
@@ -172,7 +180,7 @@ async function getAdditionalSections (page: Page): Promise<IDescriptionSection[]
       const descriptionSection: IDescriptionSection = {
         content,
         name,
-        description_placement: DESCRIPTION_PLACEMENT.ADJACENT
+        description_placement: DESCRIPTION_PLACEMENT.MAIN
       }
 
       additionalSections.push(descriptionSection)
