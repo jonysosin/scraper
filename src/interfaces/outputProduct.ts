@@ -30,6 +30,7 @@ export default interface IOutputProduct {
   link: string
   metadata: TProductMetadata
   brand?: string
+  sku?: string
   sub_brand?: string
   image_links?: string[]
   size?: string
