@@ -89,12 +89,38 @@ export default shopifyScraper(
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Color) {
         product.color = optionsObj.Color
+      } else {
+        const color = await page.evaluate(() => {
+          //@ts-ignore
+          return document.querySelector('.radios--option-current')?.innerText
+        })
+        if (color) {
+          product.color = color
+        }
       }
-      const color = await page.evaluate(() => {
-        //@ts-ignore
-        return document.querySelector('#bundles__oos')?.innerText
-      })
-      product.color = color
+
+      /**
+       * Replace all the product images with the ones related by color (only if there're matches)
+       */
+      if (product.color) {
+        const color = product.color.replace(/\//g, '-').replace(/\s/, '').toLowerCase()
+        const images = await page.evaluate(color => {
+          return Array.from(
+            document.querySelectorAll(`.product-media--featured img[alt="${color}"]`),
+          )
+            .map(
+              e =>
+                e.getAttribute('src')?.replace(/\s.*/, '') ||
+                e.getAttribute('data-src')?.replace(/\s.*/, '') ||
+                '',
+            )
+            .filter(e => e !== '')
+        }, color)
+
+        if (images.length) {
+          product.images = images
+        }
+      }
     },
   },
   {},
