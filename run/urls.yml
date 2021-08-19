@@ -1,33 +1,5 @@
-hillhousehome:
-  # - https://www.hillhousehome.com/products/savile-dream-town?variant=6581935210535
-  # - https://www.hillhousehome.com/products/the-desk-sweater-blue?variant=39384570626091
-  - https://www.hillhousehome.com/products/jolies-linen-bed-set?variant=32984699797547
-  # - https://www.hillhousehome.com/products/the-tiny-ellie-nap-dress-blue-botanical?variant=39283228278827
-  # - https://www.hillhousehome.com/products/the-lucy-nap-dress-white-broderie-anglaise?variant=39348567769131
-  # - https://www.hillhousehome.com/products/family-robe-bundle-hers-hers?variant=32991153487915
-  # - https://www.hillhousehome.com/products/dover-quick-snooze?variant=10699919949867
-  # - https://www.hillhousehome.com/products/mermaid-tablecloth?variant=39355524644907
-  # - https://www.hillhousehome.com/products/sunglasses?variant=39354356039723
-  # - https://www.hillhousehome.com/products/the-athena-nap-dress-tai-check?variant=32924055011371
-  # - https://www.hillhousehome.com/products/the-womens-hotel-robe?variant=31787785322539
-  # - https://www.hillhousehome.com/products/dover-pillowcase-set?variant=10699861295147
-  # - https://www.hillhousehome.com/products/the-mini-heart-sweater?variant=31689737207851
-  # - https://www.hillhousehome.com/products/the-womens-teddy-top?variant=32924261548075
-  # - https://www.hillhousehome.com/products/the-athena-nap-dress?variant=16803872604203
-  # - https://www.hillhousehome.com/products/family-robe-bundle-his-hers?variant=32991144509483
-  # - https://www.hillhousehome.com/products/the-roxie-nap-dress-mermaid?variant=39348571308075
-  # - https://www.hillhousehome.com/products/the-lucy-nap-dress-white-broderie-anglaise?variant=39348567867435
-  # - https://www.hillhousehome.com/products/the-belle-bow-navy?variant=32996195106859
-  # - https://www.hillhousehome.com/products/the-womens-teddy-pant?variant=32924267806763
-  # - https://www.hillhousehome.com/products/savile-pillowcase-set?variant=12470578116
-  # - https://www.hillhousehome.com/products/the-athena-nap-dress?variant=16803872571435
-  # - https://www.hillhousehome.com/products/the-napkin-ring-set?variant=33089372487723
-  # - https://www.hillhousehome.com/products/the-caroline-nap-dress?variant=31451657207851
-  # - https://www.hillhousehome.com/products/the-mens-hotel-robe?variant=31787300716587
-  # - https://www.hillhousehome.com/products/the-mens-teddy-top?variant=32924275048491
-  # - https://www.hillhousehome.com/products/the-athena-nap-dress-matilda-plaid?variant=32924053471275
-  # - https://www.hillhousehome.com/products/chancery-lane-pillow-case-set?variant=19184771396
-  # - https://www.hillhousehome.com/products/the-lou-lou-duster?variant=39348564918315
-  # - https://www.hillhousehome.com/products/the-nesli-nap-dress-light-blue-glitter-check-1?variant=33088810745899
-  # - https://www.hillhousehome.com/products/the-tiny-ellie-nap-dress-mermaid?variant=39348563673131
-  # - https://www.hillhousehome.com/products/the-lou-lou-duster?variant=39348564983851
+spartina449: # add . to the provider name to skip all its urls
+  - https://www.spartina449.com/lowcountry-pearl-necklace-silver-atlantic-opal.html
+_4ocean:
+  # - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
+  - https://www.4ocean.com/products/4ocean-logo-womens-v-neck-long-sleeve-t-shirt
