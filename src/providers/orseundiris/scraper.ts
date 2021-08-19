@@ -31,7 +31,7 @@ export default shopifyScraper(
         product.color = optionsObj.Color || optionsObj.COLOR
       }
       if (optionsObj.Size) {
-        product.size = optionsObj.Size.split(/ - */gm)[0]
+        product.size = optionsObj.Size
       }
     },
   },
