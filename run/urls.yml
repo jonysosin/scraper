@@ -1,22 +1,5 @@
-# spartina449: # add . to the provider name to skip all its urls
-#   - https://www.spartina449.com/lowcountry-pearl-necklace-silver-atlantic-opal.html
-# _4ocean:
-#   # - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
-#   - https://www.4ocean.com/products/4ocean-logo-womens-v-neck-long-sleeve-t-shirt
-kiplingusa:
-  - https://www.kipling-usa.com/on/demandware.store/Sites-kip-Site/default/Product-Variation?pid=AC8233&dwvar_AC8233_color=437&coloridvariation=437
-  - https://www.kipling-usa.com/on/demandware.store/Sites-kip-Site/default/Product-Variation?pid=AC8233&dwvar_AC8233_color=437&coloridvariation=437
-  - https://www.kipling-usa.com/creativity-extra-large-wristlet/AC7318.html?dwvar_AC7318_color=425
-  - https://www.kipling-usa.com/parac-small-printed-toiletry-bag/KI3419.html?dwvar_KI3419_color=741
-  - https://www.kipling-usa.com/heart-small-zip-pouch/KI6734.html?dwvar_KI6734_color=647
-  - https://www.kipling-usa.com/graham-printed-lunch-bag/AC8234.html?dwvar_AC8234_color=284
-  - https://www.kipling-usa.com/seoul-mini-keychain/AC8491.html?dwvar_AC8491_color=933
-  - https://www.kipling-usa.com/50-pens-printed-case/KI3707.html?dwvar_KI3707_color=412
-  - https://www.kipling-usa.com/gitroy-pencil-case/KI3560.html?dwvar_KI3560_color=987
-  - https://www.kipling-usa.com/100-pens-metallic-case/KI1634.html?dwvar_KI1634_color=448
-  - https://www.kipling-usa.com/new-fresh-waist-pack/KI6600.html?dwvar_KI6600_color=319
-  - https://www.kipling-usa.com/disney%27s-mickey-mouse-alys-waist-pack/KI7379.html?dwvar_KI7379_color=893
-  - https://www.kipling-usa.com/presto-up-metallic-waist-pack/KI4329.html?dwvar_KI4329_color=251
-  - https://www.kipling-usa.com/100-pens-metallic-case/AC6117.html?dwvar_AC6117_color=020
-  - https://www.kipling-usa.com/city-pack-mini-printed-backpack/KI4628.html?dwvar_KI4628_color=462#uuid=ddefe531e4b50d9ecfcb6a1f53
-  - https://www.kipling-usa.com/heart-eye-keychain-charm/KI4010.html?dwvar_KI4010_color=981
+spartina449: # add . to the provider name to skip all its urls
+  - https://www.spartina449.com/lowcountry-pearl-necklace-silver-atlantic-opal.html
+_4ocean:
+  # - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
+  - https://www.4ocean.com/products/4ocean-logo-womens-v-neck-long-sleeve-t-shirt
