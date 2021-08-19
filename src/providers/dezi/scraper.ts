@@ -92,16 +92,6 @@ export default shopifyScraper(
        */
       product.additionalSections.shift()
 
-      // const pageImage = await _page.evaluate(() => {
-      //   return Array.from(document.querySelectorAll('.product .flex-nowrap img'))
-      //     .map(e => e.getAttribute('src') || '')
-      //     .filter(e => e !== '')
-      // })
-
-      // if (pageImage.length) {
-      //   product.images = pageImage
-      // }
-
       /**
        * Replace all the product images with the ones related by color (only if there're matches)
        */
@@ -128,35 +118,6 @@ export default shopifyScraper(
           product.images = images
         }
       }
-
-
-            /**
-       * Replace all the product images with the ones related by color (only if there're matches)
-       */
-      //        if (product.color) {
-      //         const images = await page.evaluate(
-      //           color => {
-      //             return Array.from(
-      //               document.querySelectorAll(
-      //                 `.product .flex-nowrap.flex-lg-wrap.no-gutters[data-color="${color}"] img`,
-      //               ),
-      //             )
-      //               .map(e => e.getAttribute('data-src') || '')
-      //               .filter(e => e !== '')
-      //           },
-      //           product.color
-      //             .replace(/\//g, '-') // Bylt replaces / with - in color for images
-      //             .replace(/\s.*/, '') // Bylt keeps only first word before space
-      //             .toLowerCase(),
-      //         )
-      //         if (images.length) {
-      //           product.images = images
-      //         }
-      //       }
-
-      // if (pageImage.length) {
-      //   product.images = pageImage
-      // }
 
     },
   },
