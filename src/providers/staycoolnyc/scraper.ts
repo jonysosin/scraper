@@ -23,7 +23,13 @@ export default shopifyScraper(
       /**
        * Get Size Chart HTML
        */
-      extraData.sizeChartHtml = await getSelectorOuterHtml(page, '.sd_Sizechart')
+      await page.waitForSelector('.main-chart-table')
+      const sizeChart = await page.evaluate(() => {
+        return document.querySelector('.main-chart-table')?.outerHTML.trim()
+      })
+      if (sizeChart) {
+        extraData.sizeChartHtml = sizeChart
+      }
 
       return extraData
     },
