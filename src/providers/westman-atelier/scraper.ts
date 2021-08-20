@@ -1,3 +1,4 @@
+import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
@@ -5,7 +6,9 @@ import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
 export default shopifyScraper(
   {
     productFn: async (_request, page) => {
-      const extraData: TShopifyExtraData = {}
+      const extraData: TShopifyExtraData = {
+        additionalSections: [],
+      }
       /**
        * Get additional descriptions and information
        */
@@ -36,6 +39,36 @@ export default shopifyScraper(
        */
       // NOT APPLICABLE
       extraData.sizeChartHtml = await getSelectorOuterHtml(page, 'div[data-remodal-id=size-chart]')
+
+      const keyIngredientsSection = await getSelectorOuterHtml(
+        page,
+        '.product-ingredients__description',
+      )
+      if (keyIngredientsSection) {
+        extraData.additionalSections!.push({
+          name: 'Key Ingredients',
+          content: keyIngredientsSection,
+          description_placement: DESCRIPTION_PLACEMENT.MAIN,
+        })
+      }
+
+      const allIngredients = await getSelectorOuterHtml(page, 'div[data-product-ingredients-modal]')
+      if (allIngredients) {
+        extraData.additionalSections!.push({
+          name: 'All Ingredients',
+          content: allIngredients,
+          description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+        })
+      }
+
+      const gucciSection = await getSelectorOuterHtml(page, '.product-inspiration.product-section')
+      if (gucciSection) {
+        extraData.additionalSections!.push({
+          name: 'Product Inspiration',
+          content: gucciSection,
+          description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+        })
+      }
 
       return extraData
     },
@@ -72,20 +105,24 @@ export default shopifyScraper(
       /**
        * Add center png image
        */
-      const pngImage1 = await page.evaluate(() => {
-        return Array.from(document.querySelectorAll('.product-float-img__product-img'))
-          .map(e => e.getAttribute('src') || '')
-          .filter(e => e !== '')
-      })
+      const pngImage1 = await page.evaluate(variantId => {
+        const node = document.querySelector('.product-float-img__product-img')
+        if (!node) return null
+        const url = new URL(node.getAttribute('src')!)
+        const basePath = `${url.origin}${url.pathname}`
+        return `${basePath}?v=${variantId}`
+      }, providerVariant.id)
 
       /**
        * Add center png image
        */
-      const pngImage2 = await page.evaluate(() => {
-        return Array.from(document.querySelectorAll('.product__feature-img__smear-overlay'))
-          .map(e => e.getAttribute('src') || '')
-          .filter(e => e !== '')
-      })
+      const pngImage2 = await page.evaluate(variantId => {
+        const node = document.querySelector('.product__feature-img__smear-overlay')
+        if (!node) return null
+        const url = new URL(node.getAttribute('src')!)
+        const basePath = `${url.origin}${url.pathname}`
+        return `${basePath}?v=${variantId}`
+      }, providerVariant.id)
 
       /**
        * Add images in the product gallery
@@ -110,7 +147,13 @@ export default shopifyScraper(
 
       const videosGallery = images.filter(e => e.includes('player'))
       images = images.filter(e => !e.includes('player'))
-      product.images = [...images, ...adjacentImages, ...pngImage1, ...pngImage2]
+      product.images = [...images, ...adjacentImages]
+      if (pngImage1) {
+        product.images.push(pngImage1)
+      }
+      if (pngImage2) {
+        product.images.push(pngImage2)
+      }
 
       /**
        * Add tutorial video
