@@ -101,7 +101,6 @@ export default shopifyScraper(
       /**
        * Replace all the product images with the ones related by color (only if there're matches)
        */
-      await page.waitForTimeout(11000)
       if (product.color) {
         const colorSlugCamel = product.color.replace(/\//g, '-')
         const imagesCamel = await page.$$eval(
@@ -123,27 +122,67 @@ export default shopifyScraper(
       }
 
       /**
-       * Replace a realPrice
+       * Use the website discounts logic
        */
-      product.realPrice = await page.evaluate(() => {
-        return Number(
-          /\d.*/gm.exec(document.querySelector('.product__price')?.textContent || '')?.join(),
-        )
-      })
+      const realPrice = await page.evaluate(
+        (price, skus) => {
+          let discountPrice
+          // @ts-ignore
+          window.Shopify.ScriptDiscounts.forEach(d => {
+            switch (d.type) {
+              case 'percent':
+                skus.split(',').forEach(sku => {
+                  if (d.skus && d.skus.includes(sku)) {
+                    discountPrice = (price * (100 - d.value)) / 100 / 100
+                    return
+                  }
+                })
+                break
+              default:
+                throw new Error(`Problems handling discount type "${d.type}"`)
+            }
+          })
+          return discountPrice
+        },
+        providerVariant.price,
+        providerVariant.sku,
+      )
+
+      if (realPrice) {
+        product.realPrice = realPrice
+        product.higherPrice = providerVariant.price / 100
+      }
+
+      // /**
+      //  * Replace a realPrice
+      //  */
+      // product.realPrice = await page.evaluate(() => {
+      //   return Number(
+      //     /\d.*/gm.exec(document.querySelector('.product__price')?.textContent || '')?.join(),
+      //   )
+      // })
+
+      // /**
+      //  * Add higherPrice
+      //  */
+      // const higherPrice = await page.evaluate(() => {
+      //   return Number(
+      //     /\d.*/gm
+      //       .exec(document.querySelector('.product__priceCompare')?.textContent || '')
+      //       ?.join(),
+      //   )
+      // })
+      // if (higherPrice) {
+      //   product.higherPrice = higherPrice
+      // }
 
       /**
-       * Add higherPrice
+       * Add correct real price
        */
-      const higherPrice = await page.evaluate(() => {
-        return Number(
-          /\d.*/gm
-            .exec(document.querySelector('.product__priceCompare')?.textContent || '')
-            ?.join(),
-        )
-      })
-      if (higherPrice) {
-        product.higherPrice = higherPrice
-      }
+      // const realPrice = await page.evaluate(() => {
+      //   return document.querySelector('.product__priceList p')?.textContent?.trim().replace('$', '')
+      // })
+      // product.realPrice = Number(realPrice)
 
       /**
        * Remove the first element of the array, as we capture the description from the HTML
