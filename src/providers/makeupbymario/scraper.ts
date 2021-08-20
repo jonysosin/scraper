@@ -141,6 +141,13 @@ export default shopifyScraper(
         product.images = extraData.images
       }
 
+      /**
+       * Finally, if the product color is just a ".", remove it
+       */
+      if (product.color === '.') {
+        delete product.color
+      }
+
       product.additionalSections.shift()
     },
   },
