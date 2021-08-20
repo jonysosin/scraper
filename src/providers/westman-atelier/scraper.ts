@@ -1,3 +1,4 @@
+import parseUrl from 'parse-url'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 import { getProductOptions } from '../shopify/helpers'
@@ -5,10 +6,20 @@ import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
 
 export default shopifyScraper(
   {
-    productFn: async (_request, page) => {
+    productFn: async (request, page) => {
       const extraData: TShopifyExtraData = {
         additionalSections: [],
       }
+
+      // Remove promotion popups
+      await page.setCookie({
+        url: `https://www.westman-atelier.com`,
+        name: 'KL_FORMS_MODAL',
+        value:
+          '{%22disabledForms%22:{%22WcN9xR%22:{%22lastCloseTime%22:1629421703}}%2C%22viewedForms%22:{%22WcN9xR%22:1083187}}',
+      })
+      await page.goto(request.pageUrl)
+
       /**
        * Get additional descriptions and information
        */
@@ -103,32 +114,9 @@ export default shopifyScraper(
       })
 
       /**
-       * Add center png image
-       */
-      const pngImage1 = await page.evaluate(variantId => {
-        const node = document.querySelector('.product-float-img__product-img')
-        if (!node) return null
-        const url = new URL(node.getAttribute('src')!)
-        const basePath = `${url.origin}${url.pathname}`
-        return `${basePath}?v=${variantId}`
-      }, providerVariant.id)
-
-      /**
-       * Add center png image
-       */
-      const pngImage2 = await page.evaluate(variantId => {
-        const node = document.querySelector('.product__feature-img__smear-overlay')
-        if (!node) return null
-        const url = new URL(node.getAttribute('src')!)
-        const basePath = `${url.origin}${url.pathname}`
-        return `${basePath}?v=${variantId}`
-      }, providerVariant.id)
-
-      /**
        * Add images in the product gallery
        */
       const variantId = providerVariant.id.toString()
-
       let images = await page.evaluate(variantId => {
         return (
           [
@@ -148,11 +136,30 @@ export default shopifyScraper(
       const videosGallery = images.filter(e => e.includes('player'))
       images = images.filter(e => !e.includes('player'))
       product.images = [...images, ...adjacentImages]
-      if (pngImage1) {
-        product.images.push(pngImage1)
-      }
-      if (pngImage2) {
-        product.images.push(pngImage2)
+
+      /**
+       * Finally, if there's a floating product image, we get it
+       */
+      if (product.color) {
+        console.log('product.color', product.color)
+        await page.evaluate(variant => {
+          document
+            .querySelector(`.swatch-list__swatch[data-value="${variant}"] input`)
+            // @ts-ignore
+            ?.click()
+        }, product.color)
+        await page.waitForTimeout(1000)
+        const floatingImages = await page.evaluate(() => {
+          return [
+            document.querySelector('.product-float-img__wrapper img')?.getAttribute('src') || '',
+            document.querySelector('.product__feature-img__smear-overlay')?.getAttribute('src') ||
+              '',
+          ].filter(e => e !== '')
+        })
+        console.log('floatingImages', floatingImages)
+        if (floatingImages.length) {
+          product.images = [...floatingImages, ...product.images]
+        }
       }
 
       /**
