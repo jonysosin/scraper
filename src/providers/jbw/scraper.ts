@@ -1,7 +1,5 @@
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
-import { getSelectorTextContent } from '../../providerHelpers/getSelectorTextContent'
-import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 import _ from 'lodash'
 
 export default shopifyScraper(
@@ -32,7 +30,22 @@ export default shopifyScraper(
         return main
       }, DESCRIPTION_PLACEMENT)
 
+      /**
+       * Set key value pairs
+       */
+
       extraData.additionalSections?.push(mainSection)
+
+      extraData.keyValuePairs = await page.evaluate(() => {
+        const keys = Array.from(
+          document.querySelectorAll('.product-specs div div span:first-child'),
+        ).map(e => e.textContent?.trim())
+        const values = Array.from(
+          document.querySelectorAll('.product-specs div div span:last-child'),
+        ).map(e => e.textContent?.trim())
+
+        return Object.fromEntries(keys.map((item, i) => [item, values[i]]))
+      })
 
       /**
        * If exists, also add "Specifications" as adjacent
@@ -55,7 +68,7 @@ export default shopifyScraper(
         extraData.additionalSections?.push(adjacentSection)
       }
 
-      extraData.bullets = [adjacentSection.content]
+      // extraData.bullets = [adjacentSection.content]
 
       /**
        * Again, if exists, add "Product specifications" section as distant
