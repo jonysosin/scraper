@@ -15,7 +15,7 @@ export default shopifyScraper(
     productFn: async (_request, page) => {
       const extraData: TShopifyExtraData = { additionalSections: [] }
 
-      await page.waitForSelector('.products mat-expansion-panel')
+      await page.waitForSelector('.products mat-expansion-panel', { timeout: 120000 })
       /**
        * Get additional descriptions and information
        */
