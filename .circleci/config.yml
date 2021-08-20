@@ -80,7 +80,7 @@ commands:
                 "type": "header",
                 "text": {
                   "type": "plain_text",
-                  "text": ":red_circle: Failed: ${SERVICE_NAME}",
+                  "text": ":red_circle: Failed: crawler-providers (lambda)",
                   "emoji": true
                 }
               },
@@ -139,7 +139,7 @@ commands:
                 "type": "header",
                 "text": {
                   "type": "plain_text",
-                  "text": ":green: Deployed: ${SERVICE_NAME}",
+                  "text": ":green: Deployed: crawler-providers (lambda)",
                   "emoji": true
                 }
               },
