@@ -141,7 +141,6 @@ export default shopifyScraper(
        * Finally, if there's a floating product image, we get it
        */
       if (product.color) {
-        console.log('product.color', product.color)
         await page.evaluate(variant => {
           document
             .querySelector(`.swatch-list__swatch[data-value="${variant}"] input`)
@@ -156,7 +155,6 @@ export default shopifyScraper(
               '',
           ].filter(e => e !== '')
         })
-        console.log('floatingImages', floatingImages)
         if (floatingImages.length) {
           product.images = [...floatingImages, ...product.images]
         }
