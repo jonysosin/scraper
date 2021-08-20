@@ -50,7 +50,7 @@ export default shopifyScraper(
        * Add Main description
        */
       const mainDescription = await page.evaluate(() => {
-        return Array.from(document.querySelectorAll('.description p span'))
+        return Array.from(document.querySelectorAll('.description p'))
           .map(e => e.textContent)
           .toString()
       })
@@ -148,6 +148,23 @@ export default shopifyScraper(
         )
       })
 
+      extraData.bullets = []
+      const extraBullets = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('#product-extra .column-text'))
+          .map(x => (x as HTMLElement).innerText!)
+          .flatMap(x => x.split('\n'))
+          .filter(x => x)
+      })
+      if (extraBullets) extraData.bullets = extraData.bullets.concat(extraBullets)
+
+      const descriptionBullets = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.description li'))
+          .map(x => (x as HTMLElement).innerText!)
+          .flatMap(x => x.split('\n'))
+          .filter(x => x)
+      })
+      if (descriptionBullets) extraData.bullets = extraData.bullets.concat(descriptionBullets)
+
       return extraData
     },
     variantFn: async (
@@ -169,20 +186,20 @@ export default shopifyScraper(
         product.size = optionsObj.Size
       }
 
+      const price = await page.$eval('span[itemprop="price"]', x =>
+        parseFloat(x.getAttribute('content')!),
+      )
       /**
        * Get higher pri
        */
-      const higherPrice = await page.evaluate(() => {
-        return document.querySelector('span.value span')?.textContent?.trim().match(/\d+/)
+      const higherPrice = await page.$eval('span[itemprop="price"] .landing-weight ,value', x => {
+        const match = x.textContent!.match(/\$(\d+) Value/)
+        return match ? parseFloat(match[1]) : null
       })
-      console.log(product.realPrice)
 
-      if (product.realPrice === 0 && product.higherPrice) {
-        product.realPrice = product.higherPrice
-      } else {
-        if (higherPrice && product.realPrice && product.realPrice < Number(higherPrice[0])) {
-          product.higherPrice = Number(higherPrice)
-        }
+      product.realPrice = price
+      if (higherPrice) {
+        product.higherPrice = higherPrice
       }
 
       /**
@@ -194,6 +211,16 @@ export default shopifyScraper(
        * Set a brand
        */
       product.brand = 'Youth To The People'
+
+      const productShowcaseImages = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.landing-images .image > div'))
+          .map(e => (e as HTMLElement).style.backgroundImage)
+          .map(src => src.match(/url\(\"(.*)\"\)/)![1])
+      })
+
+      if (Array.isArray(productShowcaseImages) && productShowcaseImages.length) {
+        product.images = [...product.images, ...productShowcaseImages]
+      }
     },
   },
   {},
