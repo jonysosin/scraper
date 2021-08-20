@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { join } from 'path'
-import { load } from 'js-yaml'
-import handler from '../handlers'
-import { makeContext, makeMessage } from './utils'
-import type IOutputProduct from '../interfaces/outputProduct'
-import { chunk, pick } from 'lodash'
 import axios from 'axios'
-import { readFile, writeFile } from 'fs/promises'
 import format from 'dateformat'
+import { readFile, writeFile } from 'fs/promises'
+import { load } from 'js-yaml'
+import { chunk, pick } from 'lodash'
+import { join } from 'path'
+import handler from '../handlers'
+import type IOutputProduct from '../interfaces/outputProduct'
+import { makeContext, makeMessage } from './utils'
 
 interface URL {
   [provider: string]: string[]
@@ -77,18 +77,6 @@ const appendProducts = async (sheet: string, products: IOutputProduct[]) => {
 }
 
 async function run() {
-  // String.replaceAll polyfill (native support on Node 15+)
-  if (!String.prototype.replaceAll) {
-    String.prototype.replaceAll = function (str, newStr) {
-      // regex
-      if (Object.prototype.toString.call(str).toLowerCase() === '[object regexp]') {
-        return this.replace(str, newStr)
-      }
-      // string
-      return this.replace(new RegExp(str, 'g'), newStr)
-    }
-  }
-
   const date = format(new Date(), 'yyyy-mm-dd_HH-MM.ss')
   const content: string = await readFile(join(__dirname, '../../run/urls.yml'), {
     encoding: 'utf-8',
