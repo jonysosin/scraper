@@ -111,7 +111,6 @@ const puppeteerRunner: IRunner = async (
     } catch (e) {
       console.warn(`Error capturing screenshot for ${request.pageUrl}`, e)
     }
-    console.log(screenshot)
     return unknownError(e as Error, { screenshot })
   } finally {
     await page.close()
