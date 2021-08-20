@@ -15,10 +15,13 @@ export default shopifyScraper(
          */
         const description = Object.values({
           first: document.querySelector('#tab-1 p')?.outerHTML.trim() || '',
-          second: document.querySelector('.desc span')?.outerHTML.trim() || '',
+          second: document.querySelector('.desc p')?.outerHTML.trim() || '',
           third: document.querySelector('.second_chance_desc p')?.outerHTML.trim() || '',
+          fourth:
+            document.querySelector('.rte.product-description > div p')?.outerHTML.trim() || '',
+          fifth: document.querySelector('.column.description span')?.outerHTML.trim() || '',
         })
-          .filter(e => e.length)
+          .filter(e => e.length || !e.includes('Product Specifications'))
           .join('')
 
         const main = {
@@ -37,14 +40,37 @@ export default shopifyScraper(
       extraData.additionalSections?.push(mainSection)
 
       extraData.keyValuePairs = await page.evaluate(() => {
+        document.querySelector('.prod_spec > div')?.remove()
+
         const keys = Array.from(
           document.querySelectorAll('.product-specs div div span:first-child'),
-        ).map(e => e.textContent?.trim())
+          // @ts-ignore
+        ).map(e => e.innerText?.trim())
         const values = Array.from(
           document.querySelectorAll('.product-specs div div span:last-child'),
-        ).map(e => e.textContent?.trim())
+          // @ts-ignore
+        ).map(e => e.innerText?.trim())
 
-        return Object.fromEntries(keys.map((item, i) => [item, values[i]]))
+        /**
+         * Key value pairs may vary depending on the product
+         */
+
+        const secondaryKeys = Array.from(document.querySelectorAll('.prod_spec > div span'))
+          // @ts-ignore
+          .map(e => e.innerText)
+          .filter((item, i) => i % 2 === 0)
+
+        const secondaryValues = Array.from(document.querySelectorAll('.prod_spec > div span'))
+          // @ts-ignore
+          .map(e => e.innerText)
+          .filter((item, i) => i % 2 !== 0)
+
+        const finalKeyValuePairs = keys.length
+          ? Object.fromEntries(keys.map((item, i) => [item, values[i]]))
+          : Object.fromEntries(secondaryKeys.map((item, i) => [item, secondaryValues[i]]))
+
+        // return Object.fromEntries(keys.map((item, i) => [item, values[i]]))
+        return finalKeyValuePairs
       })
 
       /**
