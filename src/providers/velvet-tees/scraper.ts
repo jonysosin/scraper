@@ -97,7 +97,7 @@ export default shopifyScraper(
         const images: string[] = []
         extraData.imagesMap.forEach(imageData => {
           if (imageData.variants.includes(providerVariant.id.toString())) {
-            images.push(imageData.imageSrc)
+            images.push(imageData.imageSrc || '')
           }
         })
         product.images = images

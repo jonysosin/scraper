@@ -39,7 +39,7 @@ export type TShopifyExtraData = {
   videos?: string[]
   images?: string[]
   metadata?: { [key: string]: unknown }
-  imagesMap?: { variants: string[]; imageSrc: string }[]
+  imagesMap?: { variants: string[]; imageSrc?: string; imagesSrc?: string[] }[] // TODO: Once everything is normalized, fix the imageSrc type to be always an array
   token?: string
 }
 
