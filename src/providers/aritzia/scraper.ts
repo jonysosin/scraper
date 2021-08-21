@@ -75,7 +75,7 @@ const scraper: Scraper = async (request, page) => {
         await page.click(`.js-sizeguide__swatch-size[title="${title}"]`)
         await page.waitForSelector('.js-sizeguide__measurements')
         // @ts-ignore
-        allsizesChartsHTML[title] = await page.$eval(
+        allsizesChartsHTML[title.trim()] = await page.$eval(
           '.js-sizeguide__measurements',
           el => el.innerHTML,
         )
