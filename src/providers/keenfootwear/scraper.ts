@@ -13,46 +13,103 @@ const scraper: IScraper = async (request, page) => {
   // Products / Variants
   const products: Product[] = []
 
-  const colorUrls = await page.evaluate(() => {
-    return Array.from(document.querySelectorAll('ul.options.swatches.color li a')).map(e =>
-      e.getAttribute('href'),
-    ) as string[]
-  })
-  for (const colorUrl of colorUrls) {
-    await page.goto(colorUrl)
-    const sizeUrls = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('div.size-selector ul.options li input')).map(e =>
-        e.getAttribute('value'),
-      ) as string[]
-    })
-    if (sizeUrls?.length > 1) {
-      for (const sizeUrl of sizeUrls) {
-        await page.goto(sizeUrl)
-        const widthUrls = await page.evaluate(() => {
-          return Array.from(document.querySelectorAll('div.width label.size-swatch input')).map(e =>
-            e.getAttribute('value'),
-          ) as string[]
-        })
-        if (widthUrls.length) {
-          for (const widthUrl of widthUrls) {
-            products.push(await getProduct(page, widthUrl))
+  const colorOptions = await findColors(page)
+  for (const colorOption of colorOptions) {
+    await pickColor(colorOption, page)
+
+    const widthOptions = await findWidths(page)
+    if (widthOptions.length > 0) {
+      for (const widthOption of widthOptions) {
+        await pickWidth(widthOption, page)
+
+        const sizeButtonOptions = await findSizes(page)
+        if (sizeButtonOptions?.length > 1) {
+          for (const sizeButtonOption of sizeButtonOptions) {
+            await pickSize(sizeButtonOption, page)
+            products.push(await getProduct(page))
           }
         } else {
-          products.push(await getProduct(page, sizeUrl))
+          products.push(await getProduct(page))
         }
       }
     } else {
-      products.push(await getProduct(page, colorUrl))
+      products.push(await getProduct(page))
     }
   }
 
   return { screenshot, products }
 }
 
-async function getProduct(page: Page, productUrl: string) {
-  await page.goto(productUrl)
-  console.log(productUrl)
+async function findWidths(page: Page) {
+  return await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('div.width label.size-swatch input')).map(
+      (e, idx) => idx + 1,
+    )
+  })
+}
 
+async function findSizes(page: Page) {
+  return await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('div.size-selector ul.options li input')).map(
+      (e, idx) => idx + 1,
+    )
+  })
+}
+
+async function findColors(page: Page) {
+  return await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('ul.options.swatches.color li a')).map(
+      (e, idx) => idx + 1,
+    )
+  })
+}
+
+async function pickWidth(widthOption: number, page: Page) {
+  const widthSelector = `div.width label.size-swatch:nth-child(${1 + widthOption}) input`
+  await page.evaluate(
+    widthSelector => document.querySelector(widthSelector)!.click(),
+    widthSelector,
+  )
+  await page.waitForFunction(
+    widthSelector => {
+      const node = document.querySelector(widthSelector)!
+      return node.getAttribute('checked') === 'checked'
+    },
+    {},
+    widthSelector,
+  )
+}
+
+async function pickSize(sizeButtonOption: number, page: Page) {
+  const sizeSelector = `div.size-selector ul.options li:nth-child(${sizeButtonOption}) input`
+  await page.evaluate(sizeSelector => document.querySelector(sizeSelector)!.click(), sizeSelector)
+  await page.waitForFunction(
+    sizeSelector => {
+      const node = document.querySelector(sizeSelector)!
+      return node.parentElement.classList.contains('is-active')
+    },
+    {},
+    sizeSelector,
+  )
+}
+
+async function pickColor(colorOption: number, page: Page) {
+  const colorSelector = `ul.options.swatches.color li:nth-child(${colorOption}) a`
+  await page.evaluate(
+    colorSelector => document.querySelector(colorSelector)!.click(),
+    colorSelector,
+  )
+  await page.waitForFunction(
+    colorSelector => {
+      const node = document.querySelector(colorSelector)!
+      return node.parentElement.classList.contains('is-active')
+    },
+    {},
+    colorSelector,
+  )
+}
+
+async function getProduct(page: Page) {
   const id =
     (await page.evaluate(
       () => document.querySelector('div.styleno-container')?.textContent?.split('#')[1],
@@ -61,7 +118,9 @@ async function getProduct(page: Page, productUrl: string) {
     (await page.evaluate(() =>
       document.querySelector('meta[property="og:title"]')?.getAttribute('content'),
     )) || ''
-  const product = new Product(id, title, productUrl)
+  const url = await page.$eval('.size-swatch.is-active input', e => e.getAttribute('value')!)
+
+  const product = new Product(id, title, url)
   const variantData = await page.evaluate(() =>
     JSON.parse(
       document.querySelector('div.product-variations')?.getAttribute('data-attributes') || '{}',
@@ -128,22 +187,6 @@ async function getProduct(page: Page, productUrl: string) {
   if (variantData.width?.displayValue) {
     keyValuePairs['width'] = variantData.width.displayValue
   }
-
-  const oldPrice = await page.evaluate(
-    () =>
-      document
-        .querySelector('div.product-price div.price-sales span.sale.old-price')
-        ?.textContent?.split('$')[1],
-  )
-  const newPrice = await page.evaluate(
-    () =>
-      document
-        .querySelector('div.product-price div.price-sales span.price-standard.price')
-        ?.textContent?.split('$')[1],
-  )
-  const price = await page.evaluate(
-    () => document.querySelector('div.product-price div.price-sales')?.textContent?.split('$')[1],
-  )
 
   const salePrice = await page
     .$eval('.product-detail-hero--product-info .old-price:not(:empty)', e =>

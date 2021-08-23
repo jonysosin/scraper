@@ -48,6 +48,31 @@ export default shopifyScraper(
         return sections
       }, DESCRIPTION_PLACEMENT)
 
+      /**
+       * Get key value pairs from specifications
+       */
+      // await page.waitForTimeout(99999999)
+      const keyValue = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.product__meta-description table tr')).map(
+          e => e.innerHTML,
+        )
+      })
+
+      const keyValueTrim = keyValue[3]
+        .replace(/<[^>]*>/g, '?')
+        .replace(/\n/g, '')
+        .split('?')
+
+      const filteredKeyValues = keyValueTrim.filter(e => e !== '')
+      const splittedKeyValues = filteredKeyValues.map(e => e.split(':'))
+
+      const keyValuePairs = splittedKeyValues.map(pair => {
+        pair[1] = pair[1]?.trim() || pair[0]?.trim() // Default to key for those tags that are not key value
+        return pair
+      })
+
+      extraData.keyValuePairs = Object.fromEntries(keyValuePairs)
+
       const productStory = await page.evaluate(DESCRIPTION_PLACEMENT => {
         // Get a list of titles
         const values = Array.from(document.querySelectorAll('.product-story'))

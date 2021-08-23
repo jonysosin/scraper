@@ -1,3 +1,4 @@
+import Product from 'entities/product'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
@@ -44,10 +45,33 @@ export default shopifyScraper(
       }
 
       /**
-       * Get  additional sections
+       * Add distant description (available only in some products)
        */
+      const distantDescription = await page.evaluate(() => {
+        const featuresTitleSelector = document
+          .evaluate("//p[contains(., 'Features')]", document, null, XPathResult.ANY_TYPE, null)
+          .iterateNext()
 
-      const adjacentDescription = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        const title = featuresTitleSelector?.textContent || 'Features'
+        const content = featuresTitleSelector?.parentElement
+          ?.querySelector('div')
+          ?.outerHTML?.trim()
+
+        return { title, content }
+      })
+
+      if (distantDescription.content) {
+        extraData.additionalSections?.push({
+          name: distantDescription.title,
+          content: distantDescription.content,
+          description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+        })
+      }
+
+      /**
+       * Get additional sections
+       */
+      const adjacentDescriptions = await page.evaluate(DESCRIPTION_PLACEMENT => {
         const accordions = Array.from(
           document.querySelectorAll('form > div[class*=css] > div[class^=collapsible]'),
         )
@@ -62,8 +86,11 @@ export default shopifyScraper(
         }))
       }, DESCRIPTION_PLACEMENT)
 
-      if (adjacentDescription) {
-        extraData.additionalSections?.push(...adjacentDescription)
+      if (adjacentDescriptions) {
+        extraData.additionalSections = [
+          ...(extraData.additionalSections || []),
+          ...adjacentDescriptions,
+        ]
       }
 
       /**

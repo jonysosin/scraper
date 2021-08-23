@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
@@ -6,21 +7,6 @@ export default shopifyScraper(
   {
     productFn: async (_request, page) => {
       const extraData: TShopifyExtraData = { additionalSections: [] }
-
-      /**
-       * Add "Description" section
-       */
-      const mainDescription = await page.evaluate(() => {
-        return document.querySelector('.product-description')?.outerHTML
-      })
-      if (mainDescription) {
-        extraData.additionalSections?.push({
-          name: 'Description',
-          content: mainDescription,
-          description_placement: DESCRIPTION_PLACEMENT.MAIN,
-        })
-      }
-
       /**
        * Get additional descriptions and information
        */
@@ -36,14 +22,47 @@ export default shopifyScraper(
         ).map(e => e.outerHTML?.trim())
 
         // Join the two arrays
-        return values.map((value, i) => {
+        let sections = values.map((value, i) => {
           return {
             name: keys[i] || `key_${i}`,
             content: value || '',
             description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
           }
         })
+
+        return sections
       }, DESCRIPTION_PLACEMENT)
+
+
+
+      /**
+      * Add "Description" section
+      */
+        const mainDescription = await page.evaluate(() => {
+          return document.querySelector('#descBlurb')?.outerHTML.trim()
+        })
+        if (mainDescription) {
+          extraData.additionalSections?.push({
+            name: 'Description',
+            content: mainDescription,
+            description_placement: DESCRIPTION_PLACEMENT.MAIN,
+          })
+        }
+
+        /**
+      * Add "adjacent description" section
+      */
+         const adjacentDescription = await page.evaluate(() => {
+          const adjacentDescriptionSelector = document.querySelector('.description >div.rte > :not(ul)')?.parentElement
+          return adjacentDescriptionSelector?.outerHTML
+        })
+        if (adjacentDescription) {
+          extraData.additionalSections?.push({
+            name: 'Extra description',
+            content: adjacentDescription,
+            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+          })
+        }
 
       return extraData
     },

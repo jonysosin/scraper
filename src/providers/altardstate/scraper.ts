@@ -85,12 +85,14 @@ const scraper: IScraper = async (request, page) => {
   for (const variantData of variantsData) {
     const { id, url } = variantData
 
-    console.log('varian', url)
-
     const productData = await getProductJson(page, url)
+
     const title = productData.product.productName
     const productUrl = `${protocol}://${resource}${productData.product.selectedProductUrl}`
     const product = new Product(id, title, productUrl)
+
+    console.log('json', url)
+    console.log('product', productUrl)
 
     product.itemGroupId = productData.variantGTMJson[0].product_style_id
     product.sku = id // TODO: find the real sku
@@ -141,9 +143,7 @@ const getProductVariantUrls = (
   )
   const combinedVariants = combine(variants)
 
-  // console.log('combinedVariants', combinedVariants)
-
-  const variantsData: any[] = []
+  const variantsData: { id: string; url: string }[] = []
   combinedVariants.forEach(variant => {
     let url = baseProductUrl
     variant.split('-').forEach((attr: string) => {
