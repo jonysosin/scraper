@@ -51,7 +51,6 @@ export default shopifyScraper(
       /**
        * Get key value pairs from specifications
        */
-      // await page.waitForTimeout(99999999)
       const keyValue = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('.product__meta-description table tr')).map(
           e => e.innerHTML,
@@ -116,6 +115,7 @@ export default shopifyScraper(
     variantFn: async (_request, page, product, providerProduct, providerVariant) => {
       /**
        * Get the color of the product
+       * (2) ["Title", "Color"]
        */
       const color = await page.evaluate(() => {
         return document.querySelector('.product__current-color')?.textContent?.trim() || ''
@@ -124,6 +124,23 @@ export default shopifyScraper(
       if (color) {
         product.color = color
       }
+
+      /**
+       * Add product size because is not a variant
+       */
+      const size = await page.evaluate(() => {
+        const size = (document.querySelector('#luggage-select-switch') as HTMLSelectElement) || ''
+        if (size) {
+          return size.options[size.selectedIndex].text
+        } else {
+          return ''
+        }
+      })
+
+      if (size != '') {
+        product.size = size
+      }
+
       /**
        * Adding product selected color into options
        */
