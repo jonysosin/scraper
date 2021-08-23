@@ -22,7 +22,7 @@ export default shopifyScraper(
         const sections = values.map((value, i) => {
           return {
             name: keys[i].textContent?.trim() || `key_${i}`,
-            content: value.innerHTML?.trim() || '',
+            content: value.outerHTML?.trim() || '',
             description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
           }
         })
@@ -31,7 +31,8 @@ export default shopifyScraper(
       }, DESCRIPTION_PLACEMENT)
 
       const productDescription = await page.evaluate(() => {
-        return document.querySelector('div.courier-regular-12.text-uppercase.mb-3')?.textContent?.trim()
+        return document.querySelector('div.courier-regular-12.text-uppercase.mb-3')?.outerHTML?.trim()
+
       })
       if (productDescription) {
         extraData.additionalSections?.push({
