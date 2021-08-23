@@ -2,6 +2,7 @@ import { getProductOptions } from '../../providers/shopify/helpers'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { htmlToTextArray } from '../../providerHelpers/parseHtmlTextContent'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
+import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 
 export default shopifyScraper(
   {
@@ -49,11 +50,7 @@ export default shopifyScraper(
       /**
        * Add Main description
        */
-      const mainDescription = await page.evaluate(() => {
-        return Array.from(document.querySelectorAll('.description p'))
-          .map(e => e.textContent)
-          .toString()
-      })
+      const mainDescription = await getSelectorOuterHtml(page, '.description')
       if (mainDescription) {
         extraData.additionalSections?.push({
           name: 'Description',
@@ -103,6 +100,19 @@ export default shopifyScraper(
         extraData.additionalSections?.push({
           name: 'Ingredients',
           content: ingredientsSection,
+          description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+        })
+      }
+
+      const benefitsAndClaimsSection = await getSelectorOuterHtml(
+        page,
+        '#product-extra .product-extra-content  > div.column.right > div.small',
+      )
+
+      if (benefitsAndClaimsSection) {
+        extraData.additionalSections?.push({
+          name: 'Benefits and claims',
+          content: benefitsAndClaimsSection,
           description_placement: DESCRIPTION_PLACEMENT.DISTANT,
         })
       }
@@ -192,15 +202,15 @@ export default shopifyScraper(
       /**
        * Get higher pri
        */
-      const higherPrice = await page.$eval('span[itemprop="price"] .landing-weight ,value', x => {
-        const match = x.textContent!.match(/\$(\d+) Value/)
-        return match ? parseFloat(match[1]) : null
-      })
+      // const higherPrice = await page.$eval('span[itemprop="price"] .landing-weight ,value', x => {
+      //   const match = x.textContent!.match(/\$(\d+) Value/)
+      //   return match ? parseFloat(match[1]) : null
+      // })
 
       product.realPrice = price
-      if (higherPrice) {
-        product.higherPrice = higherPrice
-      }
+      // if (higherPrice) {
+      //   product.higherPrice = higherPrice
+      // }
 
       /**
        * Cut te first element of additional sections
