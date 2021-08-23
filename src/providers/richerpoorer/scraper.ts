@@ -1,7 +1,6 @@
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
-
 export default shopifyScraper(
   {
     productFn: async (_request, page) => {
@@ -18,23 +17,25 @@ export default shopifyScraper(
               .map(e => e.trim())
           : []
       })
-
       /**
        * Get additional descriptions and information
        */
       extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        // Template option 1
         const key = document.querySelector('.product-info__care h2')?.textContent?.trim()
         const value = document.querySelector('.product-info__care :not(h2)')?.outerHTML.trim()
+        // Template option 2
+        const key2 = document.querySelector('.product-care h2')?.textContent?.trim()
+        const value2 = document.querySelector('.product-care :not(h2)')?.outerHTML.trim()
         // Add missing description
         return [
           {
-            name: key || '',
-            content: value || '',
+            name: key || key2 || '',
+            content: value || value2 || '',
             description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
           },
         ]
       }, DESCRIPTION_PLACEMENT)
-
       return extraData
     },
     variantFn: async (
@@ -50,14 +51,13 @@ export default shopifyScraper(
        */
       const sizeChartHtml = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('.size-guide-charts .tabs__tab'))
-        .filter(e => (e as any).style.display ==='block')[0]?.innerHTML?.trim()
+          .filter(e => (e as any).style.display === 'block')[0]
+          ?.innerHTML?.trim()
       })
-
       product.sizeChartHtml = sizeChartHtml ? sizeChartHtml : ''
-
       /**
        * Get the list of options for the variants of this provider
-       * (3) ["Color", "Size"]
+       * (3) ["Color", "Size"]
        */
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Color) {
@@ -66,7 +66,6 @@ export default shopifyScraper(
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
-
       /**
        * Replace all the product images with the ones related by color (only if there're matches)
        */
