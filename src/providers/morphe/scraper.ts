@@ -23,7 +23,7 @@ export default shopifyScraper(
           return {
             name,
             content: value.innerHTML?.trim() || '',
-            description_placement: name === 'DESCRIPTION' ? DESCRIPTION_PLACEMENT.MAIN : DESCRIPTION_PLACEMENT.ADJACENT,
+            description_placement: name === ('DESCRIPTION') || name === ('Description') ? DESCRIPTION_PLACEMENT.MAIN : DESCRIPTION_PLACEMENT.ADJACENT,
           }
         })
 
@@ -51,17 +51,22 @@ export default shopifyScraper(
         product.color = optionsObj.Color
       }
 
-      const brandsDictionary = ['COCA COLA',
+      const brandsDictionary = [
         'ARIEL',
+        'COCA-COLA',
         'AVANI GREGG',
+        'BRITTANY BEAR',
+        'DEYSI DANGER',
         'JACLYN HILL',
         'JAMES CHARLES',
+        'JEFFREE STAR',
         'LISA FRANK',
         'MADDIE ZIEGLER',
         'MADISON BEER',
+        'MANNY MUA',
         'NIKITA DRAGUN'
         ]
-      const matchedSubBrand = product.title.match(' X ') && product.title.match(brandsDictionary.join('|'))?.[0]
+      const matchedSubBrand = product.title.match(' X') && product.title.match(brandsDictionary.join('|'))?.[0]
       if (matchedSubBrand) {
         product.subBrand = matchedSubBrand
         product.brand = product.brand
