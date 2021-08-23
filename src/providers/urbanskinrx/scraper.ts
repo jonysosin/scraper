@@ -41,6 +41,9 @@ export default shopifyScraper(
        */
       extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
         const description = document.querySelector('.product-info__content')?.outerHTML.trim()
+        const alternativeDescription = document
+          .querySelector('.product__details--tab-content')
+          ?.outerHTML.trim()
 
         const keys = Array.from(document.querySelectorAll('.product__details--tab h4')).map(e =>
           e.textContent?.trim(),
@@ -66,7 +69,7 @@ export default shopifyScraper(
         return [
           {
             name: 'Description',
-            content: description || '',
+            content: description ? description : alternativeDescription || '',
             description_placement: DESCRIPTION_PLACEMENT.MAIN,
           },
           {
@@ -76,6 +79,49 @@ export default shopifyScraper(
           },
         ].concat(sections)
       }, DESCRIPTION_PLACEMENT)
+
+      /**
+       * Get and set key value pairs
+       */
+      let keyValueTrim = extraData.additionalSections
+        ? extraData.additionalSections
+            ?.filter(e => e.name === 'Materials')[0]
+            ?.content.replace(/<[^>]*>/g, '?')
+            .replace(/\n/g, '')
+            .replace(/:/g, '')
+            .split('?')
+            .map(e => e.trim())
+            .filter(e => e !== '')
+            .filter(e => e !== '&nbsp;')
+        : []
+
+      if (!keyValueTrim) {
+        keyValueTrim = extraData.additionalSections
+          ? extraData.additionalSections
+              ?.filter(e => e.name === 'Ingredients')[0]
+              ?.content.replace(/<[^>]*>/g, '?')
+              .replace(/\n/g, '')
+              .replace(/:/g, '')
+              .split('?')
+              .map(e => e.trim())
+              .map(e => e.replace('-&nbsp;', ''))
+              .filter(e => e !== '')
+              .filter(e => e !== '&nbsp;')
+          : []
+      }
+
+      const keys = keyValueTrim?.filter((e, i) => i % 2 === 0)
+      const values = keyValueTrim?.filter((e, i) => i % 2 !== 0)
+
+      if (keys) {
+        extraData.keyValuePairs = Object.fromEntries(
+          keys.map((key, i) => {
+            return [key, values[i]]
+          }),
+        )
+      } else {
+        extraData.keyValuePairs = {}
+      }
 
       /**
        * Get Size Chart HTML
@@ -90,7 +136,7 @@ export default shopifyScraper(
     },
     variantFn: async (
       _request,
-      _page,
+      page,
       product,
       providerProduct,
       providerVariant,
@@ -99,6 +145,7 @@ export default shopifyScraper(
       /**
        * Get the list of options for the variants of this provider
        */
+
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Color) {
         product.color = optionsObj.Color
@@ -119,6 +166,14 @@ export default shopifyScraper(
       product.title = product.title.replace(/ - [^-]+$/, '')
 
       product.additionalSections.shift()
+
+      const videos = await page.evaluate(() => {
+        return document.querySelector('.learn-how-youtube iframe')?.getAttribute('src')
+      })
+
+      if (videos) {
+        product.videos.push(videos)
+      }
     },
   },
   {},
