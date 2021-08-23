@@ -7,11 +7,22 @@ export default shopifyScraper(
   {
     productFn: async (_request, page) => {
       const extraData: TShopifyExtraData = {}
+       /**
+       * Get Size Chart HTML
+       */
+
+      extraData.sizeChartHtml = await page.evaluate(() => {
+        const element = document.querySelector('.content table')
+        return element?.outerHTML
+      }) 
+      
       /** * Get additional descriptions and information */
       extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
         /**
          * Delete table from details
+         * 
          */
+
         document.querySelector('.content table')?.remove()
         // Get a list of titles
         const keys = Array.from(
@@ -37,18 +48,14 @@ export default shopifyScraper(
 
       const descriptionSection = await getSelectorOuterHtml(page, '.product-description')
       if (descriptionSection) {
-        extraData.additionalSections.push({
+        extraData.additionalSections?.push({
           name: 'Description',
           content: descriptionSection,
           description_placement: DESCRIPTION_PLACEMENT.MAIN,
         })
       }
 
-      /**
-       * Get Size Chart HTML
-       */
-      // NOT APPLICABLE
-      extraData.sizeChartHtml = await getSelectorOuterHtml(page, '.content table')
+     
       return extraData
     },
     variantFn: async (

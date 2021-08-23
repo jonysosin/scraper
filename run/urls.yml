@@ -1,5 +1,26 @@
+<<<<<<< HEAD
 .jane: # add . to the provider name to skip all its urls
   - https://jane.com/deal/1441408/slip-on-espadrille-wedges
 hm:
   # - https://www2.hm.com/en_us/productpage.0920829010.html # ignore this url
   - https://www2.hm.com/en_us/productpage.0927666004.html
+=======
+soapplybox:
+  # - https://soapplybox.com/products/handwasher-hat?variant=32235512299607
+  # - https://soapplybox.com/products/onesie?variant=39317082177623
+  # - https://soapplybox.com/products/onesie?variant=39317082243159
+  # - https://soapplybox.com/products/i-was-a-handwasher-before-it-was-cool-t-shirt?variant=39310342750295
+  # - https://soapplybox.com/products/soapply-x-the-defined-dish?variant=39292586066007
+  # - https://soapplybox.com/products/impact?variant=32466247155799
+  # - https://soapplybox.com/products/bottle-partner-rate?variant=29414063669335
+  # - https://soapplybox.com/products/replacement-pumps?variant=32279300702295
+  # - https://soapplybox.com/products/hand-soap-to-go?variant=32146510512215
+  # - https://soapplybox.com/products/but-first-wash-your-hands-tshirt?variant=31865539493975
+  # - https://soapplybox.com/products/liquid-hand-wash?variant=31617296466007
+  # - https://soapplybox.com/products/clean-freak-tote?variant=31535871524951
+  # - https://soapplybox.com/products/the-essential-set?variant=31646650662999
+  # - https://soapplybox.com/products/the-starter-set?variant=30945933361239
+  # - https://soapplybox.com/products/hand-wash-refill?variant=27999380045911
+    - https://soapplybox.com/products/bottle-partner-rate?variant=29414069829719
+    
+>>>>>>> 2ac8700 ([soapplybox] ready for QA)
