@@ -4,6 +4,84 @@ import Product from '../../entities/product'
 import Scraper from '../../interfaces/scraper'
 import screenPage from '../../utils/capture'
 
+async function getVariantId(page) {
+  return await page.$eval('.product-add-to-cart input[name="pid"]', x => x.getAttribute('value')!)
+}
+function getGroupId(page) {
+  return page.$eval('.product-add-to-cart input[name="pid_master"]', x => x.getAttribute('value')!)
+}
+async function setProductImages(page, product: Product) {
+  await page.waitForSelector('.zoomImg')
+  await page.waitForTimeout(3000)
+  await page.waitForFunction(() => {
+    // @ts-ignore
+    return Array.from(document.querySelectorAll('.zoomImg')).every(img => img.complete)
+  })
+  product.images = await page.$$eval('.zoomImg', imgs => imgs.map(img => img.getAttribute('src')!))
+}
+
+function getMainTitle(page) {
+  return page.$eval('.pdp-brand-wrapper', e => e.textContent!)
+}
+
+function getSubtitle(page) {
+  return page.$eval('.pdp-name-wrapper', e => e.textContent!)
+}
+async function addSections(product: Product, page) {
+  product.addAdditionalSection({
+    content: await page.$eval(
+      '.product-description-wrapper > .product-info-accordion > div:nth-child(1)',
+      e => e.outerHTML,
+    ),
+    description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+    name: 'FEATURES',
+  })
+
+  const hasAdditionalFeatures = await page.evaluate(() => {
+    return !!document.querySelector(
+      '.product-description-wrapper > .product-info-accordion > div:nth-child(2)',
+    )
+  })
+  if (hasAdditionalFeatures) {
+    product.addAdditionalSection({
+      content: await page.$eval(
+        '.product-description-wrapper > .product-info-accordion > div:nth-child(2)',
+        e => e.outerHTML,
+      ),
+      description_placement: DESCRIPTION_PLACEMENT.MAIN,
+      name: 'DESCRIPTION',
+    })
+  }
+}
+
+async function setPrice(page, product: Product) {
+  product.realPrice = parseInt(
+    await page.$eval('span[itemprop="price"]', x => x.getAttribute('content')!),
+  )
+  const higherPrice = await page.evaluate(() => {
+    const node = document.querySelector('.product-price > .price-standard')
+    return node ? node.textContent?.replace('$', '') : null
+  })
+  if (higherPrice) {
+    product.higherPrice = parseInt(higherPrice)
+  }
+}
+
+function getBullets(page): string[] | PromiseLike<string[] | undefined> | undefined {
+  return page.$eval('.bulletedList', list =>
+    // @ts-ignore
+    list.innerText.split('\n').map(x => x.trim()),
+  )
+}
+
+function getBreadcrumbs(page): string[] | PromiseLike<string[] | undefined> | undefined {
+  return page.$eval('.breadcrumb', x => x.innerText.split('\n'))
+}
+
+function getDescription(page): string | PromiseLike<string | undefined> | undefined {
+  return page.$eval('.pdp-description-wrapper', e => e.textContent!.trim())
+}
+
 const scraper: Scraper = async (request, page) => {
   await page.goto(request.pageUrl, { timeout: 120000 })
 
@@ -52,83 +130,67 @@ const scraper: Scraper = async (request, page) => {
           const node = document.querySelector('.product-variations .selected-value')!
           if (!node) return false
           // @ts-ignore
-          return node.innerText === selection
+          return node.innerText.trim() === selection.trim()
         },
         {},
         title!,
       )
     }
 
-    const id = await page.$eval(
-      '.product-add-to-cart input[name="pid"]',
-      x => x.getAttribute('value')!,
-    )
-    const groupId = await page.$eval(
-      '.product-add-to-cart input[name="pid_master"]',
-      x => x.getAttribute('value')!,
-    )
-    const subTitle = await page.$eval('.pdp-name-wrapper', e => e.textContent!)
-    const mainTitle = await page.$eval('.pdp-brand-wrapper', e => e.textContent!)
+    const id = await getVariantId(page)
+    const groupId = await getGroupId(page)
+    const subTitle = await getSubtitle(page)
+    const mainTitle = await getMainTitle(page)
 
     const product = new Product(id, mainTitle, url)
+    product.color = color!
 
-    await page.waitForSelector('.zoomImg')
-    product.images = await page.$$eval('.zoomImg', imgs =>
-      imgs.map(img => img.getAttribute('src')!),
-    )
+    await setProductImages(page, product)
 
-    product.description = await page.$eval('.pdp-description-wrapper', e => e.textContent!.trim())
+    product.description = await getDescription(page)
     product.currency = metaTags['product:price:currency']
     product.sku = id
-    product.realPrice = parseInt(
-      await page.$eval('span[itemprop="price"]', x => x.getAttribute('content')!),
-    )
     product.subTitle = subTitle
 
-    const higherPrice = await page.evaluate(() => {
-      const node = document.querySelector('.product-price > .price-standard')
-      return node ? node.textContent?.replace('$', '') : null
-    })
-    if (higherPrice) {
-      product.higherPrice = parseInt(higherPrice)
-    }
+    await setPrice(page, product)
     product.availability = metaTags['og:availability'] === 'instock'
     product.itemGroupId = groupId
-    product.color = color!
     // @ts-ignore
-    product.breadcrumbs = await page.$eval('.breadcrumb', x => x.innerText.split('\n'))
-    product.bullets = await page.$eval('.bulletedList', list =>
-      // @ts-ignore
-      list.innerText.split('\n').map(x => x.trim()),
-    )
+    product.breadcrumbs = await getBreadcrumbs(page)
+    product.bullets = await getBullets(page)
 
-    product.addAdditionalSection({
-      content: await page.$eval(
-        '.product-description-wrapper > .product-info-accordion > div:nth-child(1)',
-        e => e.outerHTML,
-      ),
-      description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
-      name: 'FEATURES',
-    })
-
-    const hasAdditionalFeatures = await page.evaluate(() => {
-      return !!document.querySelector(
-        '.product-description-wrapper > .product-info-accordion > div:nth-child(2)',
-      )
-    })
-    if (hasAdditionalFeatures) {
-      product.addAdditionalSection({
-        content: await page.$eval(
-          '.product-description-wrapper > .product-info-accordion > div:nth-child(2)',
-          e => e.outerHTML,
-        ),
-        description_placement: DESCRIPTION_PLACEMENT.MAIN,
-        name: 'DESCRIPTION',
-      })
-    }
+    await addSections(product, page)
 
     products.push(product)
   }
+  if (colorOptions.length === 0) {
+    const id = await page.$eval('meta[itemprop="bf:sku"]', x => x.getAttribute('content')!)
+    const groupId = id
+    const subTitle = await getSubtitle(page)
+    const mainTitle = await getMainTitle(page)
+
+    const product = new Product(id, mainTitle, page.url())
+
+    await setProductImages(page, product)
+
+    product.description = await getDescription(page)
+    product.currency = metaTags['product:price:currency']
+    product.sku = id
+    product.subTitle = subTitle
+
+    await setPrice(page, product)
+    product.availability = metaTags['og:availability'] === 'instock'
+    product.itemGroupId = groupId
+    // @ts-ignore
+    product.breadcrumbs = await getBreadcrumbs(page)
+    product.bullets = await getBullets(page)
+    product.brand = 'Kipling'
+
+    await addSections(product, page)
+
+    products.push(product)
+  }
+
   return {
     screenshot,
     products,

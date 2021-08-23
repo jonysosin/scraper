@@ -12,7 +12,7 @@ const idRegex = /\/(\d+)\//
 
 const getId = (url: string) => (url.match(idRegex) || [])[1]
 
-const getResposne = (page: Page, id: string, timeout = 10000) =>
+const getResposne = (page: Page, id: string, timeout = 30000) =>
   new Promise<JaneResponse>((res, rej) => {
     page.on('response', response => {
       if (response.url().endsWith(id)) {
@@ -57,7 +57,7 @@ const reducers: Reducers = {
 
 const scraper: IScraper = async (request, page) => {
   const id = getId(request.pageUrl)
-  page.goto(request.pageUrl, DEBUGGER_OPTIONS)
+  const gotoPromise = page.goto(request.pageUrl, DEBUGGER_OPTIONS)
   const response = await getResposne(page, id)
 
   const metaTags = await extractMetaTags(page)
@@ -92,7 +92,7 @@ const scraper: IScraper = async (request, page) => {
         .map(option => getProductOptionValue(response, option))
         .reduce(
           (newProduct, option) =>
-            (reducers[option.name || ''] || reducers.default)(newProduct, option),
+            (reducers[option.name.replace('(See Description)', '').trim() || ''] || reducers.default)(newProduct, option),
           product,
         )
 
@@ -109,6 +109,9 @@ const scraper: IScraper = async (request, page) => {
     })
 
   const screenshot = await screenPage(page)
+
+  // Await this to avoid a "Browser disconnected" error later down the line
+  await gotoPromise
 
   return {
     screenshot,

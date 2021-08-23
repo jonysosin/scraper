@@ -7,6 +7,8 @@ import { Response } from './types'
 import _ from 'lodash'
 
 const scraper: Scraper = async (request, page) => {
+  // disable request headers because site does not work with them
+  await page.setExtraHTTPHeaders({})
   const navigationPromise = page.goto(request.pageUrl)
 
   const response: { data: Response } = await new Promise<any>((res, rej) => {
@@ -27,6 +29,10 @@ const scraper: Scraper = async (request, page) => {
   const ldjson = (await getLdJsonScripts(page))[0]
 
   const responseData = response.data.products.items
+
+  const bullets = await page.$$eval('#slot_2_spp_content .benefits-block__text-content', results =>
+    results.map(a => (a as HTMLElement).innerText).flatMap(x => x.split('\n')),
+  )
 
   const products: Product[] = []
 
@@ -74,6 +80,7 @@ const scraper: Scraper = async (request, page) => {
             .filter(x => x !== '/')
             .filter(x => x),
         )
+        product.bullets = bullets
 
         const additionalDescription = await page.evaluate(() => {
           const match = document.querySelector('.js-product-overview')

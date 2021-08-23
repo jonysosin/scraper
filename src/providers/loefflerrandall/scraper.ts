@@ -74,17 +74,33 @@ export default shopifyScraper(
         product.size = optionsObj.Size
       }
 
-      product.keyValuePairs = _.fromPairs(
-        await page.$$eval('.bar-value .selected', bars =>
-          (bars as HTMLDivElement[]).map(bar => [
-            bar.dataset.vdvalue
-              ?.split('][')
-              .reverse()[0]
-              .replace(/[\'\]]/gm, '') || '',
-            bar.dataset.vdmatch || '',
-          ]),
-        ),
+      const detailPairs = await page.$$eval('.heading_font[data-vdvalue]', els =>
+        (els as HTMLElement[]).map(e => [e.dataset.vdvalue || '', e.innerText || '']),
       )
+      const barPairs = await page.$$eval('.bar-value .selected', bars =>
+        (bars as HTMLDivElement[]).map(bar => [
+          bar.dataset.vdvalue || '',
+          bar.dataset.vdmatch || '',
+        ]),
+      )
+      const keyValuePairs = [...detailPairs, ...barPairs]
+        .map(([key, value]) => [
+          key
+            ?.replace(`['description']`, '')
+            .replace('[','][')
+            .split('][')
+            .reverse()[0]
+            ?.split('.')
+            .reverse()[0]
+            ?.replace(/[\'\]]/gm, '') || '',
+          value
+            .replace(/[\r\n]/gm, ' ')
+            .replace(/\s+/gm, ' ')
+            .trim(),
+        ])
+        .filter(([key, value]) => key && value)
+
+      product.keyValuePairs = _.fromPairs(keyValuePairs)
     },
     postProcess: async (product, page) => {
       product.bullets = await page.$$eval('.badges .badge', badges =>

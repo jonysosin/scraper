@@ -41,7 +41,7 @@ export type TShopifyExtraData = {
   videos?: string[]
   images?: string[]
   metadata?: { [key: string]: unknown }
-  imagesMap?: { variants: string[]; imageSrc: string }[]
+  imagesMap?: { variants: string[]; imageSrc?: string; imagesSrc?: string[] }[] // TODO: Once everything is normalized, fix the imageSrc type to be always an array
   token?: string
 }
 
@@ -176,7 +176,7 @@ const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
 
       // Size chart URLs
       if (productExtractedData.sizeChartUrls) {
-        product.videos = productExtractedData.sizeChartUrls
+        product.sizeChartUrls = productExtractedData.sizeChartUrls
       }
 
       /**
