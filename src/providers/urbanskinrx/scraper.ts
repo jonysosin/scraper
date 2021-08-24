@@ -60,22 +60,47 @@ export default shopifyScraper(
           }
         })
 
+        const isMainDescriptionAvailable = document
+          .querySelector('.product-info__content')
+          ?.textContent?.trim()
+
+        if (!isMainDescriptionAvailable) {
+          sections.shift()
+        }
+
         const distantDescription = {
           name: document.querySelector('.grid-container.product__ingredients--container h2'),
           content: Array.from(document.querySelectorAll('.grid-x.product__ingredients--grid'))
             .map(e => e.outerHTML.trim())
             .join(''),
         }
+
+        const videoDescription = {
+          name: document.querySelector('.product__how-to--info h2')?.textContent,
+          content: document.querySelector('.product__how-to--info p')?.outerHTML.trim(),
+        }
+
+        if (distantDescription.content) {
+          sections.push({
+            name: distantDescription.name?.textContent || '',
+            content: distantDescription.content,
+            description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+          })
+        }
+
+        if (videoDescription.content) {
+          sections.push({
+            name: videoDescription.name || '',
+            content: videoDescription.content || '',
+            description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+          })
+        }
+
         return [
           {
             name: 'Description',
             content: description ? description : alternativeDescription || '',
             description_placement: DESCRIPTION_PLACEMENT.MAIN,
-          },
-          {
-            name: distantDescription.name?.textContent || '',
-            content: distantDescription.content,
-            description_placement: DESCRIPTION_PLACEMENT.DISTANT,
           },
         ].concat(sections)
       }, DESCRIPTION_PLACEMENT)
@@ -91,8 +116,8 @@ export default shopifyScraper(
             .replace(/:/g, '')
             .split('?')
             .map(e => e.trim())
+            .map(e => e.replace(/-&nbsp;|&nbsp;/g, ''))
             .filter(e => e !== '')
-            .filter(e => e !== '&nbsp;')
         : []
 
       if (!keyValueTrim) {
@@ -104,9 +129,8 @@ export default shopifyScraper(
               .replace(/:/g, '')
               .split('?')
               .map(e => e.trim())
-              .map(e => e.replace('-&nbsp;', ''))
+              .map(e => e.replace(/-&nbsp;|&nbsp;/g, ''))
               .filter(e => e !== '')
-              .filter(e => e !== '&nbsp;')
           : []
       }
 
