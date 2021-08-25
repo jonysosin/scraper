@@ -9,30 +9,52 @@ export default shopifyScraper(
   {
     urls: url => {
       const parsedUrl = parseUrl(url)
+
       return {
-        jsonUrl: `https://entireworld.myshopify.com${parsedUrl.pathname}`,
+        jsonUrl: `https://entireworld.myshopify.com/products/${parsedUrl.pathname.split('/').reverse()[0]}`,
         htmlUrl: `https://theentireworld.com${parsedUrl.pathname}`,
       }
     },
-    productFn: async (_request, page) => {
+    productFn: async (_request, page, _providerProduct, resposes) => {
       const extraData: TShopifyExtraData = {}
 
       /**
-       * Wait for req with authorization Bearer token
+       * Look for req with authorization Bearer token
        */
-      const res = await page.waitForResponse(res => {
+      let token: string | null = null
+
+      for (const key of resposes.keys()) {
+        if (key.includes('cdn.contentful.com/spaces/36urz56kgkxo/environments/master/entries')) {
+          const res = resposes.get(key)
+          if (!res) continue
+          const req = res.request()
+          const headers = req.headers()
+          if (headers['authorization']) {
+            token = headers['authorization']
+            break
+          }
+        }
+      }
+
+      if (!token) {
+        /**
+         * Wait for req with authorization Bearer token
+         */
+        const res = await page.waitForResponse(res => {
+          const req = res.request()
+          const headers = req.headers()
+          const url = req.url()
+          return Boolean(
+            url.includes('cdn.contentful.com/spaces/36urz56kgkxo/environments/master/entries') &&
+              headers['authorization'],
+          )
+        })
+
         const req = res.request()
         const headers = req.headers()
-        const url = req.url()
-        return Boolean(
-          url.includes('cdn.contentful.com/spaces/36urz56kgkxo/environments/master/entries') &&
-            headers['authorization'],
-        )
-      })
+        token = headers['authorization']
+      }
 
-      const req = res.request()
-      const headers = req.headers()
-      const token = headers['authorization']
       extraData.token = token
 
       // Wait for the description to load

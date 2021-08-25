@@ -5,7 +5,7 @@ import { extractMetaTags } from '../../utils/extractors'
 import { getProductJson, getProductOptions, getShopifyImages, getShopifyVideos } from './helpers'
 import parseHtmlTextContent, { htmlToTextArray } from '../../providerHelpers/parseHtmlTextContent'
 import IScrapeRequest from '../../interfaces/request'
-import type { Page } from 'puppeteer'
+import type { HTTPResponse, Page } from 'puppeteer'
 import { TShopifyProduct, TShopifyProductVariant } from './types'
 import { DESCRIPTION_PLACEMENT, IDescriptionSection } from '../../interfaces/outputProduct'
 import parseUrl from 'parse-url'
@@ -13,7 +13,12 @@ import parseUrl from 'parse-url'
 type TCallbacks<T = { [key: string]: any }> = {
   urls?: (url: string) => { jsonUrl: string; htmlUrl: string }
   // Callbacks for the scrapper
-  productFn?: (request: IScrapeRequest, page: Page, providerProduct: TShopifyProduct) => Promise<T>
+  productFn?: (
+    request: IScrapeRequest,
+    page: Page,
+    providerProduct: TShopifyProduct,
+    responses: Map<string, HTTPResponse>,
+  ) => Promise<T>
   variantFn?: (
     request: IScrapeRequest,
     page: Page,
@@ -22,6 +27,8 @@ type TCallbacks<T = { [key: string]: any }> = {
     providerVariant: TShopifyProductVariant,
     extraData: T,
   ) => Promise<void>
+  setupFn?: (page: Page) => Promise<void>
+  postProcess?: (product: Product, page: Page) => Promise<void>
 }
 
 export type TShopifyExtraData = {
@@ -34,14 +41,16 @@ export type TShopifyExtraData = {
   videos?: string[]
   images?: string[]
   metadata?: { [key: string]: unknown }
-  imagesMap?: { variants: string[]; imageSrc: string }[]
+  imagesMap?: { variants: string[]; imageSrc?: string; imagesSrc?: string[] }[] // TODO: Once everything is normalized, fix the imageSrc type to be always an array
   token?: string
 }
 
 const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
-  ({ urls, productFn, variantFn }, { currency = 'USD' }) =>
+  ({ urls, productFn, variantFn, setupFn, postProcess }, { currency = 'USD' }) =>
   async (request, page) => {
     console.log('scraping', request)
+
+    if (setupFn) await setupFn(page)
 
     const url = request.pageUrl
 
@@ -51,6 +60,14 @@ const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
 
     // Get the product data from the Shopify website
     const providerProduct = await getProductJson(page, jsonUrl)
+
+    // Catch all request
+    let resIndex = 0
+    const responses = new Map<string, HTTPResponse>()
+    page.on('response', res => {
+      const url = res.url()
+      responses.set(url + '@' + resIndex++, res)
+    })
 
     // Navigate to the regular
     await page.goto(htmlUrl)
@@ -64,7 +81,7 @@ const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
     // Get data from the product page that can be used later in the variants
     let productExtractedData: TShopifyExtraData = {}
     if (typeof productFn === 'function') {
-      productExtractedData = await productFn(request, page, providerProduct)
+      productExtractedData = await productFn(request, page, providerProduct, responses)
     }
 
     // Iterate over the variants
@@ -159,7 +176,7 @@ const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
 
       // Size chart URLs
       if (productExtractedData.sizeChartUrls) {
-        product.videos = productExtractedData.sizeChartUrls
+        product.sizeChartUrls = productExtractedData.sizeChartUrls
       }
 
       /**
@@ -238,6 +255,8 @@ const shopifyScraper: IScraperConstructor<TCallbacks, { currency?: string }> =
           ...product.additionalSections.map(section => htmlToTextArray(section.content)).flat(),
         ]),
       ]
+
+      if (postProcess) await postProcess(product, page)
 
       products.push(product)
     }

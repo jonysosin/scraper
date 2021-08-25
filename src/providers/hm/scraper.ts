@@ -10,11 +10,6 @@ import { TProductHM } from './types'
 const scraper: IScraper = async (request, page) => {
   console.log({ request })
 
-  // TODO: Change this once FB legal figures out what's ok
-  await page.setUserAgent(
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36',
-  )
-
   const response = await page.goto(request.pageUrl, { waitUntil: 'load', timeout: 600000 })
 
   console.log(`Successfully loaded a page with status ${response.status()}`)
@@ -149,10 +144,22 @@ const scraper: IScraper = async (request, page) => {
   const screenshot = await screenPage(page)
   console.log({ screenshot })
 
+  const outOfStock = await page.$$eval('.picker-list li', items =>
+    items
+      .map(
+        item =>
+          item.querySelector('span:nth-child(2)') &&
+          item.querySelector('span')?.innerText.toUpperCase().trim(),
+      )
+      .filter(i => !!i),
+  )
+
   const products = articleData.sizes.map(size => {
     const variant = product.clone()
     variant.size = size.name
     variant.matchableIds = [size.sizeCode]
+
+    variant.availability = !outOfStock.includes(size.name?.toUpperCase())
 
     return variant
   })

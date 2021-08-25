@@ -1,3 +1,3 @@
-export const name = 'victoriabeckhambeauty'
+export const name = 'betterworldfragrancehouse'
 
 export { default as scraper } from './scraper'
