@@ -1,5 +1,3 @@
-
-import { getSelectorOuterHtml } from 'providerHelpers/getSelectorOuterHtml'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
@@ -24,48 +22,15 @@ export default shopifyScraper(
           return {
             name,
             content: value.innerHTML?.trim() || '',
-            description_placement: name === 'DESCRIPTION' ? DESCRIPTION_PLACEMENT.MAIN : DESCRIPTION_PLACEMENT.ADJACENT,
+            description_placement:
+              name === 'DESCRIPTION' || name === 'Description'
+                ? DESCRIPTION_PLACEMENT.MAIN
+                : DESCRIPTION_PLACEMENT.ADJACENT,
           }
         })
 
-        sections.shift()
-
         return sections
       }, DESCRIPTION_PLACEMENT)
-
-       /**
-       * Add main description
-       */
-        const mainDescription = await page.evaluate(() => {
-          return document.querySelector('.resp-tab-content p')?.outerHTML.trim()
-        })
-        if (mainDescription) {
-          extraData.additionalSections.push({
-            name: 'Description',
-            content: mainDescription,
-            description_placement: DESCRIPTION_PLACEMENT.MAIN,
-          })
-        }
-
-      /**
-       * Add adjacent description
-       */
-        const adjacentDescription = await page.evaluate(() => {
-          const paragraphs = Array.from(document.querySelectorAll(".resp-tab-content:not(.tt-u-clip-hide) > p")).map(e => e?.outerHTML.trim())
-          paragraphs.shift()
-          paragraphs.shift()
-          // paragraphs.pop()
-          const  ul = Array.from(document.querySelectorAll(".resp-tab-content:not(.tt-u-clip-hide) > ul")).map(e => e?.outerHTML.trim())
-          const adjacent = [...paragraphs, ...ul]
-          return adjacent.toString()
-        })
-        if (adjacentDescription) {
-          extraData.additionalSections.push({
-            name: 'Adjacent Description',
-            content: adjacentDescription,
-            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
-          })
-        }
 
       return extraData
     },
@@ -88,17 +53,23 @@ export default shopifyScraper(
         product.color = optionsObj.Color
       }
 
-      const brandsDictionary = ['COCA COLA',
+      const brandsDictionary = [
         'ARIEL',
+        'COCA-COLA',
         'AVANI GREGG',
+        'BRITTANY BEAR',
+        'DEYSI DANGER',
         'JACLYN HILL',
         'JAMES CHARLES',
+        'JEFFREE STAR',
         'LISA FRANK',
         'MADDIE ZIEGLER',
         'MADISON BEER',
-        'NIKITA DRAGUN'
-        ]
-      const matchedSubBrand = product.title.match(' X ') && product.title.match(brandsDictionary.join('|'))?.[0]
+        'MANNY MUA',
+        'NIKITA DRAGUN',
+      ]
+      const matchedSubBrand =
+        product.title.match(' X') && product.title.match(brandsDictionary.join('|'))?.[0]
       if (matchedSubBrand) {
         product.subBrand = matchedSubBrand
         product.brand = product.brand
@@ -115,20 +86,10 @@ export default shopifyScraper(
       }
 
       /**
-       * Add video from adjacent description
-       */
-      product.videos = await page.evaluate(() => {
-        return [document.querySelector('.videoWrapper iframe')?.getAttribute('src') || '']
-      })
-      console.log(product.videos);
-
-
-      /**
        * Remove the first element of the array, as the additional section captured by
        * the generic shopify scraper is not correct in this case
        */
       product.additionalSections.shift()
-
     },
   },
   {},
