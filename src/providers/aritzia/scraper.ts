@@ -55,6 +55,13 @@ const scraper: Scraper = async (request, page) => {
 
   const sections = [sectionDescription, ...sectionsAccordion]
 
+  // geo-blocking banner
+  try {
+    if ((await page.$('a[data-click-url="banner-closed"]')) !== null) {
+      await page.click('a[data-click-url="banner-closed"]')
+    }
+  } catch (e) {}
+
   const screenshot = await screenPage(page)
 
   // sizeChart
