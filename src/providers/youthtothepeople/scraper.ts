@@ -1,6 +1,8 @@
+import { getProductOptions } from '../../providers/shopify/helpers'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { htmlToTextArray } from '../../providerHelpers/parseHtmlTextContent'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
+import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 
 export default shopifyScraper(
   {
@@ -44,6 +46,18 @@ export default shopifyScraper(
             .trim(),
         }).filter(e => e[1] !== ''),
       )
+
+      /**
+       * Add Main description
+       */
+      const mainDescription = await getSelectorOuterHtml(page, '.description')
+      if (mainDescription) {
+        extraData.additionalSections?.push({
+          name: 'Description',
+          content: mainDescription,
+          description_placement: DESCRIPTION_PLACEMENT.MAIN,
+        })
+      }
 
       /**
        * Add "Key Ingredients" section
@@ -90,6 +104,19 @@ export default shopifyScraper(
         })
       }
 
+      const benefitsAndClaimsSection = await getSelectorOuterHtml(
+        page,
+        '#product-extra .product-extra-content  > div.column.right > div.small',
+      )
+
+      if (benefitsAndClaimsSection) {
+        extraData.additionalSections?.push({
+          name: 'Benefits and claims',
+          content: benefitsAndClaimsSection,
+          description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+        })
+      }
+
       /**
        * Get additional descriptions and information (it only applies to some product pages, such as
        * https://www.youthtothepeople.com/products/superberry-hydrate-glow-pride-dream-mask)
@@ -131,7 +158,79 @@ export default shopifyScraper(
         )
       })
 
+      extraData.bullets = []
+      const extraBullets = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('#product-extra .column-text'))
+          .map(x => (x as HTMLElement).innerText!)
+          .flatMap(x => x.split('\n'))
+          .filter(x => x)
+      })
+      if (extraBullets) extraData.bullets = extraData.bullets.concat(extraBullets)
+
+      const descriptionBullets = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.description li'))
+          .map(x => (x as HTMLElement).innerText!)
+          .flatMap(x => x.split('\n'))
+          .filter(x => x)
+      })
+      if (descriptionBullets) extraData.bullets = extraData.bullets.concat(descriptionBullets)
+
       return extraData
+    },
+    variantFn: async (
+      _request,
+      page,
+      product,
+      providerProduct,
+      providerVariant,
+      extraData: TShopifyExtraData,
+    ) => {
+      /**
+       * Get the list of options for the variants of this provider
+       */
+      const optionsObj = getProductOptions(providerProduct, providerVariant)
+      if (optionsObj.Color) {
+        product.color = optionsObj.Color
+      }
+      if (optionsObj.Size) {
+        product.size = optionsObj.Size
+      }
+
+      const price = await page.$eval('span[itemprop="price"]', x =>
+        parseFloat(x.getAttribute('content')!),
+      )
+      /**
+       * Get higher pri
+       */
+      // const higherPrice = await page.$eval('span[itemprop="price"] .landing-weight ,value', x => {
+      //   const match = x.textContent!.match(/\$(\d+) Value/)
+      //   return match ? parseFloat(match[1]) : null
+      // })
+
+      product.realPrice = price
+      // if (higherPrice) {
+      //   product.higherPrice = higherPrice
+      // }
+
+      /**
+       * Cut te first element of additional sections
+       */
+      product.additionalSections?.shift()
+
+      /**
+       * Set a brand
+       */
+      product.brand = 'Youth To The People'
+
+      const productShowcaseImages = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.landing-images .image > div'))
+          .map(e => (e as HTMLElement).style.backgroundImage)
+          .map(src => src.match(/url\(\"(.*)\"\)/)![1])
+      })
+
+      if (Array.isArray(productShowcaseImages) && productShowcaseImages.length) {
+        product.images = [...product.images, ...productShowcaseImages]
+      }
     },
   },
   {},

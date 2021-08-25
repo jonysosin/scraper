@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
@@ -53,7 +54,7 @@ export default shopifyScraper(
 
       return extraData
     },
-    variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
+    variantFn: async (_request, page, product, providerProduct, providerVariant) => {
       /**
        * Replacing the description for the last pushed to additionalSections (corresponds to DESCRIPTION_MAIN)
        */
@@ -72,6 +73,39 @@ export default shopifyScraper(
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
+
+      const detailPairs = await page.$$eval('.heading_font[data-vdvalue]', els =>
+        (els as HTMLElement[]).map(e => [e.dataset.vdvalue || '', e.innerText || '']),
+      )
+      const barPairs = await page.$$eval('.bar-value .selected', bars =>
+        (bars as HTMLDivElement[]).map(bar => [
+          bar.dataset.vdvalue || '',
+          bar.dataset.vdmatch || '',
+        ]),
+      )
+      const keyValuePairs = [...detailPairs, ...barPairs]
+        .map(([key, value]) => [
+          key
+            ?.replace(`['description']`, '')
+            .replace('[','][')
+            .split('][')
+            .reverse()[0]
+            ?.split('.')
+            .reverse()[0]
+            ?.replace(/[\'\]]/gm, '') || '',
+          value
+            .replace(/[\r\n]/gm, ' ')
+            .replace(/\s+/gm, ' ')
+            .trim(),
+        ])
+        .filter(([key, value]) => key && value)
+
+      product.keyValuePairs = _.fromPairs(keyValuePairs)
+    },
+    postProcess: async (product, page) => {
+      product.bullets = await page.$$eval('.badges .badge', badges =>
+        badges.map(e => (e as HTMLElement).innerText || ''),
+      )
     },
   },
   {},

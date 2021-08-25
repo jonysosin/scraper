@@ -41,6 +41,10 @@ export default shopifyScraper(
 
         return sections
       }, DESCRIPTION_PLACEMENT)
+
+      /**
+       * Get main description
+       */
       const description = await page.evaluate(() => {
         return document.querySelector('.product-accordion-content')?.outerHTML?.trim()
       })
@@ -49,6 +53,34 @@ export default shopifyScraper(
           name: 'Main ingredients',
           content: description,
           description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+        })
+      }
+
+      /**
+       * Get brazilian babe tip
+       */
+       const brazilianBabeTip = await page.evaluate(() => {
+        return document.querySelector('.product-tip')?.outerHTML?.trim()
+      })
+      if (brazilianBabeTip) {
+        extraData.additionalSections?.push({
+          name: 'Brazilian babe tip',
+          content: brazilianBabeTip,
+          description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+        })
+      }
+
+      /**
+       * Get brazilian babe tip
+       */
+       const fragance = await page.evaluate(() => {
+        return document.querySelector('.fragrance-text')?.outerHTML?.trim() || ''
+      })
+      if (brazilianBabeTip) {
+        extraData.additionalSections?.push({
+          name: 'Fragance',
+          content: fragance,
+          description_placement: DESCRIPTION_PLACEMENT.DISTANT,
         })
       }
 
@@ -64,7 +96,7 @@ export default shopifyScraper(
         product.color = optionsObj.Color
       }
       if (optionsObj.Size) {
-        product.color = optionsObj.Size
+        product.size = optionsObj.Size
       }
 
       /**
@@ -85,6 +117,31 @@ export default shopifyScraper(
           e => e?.textContent?.trim() || '',
         )
       })
+
+      /**
+      * If there´s a higher price in the HTML, use it
+      */
+       const higherPrice = await page.evaluate(() => {
+        let price = document.querySelector('.prod-alt-price .was_price span.money')?.textContent?.match(/\d+/)
+        price = Array.from([price])[0]
+      return price
+      })
+      if (higherPrice) {
+        product.higherPrice = Number(higherPrice)
+      } else {
+        delete product.higherPrice
+      }
+
+      /**
+       * Get the videos
+       */
+      const videos = await page.evaluate(() => {
+        return document.querySelector('.mediaWrapper iframe')?.getAttribute('src')
+      })
+
+      if (videos) {
+        product.videos = [videos, ...product.videos]
+      }
     },
   },
   {},
