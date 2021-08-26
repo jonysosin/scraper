@@ -1,5 +1,4 @@
 import { Lambda } from 'aws-sdk'
-import bluebird from 'bluebird'
 
 const lambda = new Lambda({
   region: 'us-west-2',
@@ -15,6 +14,8 @@ const MAX_FAILS = 10 // max fails before aborting
 
 // branch is expected to be of the form <author>/providers/<provider1>+<provider2>...+<providern>
 const providers = process.env.CIRCLE_BRANCH!.match(/.*\/providers\/([\w+]+)/)[1]!.split('+')
+
+const delay = (delayMs: number) => new Promise(res => setTimeout(res, delayMs))
 
 async function getUrlsForProvider(provider: string): Promise<string[]> {
   // TODO make some sort of orchestrator api request
@@ -77,7 +78,7 @@ async function runProvider(provider: string) {
   async function* generateUrls() {
     for (const url of urls) {
       yield url
-      await bluebird.delay(URL_DELAY)
+      await delay(URL_DELAY)
     }
 
     while (true) {
@@ -85,11 +86,11 @@ async function runProvider(provider: string) {
       if (retries.length) {
         const [url] = retries.splice(0, 1)
         yield url
-        await bluebird.delay(URL_DELAY)
+        await delay(URL_DELAY)
       } else if (inprog == 0) {
         break
       }
-      await bluebird.delay(100)
+      await delay(100)
     }
   }
 
@@ -138,7 +139,9 @@ async function runProvider(provider: string) {
   await Promise.all(promises)
 }
 
-bluebird.mapSeries(providers, runProvider).then(
+;(async () => {
+  for (const provider of providers) await runProvider(provider)
+})().then(
   () => process.exit(0),
   e => {
     console.error(e)

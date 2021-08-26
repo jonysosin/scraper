@@ -30,7 +30,6 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.81",
-    "@types/bluebird": "^3.5.36",
     "@types/dateformat": "^3.0.1",
     "@types/html-to-text": "^8.0.1",
     "@types/js-yaml": "^4.0.2",
@@ -38,7 +37,6 @@
     "@types/node": "^16.4.7",
     "@types/uuid": "^8.3.1",
     "argparse": "^2.0.1",
-    "bluebird": "^3.7.2",
     "dotenv": "^10.0.0",
     "prettier": "^2.3.2",
     "ts-node": "^10.1.0",
