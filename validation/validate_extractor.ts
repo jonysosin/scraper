@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { Lambda } from 'aws-sdk'
 import { ArgumentParser } from 'argparse'
 import fs from 'fs/promises'
@@ -32,8 +33,14 @@ if (providers.length === 0)
 const delay = (delayMs: number) => new Promise(res => setTimeout(res, delayMs))
 
 async function getUrlsForProvider(provider: string): Promise<string[]> {
-  // TODO make some sort of orchestrator api request
-  return []
+  const { data } = await axios.get(
+    'https://orchestrator.crawler.scale.com/ci/validate_page_samples',
+    {
+      auth: { username: process.env.ORCHESTRATOR_API_TOKEN, password: '' },
+      params: { extractor: provider },
+    },
+  )
+  return data as string[]
 }
 
 function generatePayload(url: string, provider: string) {
