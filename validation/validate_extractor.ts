@@ -36,7 +36,7 @@ async function getUrlsForProvider(provider: string): Promise<string[]> {
   const { data } = await axios.get(
     'https://orchestrator.crawler.scale.com/ci/validate_page_samples',
     {
-      auth: { username: process.env.ORCHESTRATOR_API_TOKEN, password: '' },
+      auth: { username: process.env.ORCHESTRATOR_API_TOKEN!, password: '' },
       params: { extractor: provider },
     },
   )
