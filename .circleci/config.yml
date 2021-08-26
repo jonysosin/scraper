@@ -14,7 +14,7 @@ workflows:
             branches:
               only: /.*\/providers\/([\w+]+)/
           requires:
-            deploy_scrapers_validate
+            - deploy_scrapers_validate
       - deploy_scrapers:
           filters:
             branches:
