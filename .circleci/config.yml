@@ -76,8 +76,8 @@ jobs:
       - run:
           name: install jq
           command: |
-             sudo apt-get update
-             sudo apt-get install jq
+             apt-get update
+             apt-get install jq
       - run:
           name: Publish FakeScraper lambda version
           command: |
