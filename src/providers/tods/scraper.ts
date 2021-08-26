@@ -11,6 +11,10 @@ function parseBullets(desc: string) {
 }
 
 const scraper: Scraper = async (request, page) => {
+  await page.setUserAgent(
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36 (compatible: Remo/0.1, +https COLON SLASH SLASH www DOT remotasks DOT com/en/info.txt)',
+  )
+
   const navPromise = page.goto(request.pageUrl)
 
   const api_locale = await new Promise<any>((res, rej) => {
@@ -35,7 +39,7 @@ const scraper: Scraper = async (request, page) => {
 
   const screenshot = await screenPage(page)
 
-  const id = _.last(request.pageUrl.split('/'))!
+  const id = _.last(request.pageUrl.split('/').filter(subpath => subpath.length > 0))!
 
   const productResponses = await page.evaluate(
     async (id, PRODUCTS_API_URL) => {

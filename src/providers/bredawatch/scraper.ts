@@ -1,4 +1,4 @@
-import { DESCRIPTION_PLACEMENT } from '../../../src/interfaces/outputProduct'
+import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'

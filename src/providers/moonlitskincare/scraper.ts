@@ -63,6 +63,18 @@ export default shopifyScraper(
         })
       }
 
+      /**
+       * Add videos
+       */
+      const videos = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.video-wrapper iframe'))
+          .map(e => e?.getAttribute('src') || '')
+          .filter(e => e !== '')
+      })
+      if (Array.isArray(videos) && videos.length) {
+        extraData.videos = videos
+      }
+
       return extraData
     },
     variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
@@ -77,6 +89,8 @@ export default shopifyScraper(
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
+
+      product.brand = 'Moonlit Skincare'
 
       /**
        * Remove the first element of the array, as the additional section captured by the generic shopify scraper is not correct in this case

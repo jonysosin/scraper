@@ -1,7 +1,7 @@
 import { IErrorReport } from '../interfaces/report'
 
 export interface ErrorHandler<T extends string | Error> {
-  (message: T): IErrorReport
+  (message: T, extra?: { screenshot?: string }): IErrorReport
 }
 
 export const notFound: ErrorHandler<string> = (message: string) => ({
@@ -15,8 +15,9 @@ export const timeout: ErrorHandler<string> = (message: string) => ({
   error: new Error(message),
 })
 
-export const unknownError: ErrorHandler<Error> = (error: Error) => ({
+export const unknownError: ErrorHandler<Error> = (error: Error, { screenshot } = {}) => ({
   message: error.message,
   status: '500',
   error,
+  screenshot,
 })

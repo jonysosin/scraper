@@ -10,7 +10,7 @@ export default shopifyScraper(
       /**
        * Get additional descriptions and information
        */
-      const distantData = await page.evaluate(DESCRIPTION_PLACEMENT => {
+      const descriptions = await page.evaluate(DESCRIPTION_PLACEMENT => {
         // Get a list of titles
         const keys = Array.from(
           document.querySelectorAll(
@@ -43,10 +43,14 @@ export default shopifyScraper(
 
         // Join the two arrays
         return values.map((value, i) => {
+          const name = keys[i] || `key_${i}`
           return {
-            name: keys[i] || `key_${i}`,
+            name,
             content: value || '',
-            description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+            description_placement:
+              name === "WHAT WE DON'T INCLUDE"
+                ? DESCRIPTION_PLACEMENT.DISTANT
+                : DESCRIPTION_PLACEMENT.ADJACENT,
           }
         })
       }, DESCRIPTION_PLACEMENT)
@@ -65,7 +69,7 @@ export default shopifyScraper(
         ]
       }, DESCRIPTION_PLACEMENT)
 
-      extraData.additionalSections = [...mainDescription, ...distantData]
+      extraData.additionalSections = [...mainDescription, ...descriptions]
 
       return extraData
     },

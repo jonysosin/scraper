@@ -1,10 +1,11 @@
-import type { Context, SQSEvent } from 'aws-lambda'
+import * as uuid from 'uuid'
+import { Context, SQSEvent } from 'aws-lambda'
 
 type massageMaker = (message: any, attributes?: { [name: string]: string }) => SQSEvent
 export const makeMessage: massageMaker = (message, attributes = {}) => ({
   Records: [
     {
-      messageId: 'message Id',
+      messageId: uuid.v1(),
       body: JSON.stringify(message),
       attributes: {
         SentTimestamp: Date.now().toString(),
