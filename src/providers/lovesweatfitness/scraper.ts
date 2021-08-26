@@ -30,17 +30,16 @@ export default shopifyScraper(
       }, DESCRIPTION_PLACEMENT)
 
       /**
-       * Get Size Chart Url
+       * Bullets
        */
-      extraData.sizeChartUrls = await page.evaluate(() => {
-        return Array.from(document.querySelectorAll('.product-single__description p img'))
-          .map(e => e.getAttribute('src') || '')
-          .filter(e => e !== '')
+       extraData.bullets = await page.evaluate(() => {
+        const sectionLis = Array.from(document.querySelectorAll('.hup_product-tab #details .product-single__description div div ul li'))
+        return sectionLis.map(li => li.textContent?.trim() || '') || []
       })
 
       return extraData
     },
-    variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
+    variantFn: async (_request, page, product, providerProduct, providerVariant) => {
       /**
        * Get the list of options for the variants of this provider
        */
@@ -52,6 +51,12 @@ export default shopifyScraper(
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
+
+      product.sizeChartUrls = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.product-single__description p img'))
+          .map(e => e.getAttribute('src') || '')
+          .filter(e => e !== '')
+        })
     },
   },
   {},

@@ -13,7 +13,14 @@ export default shopifyScraper(
 
       return extraData
     },
-    variantFn: async (_request, _page, product) => {
+    variantFn: async (
+      _request,
+      _page,
+      product,
+
+      _extraData: TShopifyExtraData,
+    ) => {
+  
       /**
        * Sometimes, the title needs a replacement to remove the color at the end (if exists)
        * Example: "High-Waist Catch The Light Short - Black"

@@ -1,6 +1,7 @@
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
+import parseHtmlTextContent from '../../providerHelpers/parseHtmlTextContent'
 
 export default shopifyScraper(
   {
@@ -23,9 +24,9 @@ export default shopifyScraper(
        * Get additional descriptions and information
        */
       extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
-        const accordions = Array.from(document.querySelectorAll('li.accordian-data'))
+        const accordions = Array.from(document.querySelectorAll('div.accordian ul li'))
         // Get a list of titles
-        const keys = accordions.map(e => e.querySelector('p')?.textContent?.trim())
+        const keys = accordions.map(e => e.querySelector('a p')?.textContent?.trim())
 
         // Get a list of content for the titles above
         const values = accordions.map(e =>
@@ -75,10 +76,8 @@ export default shopifyScraper(
        */
       product.additionalSections.shift()
 
-      product.description = providerProduct.description
-        .replace(/<[^>]*>?/gm, ' ')
-        .replace(/\s+/gm, ' ')
-        .trim()
+      const description = product.additionalSections.find(e => e.name === 'Description')?.content
+      product.description = description ? parseHtmlTextContent(description) : undefined
 
       /**
        * Get the list of options for the variants of this provider
@@ -91,6 +90,12 @@ export default shopifyScraper(
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
+
+      /**
+       * Sometimes, the title needs a replacement to remove the color at the end (if exists)
+       * Example: "High-Waist Catch The Light Short - Black"
+       */
+      product.title = product.title.replace(/ : [^-]+$/, '')
     },
   },
   {},

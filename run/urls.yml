@@ -1,13 +1,5 @@
-.spartina449: # add . to the provider name to skip all its urls
-  - https://www.spartina449.com/lowcountry-pearl-necklace-silver-atlantic-opal.html
-._4ocean:
-  # - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
-  - https://www.4ocean.com/products/4ocean-logo-womens-v-neck-long-sleeve-t-shirt
-
-aritzia:
-  - https://www.aritzia.com/intl/en/product/prospect-shirt-jacket/79830.html?dwvar_79830_color=22823
-  - https://www.aritzia.com/intl/en/product/tnabutter%E2%84%A2-atmosphere-super-hi-7%2F8-legging/79963.html?dwvar_79963_color=1274
-  - https://www.aritzia.com/intl/en/product/airy-fleece-perfect-2%E2%80%9D-sweatshort/78076.html?dwvar_78076_color=19451&isort=on_a,on_b,on_c,on_d,on_e,on_f,on_g,on_h,off_a,off_b,off_c,off_d,off_e,off_f,off_g,off_h
-  - https://www.aritzia.com/intl/en/product/cropped-rib-tank/83463.html?dwvar_83463_color=22768&isort=on_a,on_b,on_c,on_d,on_e,on_f,on_g,on_h,off_a,off_b,off_c,off_d,off_e,off_f,off_g,off_h
-  - https://www.aritzia.com/intl/en/product/variation?pid=79830&dwvar_79830_color=22813&dwvar_79830_size=43
-  - https://www.aritzia.com/intl/en/product/prospect-shirt-jacket/79830.html?dwvar_79830_color=22813&isort=on_a,on_b,on_c,on_d,on_e,on_f,on_g,on_h,off_a,off_b,off_c,off_d,off_e,off_f,off_g,off_h
+.jane: # add . to the provider name to skip all its urls
+  - https://jane.com/deal/1441408/slip-on-espadrille-wedges
+hm:
+  # - https://www2.hm.com/en_us/productpage.0920829010.html # ignore this url
+  - https://www2.hm.com/en_us/productpage.0927666004.html
