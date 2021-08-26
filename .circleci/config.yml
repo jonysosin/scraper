@@ -74,6 +74,11 @@ jobs:
       - shallow-checkout/checkout
       - abort_if_novalidate
       - run:
+          name: install jq
+          command: |
+             apt-get update
+             apt-get install jq -y
+      - run:
           name: Publish FakeScraper lambda version
           command: |
             VERSION=$(aws lambda update-function-code --publish --function-name FakeScraper --image-uri "695567787164.dkr.ecr.us-west-2.amazonaws.com/scraper-lambda:${CIRCLE_SHA1}" | jq -r .Version) 
@@ -208,7 +213,8 @@ commands:
   abort_if_novalidate:
     description: "Aborts this step if validation is not needed to run."
     steps:
-      - run: |
+      - name: "maybe abort if no PR"
+        run: |
           if [ -z "$CIRCLE_PULL_REQUEST" ]; then
             circleci-agent step halt 
           fi
