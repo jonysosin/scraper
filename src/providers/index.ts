@@ -137,6 +137,7 @@ export * as tods from './tods'
 export * as thetinytassel from './thetinytassel'
 export * as smashbox from './smashbox'
 export * as kiplingusa from './kiplingusa'
+export * as aritzia from './aritzia'
 
 export function getProvider(name: string) {
   const provider: IProvider = exports[name]
