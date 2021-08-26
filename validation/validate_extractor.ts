@@ -16,7 +16,7 @@ parser.add_argument('--url-delay', { type: 'int', default: 2000 })
 parser.add_argument('--max-retries-per-url', { type: 'int', default: 3 })
 parser.add_argument('--provider', { type: 'str', action: 'append' })
 
-const {
+let {
   function_name: FUNCTION_NAME,
   function_version: FUNCTION_VERSION,
   url_delay: URL_DELAY,
@@ -24,11 +24,9 @@ const {
   provider: providers,
 } = parser.parse_args()
 
-if (providers.length === 0)
+if (!providers?.length)
   // branch is expected to be of the form <author>/providers/<provider1>+<provider2>...+<providern>
-  providers.push(
-    ...(process.env.CIRCLE_BRANCH!.match(/.*\/providers\/([\w+]+)/)?.[1]!.split('+') ?? []),
-  )
+  providers = process.env.CIRCLE_BRANCH!.match(/.*\/providers\/([\w+]+)/)?.[1]!.split('+') ?? []
 
 const delay = (delayMs: number) => new Promise(res => setTimeout(res, delayMs))
 
