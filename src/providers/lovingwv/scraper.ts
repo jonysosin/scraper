@@ -106,6 +106,35 @@ export default shopifyScraper(
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
+
+      /**
+       * Check if the dropdown menu doesn't involve size options
+       */
+      const dropdownMenuColorBoolean = await page.evaluate(() => {
+        return (
+          document
+            .querySelector('.selector-wrapper')
+            // @ts-ignore
+            ?.innerText?.trim()
+            .toLowerCase()
+            .includes('color')
+        )
+      })
+
+      /**
+       * Get the selected value of the dropdown menu
+       */
+      const dropdownMenuColor = await page.evaluate(() => {
+        // @ts-ignore
+        return document.querySelector('.single-option-selector')?.value
+      })
+
+      /**
+       * If the dropdown menu includes the word "color", then add it
+       */
+      if (!product.color && dropdownMenuColorBoolean) {
+        product.color = dropdownMenuColor
+      }
     },
   },
   {},
