@@ -1,3 +1,5 @@
+import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
+import parseHtmlTextContent from '../../providerHelpers/parseHtmlTextContent'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
@@ -36,14 +38,10 @@ export default shopifyScraper(
 
         // Join the two arrays
         const sections = values.map((value, i) => {
-          const name = keys[i] || `key_${i}`
           return {
-            name,
+            name: keys[i] || `key_${i}`,
             content: value || '',
-            description_placement:
-              name === 'Details & Sizing'
-                ? DESCRIPTION_PLACEMENT.MAIN
-                : DESCRIPTION_PLACEMENT.ADJACENT,
+            description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
           }
         })
 
@@ -66,13 +64,21 @@ export default shopifyScraper(
         product.size = optionsObj.Size
       }
 
-      const description = await page.evaluate(() => {
-        return document.querySelector('.product-description')?.textContent?.trim()
-      })
+      const descriptionSection = await getSelectorOuterHtml(
+        page,
+        '.product-description',
+      )
+      if (descriptionSection) {
+        // Remove the first element of the array, as the additional section captured by the generic shopify scraper is not correct in this case
+        product.additionalSections.shift()
 
-      product.description = description
-
-      product.additionalSections.shift()
+        product.description = parseHtmlTextContent(descriptionSection)
+        product.additionalSections.push({
+          name: 'Description',
+          content: descriptionSection,
+          description_placement: DESCRIPTION_PLACEMENT.MAIN,
+        })
+      }
     },
   },
   {},

@@ -1,3 +1,4 @@
+import { TMediaImage } from '../../providers/shopify/types'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
@@ -76,7 +77,7 @@ export default shopifyScraper(
     },
     variantFn: async (
       _request,
-      _page,
+      page,
       product,
       providerProduct,
       providerVariant,
@@ -89,7 +90,59 @@ export default shopifyScraper(
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Color) {
         product.color = optionsObj.Color
+      } else {
+        const color = await page.evaluate(() => {
+          //@ts-ignore
+          return document.querySelector('.radios--option-current')?.innerText
+        })
+        if (color) {
+          product.color = color
+        }
       }
+
+      /**
+       * Replace all the product images with the ones related by color (only if there're matches)
+       */
+      // await page.waitForTimeout(999999)
+      // if (product.color) {
+      //   const color = product.color.replace(/\//g, '-').replace(/\s/, '').toLowerCase()
+      //   const images = await page.evaluate(color => {
+      //     return Array.from(document.querySelectorAll(`.image--container img[alt="${color}"]`))
+      //       .map(
+      //         e =>
+      //           e
+      //             .getAttribute('src')
+      //             ?.replace(/\s.*/, '')
+      //             .replace(/.%.*\./gm, '') ||
+      //           e
+      //             .getAttribute('data-srcset')
+      //             ?.replace(/\s.*/, '')
+      //             .replace(/.%.*\./gm, '') ||
+      //           '',
+      //       )
+      //       .filter(e => e !== '')
+      //   }, color)
+
+      //   if (images.length) {
+      //     product.images = images
+      //   }
+
+      /**
+       * Replace all the product images with the ones related by color (only if there're matches)
+       */
+      if (product.color) {
+        const color = product.color.replace(/\//g, '-').replace(/\s/, '').toLowerCase()
+        const images = (providerProduct.media as TMediaImage[])
+          .filter(e => e.alt === `${color}` || e.alt?.replace(/\s-.*/, '') === `${color}`)
+          .map(e => e?.src)
+          .filter(e => e !== '')
+
+        if (images.length) {
+          product.images = images
+        }
+      }
+
+      // }
     },
   },
   {},

@@ -9,6 +9,16 @@ export default shopifyScraper(
       const extraData: TShopifyExtraData = {}
 
       /**
+       * Get the breadcrumbs
+       */
+      extraData.breadcrumbs = await page.evaluate(() => {
+        return document
+          .querySelector('nav.breadcrumb')
+          ?.textContent?.split('›')
+          .map(e => e.trim())
+      })
+
+      /**
        * Get additional descriptions and information
        */
       extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
@@ -29,6 +39,23 @@ export default shopifyScraper(
           }
         })
       }, DESCRIPTION_PLACEMENT)
+
+      /**
+       * Get "How to use" section
+       */
+      const howToUse = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        const section = document.querySelector('section.Directions')
+        section?.querySelector('.Heading')?.remove()
+
+        return {
+          name: 'How to Use',
+          content: section?.outerHTML?.trim() || '',
+          description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+        }
+      }, DESCRIPTION_PLACEMENT)
+      if (howToUse) {
+        extraData.additionalSections?.push(howToUse)
+      }
 
       /**
        * Get directions section
@@ -62,7 +89,7 @@ export default shopifyScraper(
     },
     variantFn: async (
       _request,
-      _page,
+      page,
       product,
       providerProduct,
       providerVariant,
@@ -75,6 +102,19 @@ export default shopifyScraper(
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Size || optionsObj['5ml Sachet'] || optionsObj.Amount) {
         product.size = optionsObj.Size || optionsObj['5ml Sachet'] || optionsObj.Amount
+      }
+
+      /**
+       * This page has some videos in the alt of the pictures in "media"
+       */
+      const videos = providerProduct.media.filter(e => e.alt?.match(/video/)).map(e => e.alt || '')
+
+      const mainVideo = await page.evaluate(() => {
+        return document.querySelector('.VideoElement iframe')?.getAttribute('data-src') || ''
+      })
+
+      if (videos && videos.length) {
+        product.videos = [...product.videos, ...videos, mainVideo]
       }
     },
   },

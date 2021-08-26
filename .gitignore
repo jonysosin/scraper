@@ -35,9 +35,9 @@ Thumbs.db
 # Ignore built ts files
 **/dist/**/*
 
-packages/*/lib
 dist.zip
 
 run/*
 !run/.gitkeep
 !run/urls.yml
+!run/urls-example.yml
