@@ -11,7 +11,7 @@ export default shopifyScraper(
        * Get additional descriptions and information
        */
       extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
-        const description = document.querySelector('.ProductMeta__Description')?.textContent?.trim()
+        const description = document.querySelector('.ProductMeta__Description')?.outerHTML?.trim()
 
         return [
           {
@@ -24,7 +24,7 @@ export default shopifyScraper(
 
       return extraData
     },
-    variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
+    variantFn: async (_request, page, product, providerProduct, providerVariant, extraData) => {
       /**
        * Replace description for the entire description in the product
        */
@@ -38,6 +38,16 @@ export default shopifyScraper(
       const optionsObj = getProductOptions(providerProduct, providerVariant)
       if (optionsObj.Size) {
         product.size = optionsObj.Size
+      }
+
+      const color = await page.$$eval('.ProductMeta__Description ul li', color => {
+        return color
+          ?.filter(e => e?.textContent?.includes('Color: '))[0]
+          ?.textContent?.replace(/Color: /, '')
+      })
+
+      if (color) {
+        product.color = color.toLowerCase()
       }
     },
   },
