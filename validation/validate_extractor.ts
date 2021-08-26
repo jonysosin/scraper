@@ -9,20 +9,25 @@ const lambda = new Lambda({
 })
 
 const parser = new ArgumentParser()
-parser.add_argument('--function-name', { type: 'string', default: 'FakeScraper' })
-parser.add_argument('--function-version', { type: 'string', default: process.env.CIRCLE_SHA1 })
-parser.add_argument('--url-delay', { type: 'number', default: 2000 })
-parser.add_argument('--max-retries-per-url', { type: 'number', default: 3 })
+parser.add_argument('--function-name', { type: 'str', default: 'FakeScraper' })
+parser.add_argument('--function-version', { type: 'str', default: process.env.CIRCLE_SHA1 })
+parser.add_argument('--url-delay', { type: 'int', default: 2000 })
+parser.add_argument('--max-retries-per-url', { type: 'int', default: 3 })
+parser.add_argument('--provider', { type: 'str', action: 'append' })
 
 const {
   function_name: FUNCTION_NAME,
   function_version: FUNCTION_VERSION,
   url_delay: URL_DELAY,
   max_retries_per_url: MAX_RETRIES,
+  provider: providers,
 } = parser.parse_args()
 
-// branch is expected to be of the form <author>/providers/<provider1>+<provider2>...+<providern>
-const providers = process.env.CIRCLE_BRANCH!.match(/.*\/providers\/([\w+]+)/)[1]!.split('+')
+if (providers.length === 0)
+  // branch is expected to be of the form <author>/providers/<provider1>+<provider2>...+<providern>
+  providers.push(
+    ...(process.env.CIRCLE_BRANCH!.match(/.*\/providers\/([\w+]+)/)?.[1]!.split('+') ?? []),
+  )
 
 const delay = (delayMs: number) => new Promise(res => setTimeout(res, delayMs))
 
@@ -71,6 +76,9 @@ async function tryScrape(url: string, provider: string) {
 
 async function getFailure(lambdaResponse: any): Promise<string | null> {
   // TODO parses the lambda response to see if there were any failures. If so, returns the details of the failure, else returns null.
+  if (lambdaResponse[0].extractorResults[0].status === '500') {
+    return lambdaResponse[0].extractorResults[0].message ?? 'unknown'
+  }
   return null
 }
 
@@ -78,6 +86,7 @@ async function getFailure(lambdaResponse: any): Promise<string | null> {
 // Manages retries appropriately, and fails the job if there are too many failures.
 async function runProvider(provider: string) {
   const urls = await getUrlsForProvider(provider)
+  console.log(`got ${urls.length} urls for provider`)
   const retryCount = {}
   const retries: string[] = [] // list of URLs we want to retry
   const successes: { url: string; response: any }[] = [] // list of successes
@@ -108,10 +117,10 @@ async function runProvider(provider: string) {
     retryCount[url] = retryCount[url] ?? 0
     retryCount[url]++
     if (retryCount[url] > MAX_RETRIES) {
-      console.log(`fail: ${url}`)
+      console.log(`fail: ${url}`, error)
       fails.push({ url, error })
     } else {
-      console.log(`fail (retrying): ${url}`)
+      console.log(`fail (retry ${retryCount[url]}/${MAX_RETRIES}): ${url}`, error)
       retries.push(url)
     }
   }
@@ -126,8 +135,8 @@ async function runProvider(provider: string) {
     inprog++
     try {
       const { FunctionError, Payload } = await tryScrape(url, provider)
-      const response = JSON.parse(Payload.toString())
-      const failure = FunctionError || (await getFailure(Payload))
+      const response = JSON.parse(Payload?.toString() ?? '{}')
+      const failure = FunctionError || (await getFailure(response))
       if (failure) {
         return fail(url, failure)
       }
@@ -150,6 +159,7 @@ async function runProvider(provider: string) {
 ;(async () => {
   const summaries: Record<string, { successCount: number; failCount: number }> = {}
   for (const provider of providers) {
+    console.log(`Testing provider ${provider}...`)
     const artifacts = await runProvider(provider)
     summaries[provider] = {
       successCount: artifacts.successes.length,
