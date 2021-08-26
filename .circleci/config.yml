@@ -212,9 +212,9 @@ commands:
     description: "Aborts this step if validation is not needed to run."
     steps:
       - run: >
-        if [ -z "$CIRCLE_PULL_REQUEST" ]; then
-          circleci-agent step halt 
-        fi
+          if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+            circleci-agent step halt 
+          fi
 
 
 executors:
