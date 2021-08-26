@@ -213,11 +213,12 @@ commands:
   abort_if_novalidate:
     description: "Aborts this step if validation is not needed to run."
     steps:
-      - name: "maybe abort if no PR"
-        run: |
-          if [ -z "$CIRCLE_PULL_REQUEST" ]; then
-            circleci-agent step halt 
-          fi
+      - run:
+          name: "maybe abort if no PR"
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              circleci-agent step halt 
+            fi
 
 
 executors:
