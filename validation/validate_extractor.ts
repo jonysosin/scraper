@@ -1,4 +1,6 @@
 import { Lambda } from 'aws-sdk'
+import { ArgumentParser } from 'argparse'
+import fs from 'fs/promises'
 
 const lambda = new Lambda({
   region: 'us-west-2',
@@ -6,11 +8,18 @@ const lambda = new Lambda({
   httpOptions: { timeout: 10 * 60 * 1000 },
 })
 
-const FUNCTION_NAME = 'FakeScraper'
-const FUNCTION_VERSION = process.env.CIRCLE_SHA1!
-const URL_DELAY = 2000 // delay between invocations of urls
-const MAX_RETRY_COUNT = 3 // max retries per url
-const MAX_FAILS = 10 // max fails before aborting
+const parser = new ArgumentParser()
+parser.add_argument('--function-name', { type: 'string', default: 'FakeScraper' })
+parser.add_argument('--function-version', { type: 'string', default: process.env.CIRCLE_SHA1 })
+parser.add_argument('--url-delay', { type: 'number', default: 2000 })
+parser.add_argument('--max-retries-per-url', { type: 'number', default: 3 })
+
+const {
+  function_name: FUNCTION_NAME,
+  function_version: FUNCTION_VERSION,
+  url_delay: URL_DELAY,
+  max_retries_per_url: MAX_RETRIES,
+} = parser.parse_args()
 
 // branch is expected to be of the form <author>/providers/<provider1>+<provider2>...+<providern>
 const providers = process.env.CIRCLE_BRANCH!.match(/.*\/providers\/([\w+]+)/)[1]!.split('+')
@@ -71,8 +80,8 @@ async function runProvider(provider: string) {
   const urls = await getUrlsForProvider(provider)
   const retryCount = {}
   const retries: string[] = [] // list of URLs we want to retry
-  const successes = [] // list of successes
-  const fails = [] // list of failures
+  const successes: { url: string; response: any }[] = [] // list of successes
+  const fails: { url: string; error: any }[] = [] // list of failures
   const promises: Promise<void>[] = []
   let inprog = 0
   async function* generateUrls() {
@@ -96,15 +105,13 @@ async function runProvider(provider: string) {
 
   // this URL failed with an error, either retry it or mark as failed
   function fail(url: string, error: any) {
-    console.log(`fail: ${url}`)
     retryCount[url] = retryCount[url] ?? 0
     retryCount[url]++
-    if (retryCount[url] > MAX_RETRY_COUNT) {
+    if (retryCount[url] > MAX_RETRIES) {
+      console.log(`fail: ${url}`)
       fails.push({ url, error })
-      if (fails.length > MAX_FAILS) {
-        throw new Error('Excessive Failures')
-      }
     } else {
+      console.log(`fail (retrying): ${url}`)
       retries.push(url)
     }
   }
@@ -137,10 +144,23 @@ async function runProvider(provider: string) {
     promises.push(doScrape(url))
   }
   await Promise.all(promises)
+  return { successes, fails }
 }
 
 ;(async () => {
-  for (const provider of providers) await runProvider(provider)
+  const summaries: Record<string, { successCount: number; failCount: number }> = {}
+  for (const provider of providers) {
+    const artifacts = await runProvider(provider)
+    summaries[provider] = {
+      successCount: artifacts.successes.length,
+      failCount: artifacts.fails.length,
+    }
+    await fs.writeFile(`artifacts/${provider}.json`, JSON.stringify(artifacts, null, 2))
+  }
+  console.log('==================== SUMMARY ====================')
+  for (const [k, v] of Object.entries(summaries)) {
+    console.log(`${k}: ${v.successCount} successful, ${v.failCount} failures`)
+  }
 })().then(
   () => process.exit(0),
   e => {
