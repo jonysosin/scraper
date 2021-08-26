@@ -92,7 +92,10 @@ jobs:
           name: Run scraper validation
           command: |
             yarn install
+            mkdir artifacts
             yarn run ts-node validation/validate_extractor.ts
+      - store_artifacts:
+          path: artifacts
 
 commands:
   get_commit_message:
