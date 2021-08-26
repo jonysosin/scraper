@@ -84,7 +84,7 @@ jobs:
             VERSION=$(aws lambda update-function-code --publish --function-name FakeScraper --image-uri "695567787164.dkr.ecr.us-west-2.amazonaws.com/scraper-lambda:${CIRCLE_SHA1}" | jq -r .Version) 
             aws lambda create-alias --function-name FakeScraper --name "$CIRCLE_SHA1" --function-version $VERSION
   run_scraper_validation:
-    executor: deployer
+    executor: script-runner
     steps:
       - shallow-checkout/checkout
       - abort_if_novalidate
