@@ -77,6 +77,11 @@ jobs:
       - shallow-checkout/checkout
       - get_commit_message
       - run:
+          name: install jq
+          command: >
+             sudo apt-get update
+             sudo apt-get install jq
+      - run:
           name: Publish FakeScraper lambda version
           command: >
             REVISIONID=$(aws lambda update-function-code --function-name FakeScraper --image-uri "695567787164.dkr.ecr.us-west-2.amazonaws.com/scraper-lambda:${CIRCLE_SHA1}" | jq .RevisionId -r) 
