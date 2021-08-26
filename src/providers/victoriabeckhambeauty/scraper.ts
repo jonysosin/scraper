@@ -1,4 +1,3 @@
-
 import { getSelectorOuterHtml } from '../../providerHelpers/getSelectorOuterHtml'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
 import { getProductOptions } from '../shopify/helpers'
@@ -18,16 +17,16 @@ export default shopifyScraper(
       const url = new URL(_request.pageUrl)
 
       // Remove promotion popups
-      await page.setCookie(
-        {
-          url: `${url.protocol}//${url.host}/`,
-          name: 'vbb_newsletter_popup_seen',
-          value: 'true'
-        }
-      )
+      await page.setCookie({
+        url: `${url.protocol}//${url.host}/`,
+        name: 'vbb_newsletter_popup_seen',
+        value: 'true',
+      })
 
       // Set USA variant
-      await page.evaluate(() => localStorage.setItem('vbb:geoip', JSON.stringify({"country":"EN","currency":"USD"})))
+      await page.evaluate(() =>
+        localStorage.setItem('vbb:geoip', JSON.stringify({ country: 'EN', currency: 'USD' })),
+      )
 
       // Reload to apply changes
       await page.reload()
@@ -62,32 +61,39 @@ export default shopifyScraper(
         }, {})
       })
 
-      const additionalSections = await page.$$eval('.content-block-container__block', (elements) => {
-        return elements.map(element => ({
-          name: element.id,
-          content: element.innerHTML
-        }))
+      /**
+       * This site differs from the others and has a particular description included in the HTML (not the JSON)
+       */
+      const description = await page.evaluate(() => {
+        return document
+          .querySelector('.product-details__tab-content__description')
+          ?.outerHTML?.trim()
       })
 
-      extraData.additionalSections = additionalSections.map(section => ({
-        ...section,
-        description_placement: DESCRIPTION_PLACEMENT.DISTANT
-      }))
-
-      extraData.videos = await page.$$eval(
-        '.content-block-container__block video',
-        (videos) => videos.map(video => (video as HTMLVideoElement).src!)
-      )
-
-      extraData.images = await page.$$eval(
-        '.content-block-container__block img',
-        (imgs) => imgs.map(img => (img as HTMLImageElement).src!)
-      )
-
       /**
-       * Get Size Chart HTML
+       * Get additional descriptions and information
        */
-      extraData.sizeChartHtml = await getSelectorOuterHtml(page, 'div[data-remodal-id=size-chart]')
+      const additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        //Get titles from descriptions
+        const keys = Array.from(document.querySelectorAll('.content-block-container__block'))
+          .map(e => e.querySelector('h2, h1'))
+          .map(e => e?.textContent?.trim())
+        // Get a list of content for the titles above
+        const values = Array.from(document.querySelectorAll('.content-block-container__block'))
+          .map(e => e?.outerHTML?.trim())
+          .map(e => e.replace(/(<h2>.*<\/h2>)/gm, '')) //Cut title from content
+
+        const sections = values.map((value, i) => {
+          return {
+            name: keys[i] || `keys${i}`,
+            content: value,
+            description_placement: ['What It Is:', 'WHAT IT IS'].includes(keys[i] || '')
+              ? DESCRIPTION_PLACEMENT.ADJACENT
+              : DESCRIPTION_PLACEMENT.DISTANT,
+          }
+        })
+        return sections
+      }, DESCRIPTION_PLACEMENT)
 
       /**
        * This page has custom data per variant
@@ -99,65 +105,87 @@ export default shopifyScraper(
       const customData: IVictoriaBeckhamBeautyCustomProduct = await customDataFile.json()
       const customProduct = customData.data.product
 
-      if (customProduct.contentful.ingredientTechnology) {
+      if (description) {
         extraData.additionalSections = [
-          ...extraData.additionalSections,
           {
-            name: 'ingredientTechnology',
-            content: customProduct.contentful.ingredientTechnology,
-            description_placement: DESCRIPTION_PLACEMENT.ADJACENT
-          }
+            name: 'Description',
+            content: description,
+            description_placement: DESCRIPTION_PLACEMENT.MAIN,
+          },
         ]
       }
 
       if (customProduct.contentful.howTo) {
-        extraData.additionalSections = [
-          ...extraData.additionalSections,
-          {
-            name: 'howTo',
-            content: customProduct.contentful.description,
-            description_placement: DESCRIPTION_PLACEMENT.ADJACENT
-          }
-        ]
+        extraData.additionalSections?.push({
+          name: 'In Motion',
+          content: '<p>' + customProduct.contentful.howTo.text + '<p>',
+          description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+        })
       }
+
+      if (customProduct.contentful.ingredientTechnology) {
+        extraData.additionalSections?.push({
+          name: 'ingredientTechnology',
+          content: '<p>' + customProduct.contentful.ingredientTechnology + '<p>',
+          description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+        })
+      }
+
+      if (additionalSections) {
+        extraData.additionalSections?.push(...additionalSections)
+      }
+
+      extraData.videos = await page.$$eval('.content-block-container__block video', videos =>
+        videos.map(video => (video as HTMLVideoElement).src!),
+      )
+
+      extraData.images = await page.$$eval('.content-block-container__block img', imgs =>
+        imgs.map(img => (img as HTMLImageElement).src!),
+      )
+
+      /**
+       * Get Size Chart HTML
+       */
+      extraData.sizeChartHtml = await getSelectorOuterHtml(page, 'div[data-remodal-id=size-chart]')
 
       if (customProduct.contentful?.howTo?.videoWithPoster?.poster) {
         extraData.images = [
           ...extraData.images,
-          `https://${url.hostname}${customProduct.contentful.howTo.videoWithPoster.poster.src}`
+          `https://${url.hostname}${customProduct.contentful.howTo.videoWithPoster.poster.src}`,
         ]
       }
 
       if (customProduct.contentful?.howTo?.videoWithPoster?.video) {
         extraData.videos = [
           ...extraData.videos,
-          `https://${url.hostname}${customProduct.contentful.howTo.videoWithPoster.video.src}`
+          `https://${url.hostname}${customProduct.contentful.howTo.videoWithPoster.video.src}`,
         ]
       }
 
       const variants = customProduct.variants.map(variant => {
         const variantUrl = new URL(url.toString())
         variantUrl.pathname = customProduct.path
-        variantUrl.search =  '?' + new URLSearchParams({ variant: variant.legacyId.USD }).toString()
+        variantUrl.search = '?' + new URLSearchParams({ variant: variant.legacyId.USD }).toString()
         return {
           ...variant,
-          url: variantUrl.toString()
+          url: variantUrl.toString(),
         }
       })
 
-      extraData.variants = Object.fromEntries(variants.map(variant => [ variant.legacyId.USD, variant ]))
+      extraData.variants = Object.fromEntries(
+        variants.map(variant => [variant.legacyId.USD, variant]),
+      )
 
       return extraData
     },
     variantFn: async (
       _request,
-      _page,
+      page,
       product,
       providerProduct,
       providerVariant,
       _extraData: TVictoriaBeckhamBeautyExtraData,
     ) => {
-
       const url = new URL(_request.pageUrl)
       const customVariant = (_extraData.variants || {})[providerVariant.id]
 
@@ -167,23 +195,24 @@ export default shopifyScraper(
         product.realPrice = customVariant.price.USD
         product.higherPrice = customVariant.compareAtPrice.USD || customVariant.price.USD
 
-        product.images = [
-          ...product.images,
-          ...customVariant.contentful.images
-            .filter(image => image.type === 'image')
-            .map((image) => `https://${url.hostname}${image.src}`)
-        ]
+        if (customVariant.contentful) {
+          product.images = [
+            ...customVariant.contentful.images
+              .filter(image => image.type === 'image')
+              .map(image => `https://${url.hostname}${image.src}`),
+          ]
 
-        product.videos = [
-          ...product.videos,
-          ...customVariant.contentful.images
-            .filter(image => image.type === 'video')
-            .map((image) => `https://${url.hostname}${image.src}`)
-        ]
+          product.videos = [
+            ...product.videos,
+            ...customVariant.contentful.images
+              .filter(image => image.type === 'video')
+              .map(image => `https://${url.hostname}${image.src}`),
+          ]
+        }
 
-        product.availability =customVariant.availableForSale
+        product.availability = customVariant.availableForSale
 
-        if (customVariant.contentful.subtitle) {
+        if (customVariant.contentful) {
           product.subTitle = customVariant.contentful.subtitle
         }
       }
@@ -199,6 +228,68 @@ export default shopifyScraper(
 
       if (optionsObj.Size) {
         product.size = optionsObj.Size
+      }
+
+      await page.goto(product.url)
+
+      /**
+       * Get all images of distant description
+       */
+      const distantImages = await page.evaluate(() => {
+        const images = Array.from(
+          document.querySelectorAll('.content-block-container .aspect-ratio-box img'),
+        ).map(e => e.getAttribute('src'))
+
+        const img = images.map(img => {
+          return `https://www.victoriabeckhambeauty.com${img}`
+        })
+
+        return img.map(e => e.replace(/(w=.*)/gm, ''))
+      })
+
+      if (distantImages) {
+        product.images = [...product.images, ...distantImages]
+      }
+
+      /**
+       * Get all images of distant description
+       */
+      const distantVideos = await page.evaluate(() => {
+        const videos = Array.from(
+          document.querySelectorAll('.content-section-hero__video-wrapper video source'),
+        ).map(e => e.getAttribute('src'))
+
+        const video = videos.map(video => {
+          return `https://www.victoriabeckhambeauty.com${video}`
+        })
+
+        return video
+      })
+
+      /**
+       * Get all images of distant description
+       */
+      const adjacentVideos = await page.evaluate(() => {
+        const videos = Array.from(
+          document.querySelectorAll('.content-section-beauty-in-motion__container video'),
+        ).map(e => e.getAttribute('src'))
+
+        const video = videos.map(video => {
+          return `https:${video}` || ''
+        })
+
+        video.filter(e => e !== '')
+
+        return video
+      })
+
+      product.videos = [...product.videos, ...distantVideos, ...adjacentVideos]
+
+      /**
+       * Cut the first element to array, this page use another main description different comes from json
+       */
+      if (customVariant.contentful.description) {
+        product.additionalSections.shift()
       }
     },
   },
