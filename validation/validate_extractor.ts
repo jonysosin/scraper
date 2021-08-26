@@ -1,7 +1,5 @@
 import { Lambda } from 'aws-sdk'
-import axios from 'axios'
 import bluebird from 'bluebird'
-import argparse from 'argparse'
 
 const lambda = new Lambda({
   region: 'us-west-2',
@@ -66,6 +64,8 @@ async function getFailure(lambdaResponse: any): Promise<string | null> {
   return null
 }
 
+// Runs a provider through a set of URLs.
+// Manages retries appropriately, and fails the job if there are too many failures.
 async function runProvider(provider: string) {
   const urls = await getUrlsForProvider(provider)
   const retryCount = {}
@@ -138,4 +138,10 @@ async function runProvider(provider: string) {
   await Promise.all(promises)
 }
 
-bluebird.mapSeries(providers, runProvider)
+bluebird.mapSeries(providers, runProvider).then(
+  () => process.exit(0),
+  e => {
+    console.error(e)
+    process.exit(1)
+  },
+)
