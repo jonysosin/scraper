@@ -22,6 +22,13 @@ workflows:
                 - main
           requires:
             - build_scrapers
+      - update_orchestrator_providers:
+          filters:
+            branches:
+              only:
+                - main
+          requires:
+            - deploy_scrapers
 
 jobs:
   build_scrapers:
@@ -96,6 +103,17 @@ jobs:
             yarn run ts-node validation/validate_extractor.ts
       - store_artifacts:
           path: artifacts
+  update_orchestrator_providers:
+    executor: script-runner
+    steps:
+      - shallow-checkout/checkout
+      - abort_if_novalidate
+      - run:
+          name: Update orchestrator providers
+          command: |
+            yarn install
+            mkdir artifacts
+            yarn update-providers
 
 commands:
   get_commit_message:

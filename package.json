@@ -22,6 +22,7 @@
     "testCode": "ts-node -r dotenv/config testCode.ts",
     "generate": "ts-node -r dotenv/config src/scripts/generate.ts",
     "check-useragent": "ts-node -r dotenv/config src/scripts/check-useragent.ts",
+    "update-providers": "ts-node -r dotenv/config src/scripts/update-providers",
     "test": "echo \"Error: run tests from root\" && exit 1",
     "build": "tsc --project ./"
   },
