@@ -1,8 +1,7 @@
-.spartina449: # add . to the provider name to skip all its urls
-  - https://www.spartina449.com/lowcountry-pearl-necklace-silver-atlantic-opal.html
-._4ocean:
-  # - https://www.4ocean.com/products/hammerhead-shark-beaded-bracelet
-  - https://www.4ocean.com/products/4ocean-logo-womens-v-neck-long-sleeve-t-shirt
+.jane: # add . to the provider name to skip all its urls
+  - https://jane.com/deal/1441408/slip-on-espadrille-wedges
+hm:
+  # - https://www2.hm.com/en_us/productpage.0920829010.html # ignore this url
 metmuseum:
   - https://store.metmuseum.org/francois-pompon-polar-bear-sculpture-francoispompon-polarbear #price dependes on variant
   - https://store.metmuseum.org/hokusai-great-wave-unisex-tee-hokusaitee #size + color -- Medium+White=OOS

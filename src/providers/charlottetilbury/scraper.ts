@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { join } from 'path'
 import { DESCRIPTION_PLACEMENT } from '../../interfaces/outputProduct'
-import { extractBullets } from '../../providerHelpers/parseHtmlTextContent'
+import { htmlToTextArray } from '../../providerHelpers/parseHtmlTextContent'
 import { extractMetaTags } from '../../utils/extractors'
 import Product from '../../entities/product'
 import Scraper from '../../interfaces/scraper'
@@ -70,18 +70,40 @@ const scraper: Scraper = async (request, page) => {
         description_placement: DESCRIPTION_PLACEMENT.DISTANT,
       })
 
+    if (model.product.applicationTips)
+      product.addAdditionalSection({
+        name: 'How to Apply',
+        content: model.product.applicationTips,
+        description_placement: DESCRIPTION_PLACEMENT.DISTANT,
+      })
+
     product.bullets = [
-      ...extractBullets(model.product.additionalDescription || ''),
-      ...extractBullets(model.product.longDescription || ''),
+      ...htmlToTextArray(model.product.additionalDescription || ''),
+      ...htmlToTextArray(model.product.longDescription || ''),
+    ]
+
+    /**
+     * Try to extract bullets from the additionalSections and remove duplicates
+     */
+    product.bullets = [
+      ...new Set([
+        ...(product.bullets || []),
+        ...product.additionalSections.map(section => htmlToTextArray(section.content)).flat(),
+      ]),
     ]
 
     product.breadcrumbs = model.breadcrumbs.map(breadcrumb => breadcrumb.label)
-    product.images = [
-      ...new Set([...sibling.images.map(i => i.imageSrc)]),
-    ].map(link => `https:${link}`)
-    product.videos = [model.product.shortVideo?.videoSrc]
-      .filter(v => !!v)
-      .map(link => `https:${link}`)
+    product.images = [...new Set([...sibling.images.map(i => i.imageSrc)])].map(
+      link => `https:${link}`,
+    )
+
+    const videoSrc = model.product.shortVideo?.videoSrc
+    product.videos = [
+      ...new Set([
+        videoSrc && `https://${videoSrc}`,
+        ...model.widgets.flatMap(widget => Object.values(widget)).map(widget => widget?.videoUrl),
+      ]),
+    ].filter(v => !!v)
     product.metadata = { model, metaTags }
 
     return product

@@ -1,0 +1,277 @@
+version: 2.1
+workflows:
+  providers:
+    jobs:
+      - build_scrapers
+      - deploy_scrapers_validate:
+          filters:
+            branches:
+              only: /.*\/providers\/([\w+]+)/
+          requires:
+            - build_scrapers
+      - run_scraper_validation:
+          filters:
+            branches:
+              only: /.*\/providers\/([\w+]+)/
+          requires:
+            - deploy_scrapers_validate
+      - deploy_scrapers:
+          filters:
+            branches:
+              only:
+                - main
+          requires:
+            - build_scrapers
+      - update_orchestrator_providers:
+          filters:
+            branches:
+              only:
+                - main
+          requires:
+            - deploy_scrapers
+
+jobs:
+  build_scrapers:
+    environment:
+      SERVICE_NAME: scrapers
+    executor: docker-builder
+    steps:
+      - shallow-checkout/checkout
+      - get_commit_message
+      - run:
+          name: Build Docker image
+          command: |
+            REPO_NAME=scraper-lambda
+
+            if aws ecr describe-images --repository-name=${REPO_NAME} --image-ids=imageTag="${CIRCLE_SHA1}" > /dev/null 2>&1; then
+              echo "Skipping image build for ${CIRCLE_SHA1}, image already exists"
+            else
+              echo Building image for ${CIRCLE_SHA1}
+              docker build -f Dockerfile.scrapers -t "${ECR_HOST}/${REPO_NAME}:${CIRCLE_SHA1}" .
+            fi
+      - run:
+          name: Upload images
+          command: |
+            # Upload image if it doesn't already exist
+            aws ecr --region us-west-2 get-login-password | docker login --username AWS --password-stdin $(aws sts get-caller-identity | jq -r .Account).dkr.ecr.us-west-2.amazonaws.com
+            REPO_NAME=scraper-lambda
+            if aws ecr describe-images --repository-name=${REPO_NAME} --image-ids=imageTag="${CIRCLE_SHA1}" > /dev/null 2>&1; then
+              echo "Skipping image push for ${CIRCLE_SHA1}, image already exists"
+            else
+              echo Pushing image for ${CIRCLE_SHA1}
+              docker push "${ECR_HOST}/${REPO_NAME}:${CIRCLE_SHA1}"
+            fi
+      - slack_on_failure_step
+  deploy_scrapers:
+    executor: deployer
+    steps:
+      - shallow-checkout/checkout
+      - get_commit_message
+      - run:
+          name: Update scrapers lambda
+          command: |
+            for f in Scraper Scraper_ISP Scraper_RESIDENTIAL; do
+              aws lambda update-function-code --function-name $f --image-uri "695567787164.dkr.ecr.us-west-2.amazonaws.com/scraper-lambda:${CIRCLE_SHA1}"
+            done
+      - slack_on_failure_step
+      - slack_on_deploy_step
+  deploy_scrapers_validate:
+    executor: deployer
+    steps:
+      - shallow-checkout/checkout
+      - abort_if_novalidate
+      - run:
+          name: install jq
+          command: |
+             apt-get update
+             apt-get install jq -y
+      - run:
+          name: Publish FakeScraper lambda version
+          command: |
+            VERSION=$(aws lambda update-function-code --publish --function-name FakeScraper --image-uri "695567787164.dkr.ecr.us-west-2.amazonaws.com/scraper-lambda:${CIRCLE_SHA1}" | jq -r .Version) 
+            aws lambda create-alias --function-name FakeScraper --name "$CIRCLE_SHA1" --function-version $VERSION
+  run_scraper_validation:
+    executor: script-runner
+    steps:
+      - shallow-checkout/checkout
+      - abort_if_novalidate
+      - run:
+          name: Run scraper validation
+          command: |
+            yarn install
+            mkdir artifacts
+            yarn run ts-node validation/validate_extractor.ts
+      - store_artifacts:
+          path: artifacts
+  update_orchestrator_providers:
+    executor: script-runner
+    steps:
+      - shallow-checkout/checkout
+      - abort_if_novalidate
+      - run:
+          name: Update orchestrator providers
+          command: |
+            yarn install
+            mkdir artifacts
+            yarn update-providers
+
+commands:
+  get_commit_message:
+    steps:
+    - run:
+        name: Get commit message
+        command: |
+          echo "export COMMIT_MESSAGE='$(git log --format=%s -n 1 $CIRCLE_SHA1)'" >> $BASH_ENV
+  slack_on_failure_step:
+    steps:
+    - slack/notify:
+        event: fail
+        branch_pattern: main
+        custom: |
+          {
+            "text": "CircleCI job failed",
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": ":red_circle: Failed: crawler-providers (lambda)",
+                  "emoji": true
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "> ${COMMIT_MESSAGE}"
+                  }
+                ]
+              },
+              {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Job*: ${CIRCLE_JOB}"
+                  }
+                ]
+              },
+              {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Tag*: ${CIRCLE_SHA1}"
+                  }
+                ]
+              },
+              {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View Job"
+                    },
+                    "url": "${CIRCLE_BUILD_URL}"
+                  }
+                ]
+              }
+            ]
+          }
+  slack_on_deploy_step:
+    steps:
+    - slack/notify:
+        event: pass
+        branch_pattern: main
+        custom: |
+          {
+            "text": "CircleCI job succeeded!",
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": ":green: Deployed: crawler-providers (lambda)",
+                  "emoji": true
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "> ${COMMIT_MESSAGE}"
+                  }
+                ]
+              },
+              {
+                "type": "context",
+                "elements": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Tag*: ${CIRCLE_SHA1}"
+                  }
+                ]
+              },
+              {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View Job"
+                    },
+                    "url": "${CIRCLE_BUILD_URL}"
+                  }
+                ]
+              }
+            ]
+          }
+  abort_if_novalidate:
+    description: "Aborts this step if validation is not needed to run."
+    steps:
+      - run:
+          name: "maybe abort if no PR"
+          command: |
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then
+              circleci-agent step halt 
+            fi
+
+
+executors:
+  docker-builder:
+    machine:
+      image: ubuntu-2004:202104-01
+      docker_layer_caching: true
+    resource_class: large
+    environment:
+      ECR_HOST: 695567787164.dkr.ecr.us-west-2.amazonaws.com
+      AWS_DEFAULT_REGION: us-west-2
+      AWS_PAGER: ''
+  script-runner:
+    docker:
+      - image: cimg/node:14.17.5
+    resource_class: small
+    environment:
+      AWS_DEFAULT_REGION: us-west-2
+      AWS_PAGER: ''
+  deployer:
+    docker:
+      - image: 695567787164.dkr.ecr.us-west-2.amazonaws.com/base-deployer:20210809.1
+        aws_auth:
+          aws_access_key_id: $AWS_ACCESS_KEY_ID
+          aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+    resource_class: small
+    environment:
+      ECR_HOST: 695567787164.dkr.ecr.us-west-2.amazonaws.com
+      AWS_DEFAULT_REGION: us-west-2
+      AWS_PAGER: ''
+
+orbs:
+  slack: circleci/slack@4.4.2
+  build-tools: circleci/build-tools@2.9.1
+  shallow-checkout: guitarrapc/git-shallow-clone@2.0.3

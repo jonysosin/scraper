@@ -11,6 +11,11 @@ export default shopifyScraper(
        * Get additional descriptions and information
        */
       extraData.additionalSections = await page.evaluate(DESCRIPTION_PLACEMENT => {
+        //Get description outside accordion
+        const descriptionContent = document
+          .querySelector('.product__description-text')
+          ?.outerHTML?.trim()
+
         // Get a list of titles
         const keys = Array.from(document.querySelectorAll('.product__ingredients button > p')).map(
           e => e?.textContent?.trim(),
@@ -22,13 +27,19 @@ export default shopifyScraper(
         )
 
         // Join the two arrays
-        const sections = values.map((value, i) => {
-          return {
-            name: keys[i] || `key_${i}`,
-            content: value || '',
-            description_placement: DESCRIPTION_PLACEMENT.DISTANT,
-          }
-        })
+        const sections = values
+          .map((value, i) => {
+            return {
+              name: keys[i] || `key_${i}`,
+              content: value || '',
+              description_placement: DESCRIPTION_PLACEMENT.ADJACENT,
+            }
+          })
+          .concat({
+            name: 'Description',
+            content: descriptionContent || '',
+            description_placement: DESCRIPTION_PLACEMENT.MAIN,
+          })
 
         return sections
       }, DESCRIPTION_PLACEMENT)
@@ -36,6 +47,11 @@ export default shopifyScraper(
       return extraData
     },
     variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
+      /**
+       * Shifts the predefined description and replaces it with one that includes HTML content
+       */
+      product.additionalSections.shift()
+
       /**
        * Get the list of options for the variants of this provider
        * (4) ["Size", "Title", "Type", "Free gift"]

@@ -1,9 +1,10 @@
+import { vimeoRegex } from '../../utils/regex'
 import { getProductOptions } from '../shopify/helpers'
 import shopifyScraper, { TShopifyExtraData } from '../shopify/scraper'
 
 export default shopifyScraper(
   {
-    productFn: async (_request, page) => {
+    productFn: async (_request, page, _p) => {
       const extraData: TShopifyExtraData = {}
       /**
        * Get the breadcrumbs
@@ -21,7 +22,7 @@ export default shopifyScraper(
 
       return extraData
     },
-    variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
+    variantFn: async (_request, page, product, providerProduct, providerVariant) => {
       /**
        * Get the list of options for the variants of this provider
        * (8) ["Size", "Title", "COLOR", "Custom", "Color", "SIZE", "AMOUNT", "One Size"]
@@ -31,7 +32,19 @@ export default shopifyScraper(
         product.color = optionsObj.Color || optionsObj.COLOR
       }
       if (optionsObj.Size) {
-        product.size = optionsObj.Size
+        product.size = optionsObj.Size.replace('- Pre-Order', '')
+      }
+
+      /**
+       * Get the videos
+       */
+      const videos =
+        providerProduct.media
+          .filter(e => e.alt?.match(/vimeo/))
+          .map(e => e.alt?.replace(/\"|<|>/gim, '').match(vimeoRegex)?.[0] || '')
+          .filter(e => e !== '') || []
+      if (videos.length) {
+        product.videos = [...product.videos, ...videos]
       }
     },
   },

@@ -44,7 +44,7 @@ export default shopifyScraper(
 
       return extraData
     },
-    variantFn: async (_request, _page, product, providerProduct, providerVariant) => {
+    variantFn: async (_request, page, product, providerProduct, providerVariant) => {
       /**
        * Get the list of options for the variants of this provider
        * (3) ["Title", "Size", "Amount"]
@@ -53,6 +53,15 @@ export default shopifyScraper(
       if (optionsObj.Size) {
         product.size = optionsObj.Size
       }
+      const color = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.breadcrumb li:last-child')).map(
+          e => e.textContent?.split('-')[e.textContent?.split('-').length - 1].trim() || '',
+        )
+      })
+        
+      product.color = color[0]
+      
+
     },
   },
   {},
